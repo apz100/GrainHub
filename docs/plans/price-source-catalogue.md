@@ -3446,3 +3446,27 @@ Live re-verification sweep of the 10 working US AgriCharts wrappers (one call ea
 | Anthony Farmers Co-op | 9 | 9 | 3 |
 
 Heritage was confirmed live in Cycle 23 (14 rows) and Heartland/Mulvane are closed for now — neither was re-probed. Together with Cycle 26's sweep (FMN 453, Five Star 299, TGM 362, USDA mirror 197, FAC 45), every live-verified collector has now been re-checked this morning with zero drift — the catalogue's verified counts stand.
+
+## Cycle 28 — Embed family re-verification: all 13 exact matches; FS Grain mirror confirmed (2026-11-19)
+
+Live re-verification sweep of the full 13-site AgriCharts-embed family plus the FS Grain USDA mirror (13 calls, one per site, no retries). **All returned `status='ok'` with row counts exactly matching their earlier verifications — no drift, no failures.** Counts only, no values recorded.
+
+| Site | Rows now | Prior | Locations |
+|---|---|---|---|
+| Agtegra | 8 | 8 (Cycle 7) | 1 (Hecla) |
+| Heritage Cooperative (embed) | 15 | 15 (Cycle 7) | 1 (Ada) |
+| Linn Coop | 51 | 51 (Cycle 7) | 5 |
+| Midway Coop | 8 | 8 (Cycle 7) | 1 ("All Locations") |
+| Ag State | 11 | 11 (Cycle 7) | 1 |
+| Superior Ag | 12 | 12 (Cycle 7) | 1 |
+| ALCIVIA | 181 | 181 (Cycle 9) | 15 |
+| TGM | 362 | 362 (Cycle 9) | 24 |
+| PRO Coop 21297 (Ayrshire) | 6 | 6 (Cycle 11) | 1 |
+| PRO Coop 21302 (Manson) | 12 | 12 (Cycle 12) | 1 |
+| PRO Coop 21302b (Manson dup) | 12 | 12 (Cycle 13) | 1 |
+| Hull Coop | 12 | 12 (Cycle 12) | 1 |
+| StateLine Coop | 126 | 126 (Cycle 12) | 11 |
+
+**816 rows across the 13 embed sites** (TGM re-verified in Cycle 26; the other 12 this cycle). Structure unchanged everywhere: same location sets, commodity splits, and groupby behaviour (Ag State / Superior Ag still group by commodity with `location_name` authoritative; Midway still publishes the single "All Locations" label; StateLine still 12 rows per location except Emmetsburg-AGP, Soybeans-only with 6).
+
+USDA mirror, FS Grain (`fetch_usda_mirror_fs_grain`): **197 rows, report id 7730, dated Nov 18, 2026** — exact match to the James Valley re-verification in Cycle 26. Caveat: the region count was not re-tallied this run (rows grouped on `location`, which is "United States" for all rows); the 29-region figure stands from Cycle 26.

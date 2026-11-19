@@ -329,12 +329,12 @@ branch to GitHub frequently.
 - Elevator Ops: which ERP first (Agris / Agvance / AgTrax)?
 - US scope: Corn Belt first, or Corn Belt + Gulf / PNW from day one?
 
-## 9. Progress — Cycles 1–26 (2026-11-18/19)
+## 9. Progress — Cycles 1–27 (2026-11-18/19)
 
-Twenty-six overnight autonomous cycles on branches `overnight/grainhub-cycle-1`
-through `overnight/grainhub-cycle-26`, none merged to master. Full API test
-suite grew **179 → 291 → 320 → 359 → 364 → 380 → 407 → 407 → 454 → 488 → 536 → 558 → 590 → 617 → 629 → 638 → 643 → 646 → 656 → 692 → 692 → 696 → 697 → 702 → 704 → 709 passed, 0 failed**
-across the twenty-six cycles. Full detail in `docs/plans/overnight-cycle-N-report.md`.
+Twenty-seven overnight autonomous cycles on branches `overnight/grainhub-cycle-1`
+through `overnight/grainhub-cycle-27`, none merged to master. Full API test
+suite grew **179 → 291 → 320 → 359 → 364 → 380 → 407 → 407 → 454 → 488 → 536 → 558 → 590 → 617 → 629 → 638 → 643 → 646 → 656 → 692 → 692 → 696 → 697 → 702 → 704 → 709 → 709 passed, 0 failed**
+across the twenty-seven cycles. Full detail in `docs/plans/overnight-cycle-N-report.md`.
 Merge order, gates, and conflicts are in `docs/plans/merge-plan.md`.
 
 - **Cycle 1** (`overnight/grainhub-cycle-1`, 179 tests): Phase 0 hardening,
@@ -522,6 +522,11 @@ Merge order, gates, and conflicts are in `docs/plans/merge-plan.md`.
   complete; live re-verification sweep of five key collectors, all
   exact matches (FMN 453, Five Star 299, TGM 362, USDA mirror 197,
   FAC 45); merge plan extended to Cycle 25 (69 commits, 0 merges).
+- **Cycle 27** (`overnight/grainhub-cycle-27`, 709 tests, docs only):
+  all 10 working US AgriCharts wrappers re-verified live, all exact
+  matches to Cycle 21 (639 rows, 0 zero-row results); every
+  live-verified collector has now been re-checked this morning with
+  zero drift; merge plan extended to Cycle 26 (71 commits, 0 merges).
 
 **Remaining blockers that need Adam:** NASS API key (free) and FAS /
 data.gov key (free); LLM provider + key for Advisor `/ask`; Barchart /
@@ -577,4 +582,7 @@ extended; feed-down degradation implemented; Heartland/Mulvane
 closed for now. **Cycle 26 additions:** feed-error degradation
 implemented — design-note work complete; live re-verification
 sweep of five key collectors, all exact matches (FMN 453, Five
-Star 299, TGM 362, USDA mirror 197, FAC 45).
+Star 299, TGM 362, USDA mirror 197, FAC 45). **Cycle 27
+additions:** all 10 working AgriCharts wrappers re-verified live,
+all exact matches (639 rows) — every live-verified collector now
+re-checked this morning with zero drift.

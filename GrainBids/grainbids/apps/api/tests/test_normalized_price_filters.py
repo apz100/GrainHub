@@ -1,0 +1,124 @@
+from __future__ import annotations
+
+from types import SimpleNamespace
+import uuid
+
+from app.api.routes.normalized_prices import (
+    _append_forced_company_rows,
+    _build_market_period_recency_filters,
+    _build_quality_filters,
+    _canonical_month_label,
+    _canonical_and_quality_filters,
+    _group_preview_rows_by_delivery,
+    _preview_row_dedupe_key,
+    _prune_facet_rows,
+    _user_visible_market_filters,
+)
+
+
+def test_user_visible_market_filters_extend_canonical_filters() -> None:
+    canonical_filters = _canonical_and_quality_filters(False)
+    quality_filters = _build_quality_filters()
+    recency_filters = _build_market_period_recency_filters()
+    combined_filters = _user_visible_market_filters(False)
+
+    assert len(combined_filters) == len(canonical_filters) + len(quality_filters) + len(recency_filters)
+    assert len(combined_filters) > len(canonical_filters)
+
+
+def test_user_visible_market_filters_for_alternates_still_include_quality_gate() -> None:
+    combined_filters = _user_visible_market_filters(True)
+    quality_filters = _build_quality_filters()
+
+    assert len(combined_filters) >= len(quality_filters)
+
+
+def test_group_preview_rows_by_delivery_sorts_months_and_limits_rows() -> None:
+    groups = _group_preview_rows_by_delivery(
+        [
+            {"id": "3", "delivery_label": "Jul 2026", "futures_month": None, "cash_price_bu": 5.5, "basis": 0.8, "location": "C"},
+            {"id": "1", "delivery_label": "May 2026", "futures_month": None, "cash_price_bu": 6.2, "basis": 1.0, "location": "A"},
+            {"id": "2", "delivery_label": "May 2026", "futures_month": None, "cash_price_bu": 6.0, "basis": 0.9, "location": "B"},
+        ],
+        rows_per_group=1,
+    )
+
+    assert [group["label"] for group in groups] == ["May 2026", "Jul 2026"]
+    assert groups[0]["row_count"] == 2
+    assert len(groups[0]["rows"]) == 1
+    assert groups[0]["rows"][0]["id"] == "1"
+
+
+def test_prune_facet_rows_respects_minimum_market_count() -> None:
+    rows = [
+        {"id": "1", "name": "GLG", "market_count": 3},
+        {"id": "2", "name": "Thin Row", "market_count": 1},
+    ]
+
+    pruned = _prune_facet_rows(rows, minimum_market_count=2)
+
+    assert pruned == [{"id": "1", "name": "GLG", "market_count": 3}]
+
+
+def test_append_forced_company_rows_includes_low_count_overrides() -> None:
+    base_rows = [{"id": "1", "name": "Great Lakes Grain", "market_count": 8}]
+    all_rows_by_key = {
+        "great lakes grain": {"id": "1", "name": "Great Lakes Grain", "market_count": 8},
+        "ingredion": {"id": "2", "name": "Ingredion", "market_count": 1},
+        "greenfield global": {"id": "3", "name": "Greenfield Global", "market_count": 1},
+    }
+
+    merged = _append_forced_company_rows(
+        base_rows,
+        all_company_rows_by_key=all_rows_by_key,
+        forced_company_names={"Ingredion", "Greenfield Global"},
+    )
+
+    assert {row["name"] for row in merged} == {"Great Lakes Grain", "Ingredion", "Greenfield Global"}
+
+
+def test_preview_row_dedupe_key_collapses_month_label_variants() -> None:
+    location_id = uuid.uuid4()
+    company_id = uuid.uuid4()
+    company_name_map = {company_id: "Great Lakes Grain"}
+    location_company_map = {location_id: company_id}
+    common = {
+        "location_id": location_id,
+        "location": "Aylmer",
+        "company_id": None,
+        "source_name": "Agricharts",
+        "commodity_name": "Corn",
+        "delivery_end": None,
+        "delivery_start": None,
+    }
+    row_a = SimpleNamespace(
+        **common,
+        delivery_label="May 2026",
+        futures_month="July 2026",
+    )
+    row_b = SimpleNamespace(
+        **common,
+        delivery_label="May-26",
+        futures_month="Jul 2026",
+    )
+
+    key_a = _preview_row_dedupe_key(
+        row_a,
+        company_name_map=company_name_map,
+        location_company_map=location_company_map,
+    )
+    key_b = _preview_row_dedupe_key(
+        row_b,
+        company_name_map=company_name_map,
+        location_company_map=location_company_map,
+    )
+    assert key_a == key_b
+
+
+def test_canonical_month_label_normalizes_common_variants() -> None:
+    assert _canonical_month_label("May-26") == "May 2026"
+    assert _canonical_month_label("Jul 2026") == "July 2026"
+    assert _canonical_month_label("December 2026") == "December 2026"
+    assert _canonical_month_label("Nov 30, 2026") == "November 2026"
+    assert _canonical_month_label("May 31") == "May"
+    assert _canonical_month_label("Nearby") == "Nearby"

@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+# Node
+node_modules/
+.next/
+# Env / secrets / local data
+.env
+.env.local
+*.db
+*.sqlite*
+ingredion_storage_state.json
+# Logs / outputs
+*.log
+.runlogs/
+TestOutput/
+EasternOntarioBids/
+# OS
+.DS_Store
+Thumbs.db

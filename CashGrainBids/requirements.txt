@@ -1,0 +1,9 @@
+﻿playwright
+pandas
+beautifulsoup4
+lxml
+html5lib
+openpyxl
+pywin32
+Pillow
+pytesseract

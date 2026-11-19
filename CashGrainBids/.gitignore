@@ -1,0 +1,57 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Playwright browsers/runtime downloads
+pw-browsers/
+
+# Local editor settings
+.vscode/
+
+# Generated bid outputs
+EasternOntarioBids/
+GoogleDriveExport/
+OntarioBids/
+PostedBids/
+testingBids/
+logs/
+
+# Archives and generated bundles
+*.zip
+
+# Local secrets and environment files
+.env
+.env.*
+ingredion_storage_state.json
+ingredion_browser_profile/
+*.pem
+*.key
+*service-account*.json
+*credentials*.json
+*secret*.json
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+
+# Historical/test script variants
+\# cash_bids_dynamic.py
+\# cash_bids_dynamic/
+\# cash_bids_testing.py
+cash_bids_dynamic.py
+cash_bids_testeroonie.py
+cash_bids_testing.py
+cash_bids_via_playwright_laptop.py
+cash_bids_via_playwright_laptop_test.py
+compute_posted_bid_UPDATED.py
+
+

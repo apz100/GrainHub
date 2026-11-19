@@ -1,0 +1,93 @@
+# ---------- Environment / secrets ----------
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# ---------- Python ----------
+.venv/
+venv/
+ENV/
+**/.venv/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+**/.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# ---------- Databases / local state ----------
+*.db
+*.sqlite
+*.sqlite3
+
+# ---------- Node / Next.js ----------
+node_modules/
+**/node_modules/
+.next/
+**/.next/
+out/
+.turbo/
+pnpm-store/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ---------- Build artifacts ----------
+dist/
+build/
+*.tsbuildinfo
+
+# ---------- Logs / debug dumps ----------
+*.log
+debug_*.txt
+debug_*.json
+debug_*.py
+**/Debug/
+**/debug/
+api_prices*.json
+
+# ---------- Multi-agent workflow state ----------
+.agent/
+.worktrees/
+
+# ---------- Local research / handoff artifacts ----------
+GrainBidder plans.docx
+GrainBidderElevatorMapping.pdf
+agricharts_*.csv
+seed_*.csv
+retry_*.csv
+unmapped_*.csv
+**/agricharts_*.csv
+**/seed_*.csv
+**/retry_*.csv
+**/unmapped_*.csv
+
+# ---------- Generated exports ----------
+*_output.csv
+*_output.xlsx
+Ontario_CashBids_*.xlsx
+grainbids/apps/api/exports/
+
+# ---------- Legacy runtime artifacts ----------
+**/legacy_runtime/experiments_reference/
+
+# ---------- Archive hygiene ----------
+archive/**/__pycache__/
+archive/**/.pytest_cache/
+archive/**/*.db
+archive/**/*.sqlite*
+
+# ---------- Editor / OS ----------
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

@@ -14,7 +14,56 @@ was seen in a direct fetch. **Partially verified** = live homepage
 
 | Company | Location(s) | URL | Type | Crops | Frequency | Status |
 |---|---|---|---|---|---|---|
-| AgriCharts / Farm Market News | Brinston, Cardinal, Chesterville, Dalkeith, Johnstown, Kars, Lansdowne, North Gower, Prescott, Vankleek Hill, Winchester | https://fmn1.agricharts.com/markets/cash.php | AgriCharts writeBidRow | corn, soy, wheat | intraday | Verified live 200 (2026-11-19). Keep. |
+| AgriCharts / Farm Market News | Brinston, Cardinal, Chesterville, Dalkeith, Johnstown, Kars, Lansdowne, North Gower, Prescott, Vankleek Hill, Winchester | https://fmn1.agricharts.com/markets/cash.php | AgriCharts writeBidRow | corn, soy, wheat | intraday | Verified live 200 (2026-11-19). Keep. Full read 2026-11-18 — see "Farm Market News cash page" section below. |
+
+## Farm Market News cash page — full read (2026-11-18 23:49–23:51 EST)
+
+The page `https://fmn1.agricharts.com/markets/cash.php` was read in full.
+It is **one long scrolling list, not paginated**: **204 separate bid
+tables covering 86 distinct named delivery points** — 85 Ontario-titled
+plus 1 Quebec ("Quebec FOB Corn"). No prices are copied here;
+locations, crops, and structure only.
+
+- **Columns per table:** Name, Delivery, Delivery End, Futures Month,
+  Futures Price, Change, Basis, Cash Price, Settlement.
+- **Crops:** corn, soybeans, wheat (HRS / HRW / SRW / SWW, new + old
+  crop). **Barley and oats only at Hensall HDC and Sunderland.**
+  **No canola table appeared.**
+- **Delivery:** mostly old crop Nov 2026 and new crop Oct 2027
+  (corn/soy) / Jul–Aug 2027 (wheat), with a few exceptions
+  (e.g. London Dec 2026–Feb 2027).
+- **Delivery points in page order (86):** Alliston, Amberly, Arner,
+  Aylmer, Ayr, Beeton, Belmore, Blenheim, Brantford, Brigden, Brinston,
+  Burford, Burgessville, Cargill ON, Chatham Ethanol, Chatham-Kent Avg,
+  Chatham/Oungah, Chesterville, Collingwood, Dalkeith, Delhi, Dresden,
+  Essex Cty, Exeter, Forest, Glencoe, Grafton, Grand Valley, Guelph,
+  Hagersville, Haggerty, Hamilton Transfer, Hensall HDC,
+  Hensall Thompson, Highgate, Huron FOB, Ingredion Cardinal,
+  Ingredion London, Johnstown Ethanol, Kars, Kent Bridge, Kent FOB,
+  Lamb FOB, Lansdowne, Lindsay, Listowel, London, London Avg, Lucknow,
+  McGregor, Mdsx FOB, Milverton, Mitchell GLG, Mitchell Thompsons,
+  Monkton, North Gower, Norwich, Oakwood-Sunderland Co-op, Palmerston,
+  Park Hill, Pontypool, Port Albert, Port Colborne,
+  Port Colborne Transfer, Port Perry, Prescott Transfer, Putnam,
+  Quebec FOB, Rochester, Seaforth, Straffordville, Sunderland,
+  Tavistock, Thamesville, Thornton, Toledo Elevator, Trenton,
+  Tupperville, Vankleek Hill, Varna, W O Feed, Wheatley, Windsor,
+  Windsor Crusher, Woodstock, Wyoming.
+- **Dropdown discrepancy — the default view is NOT the complete FMN
+  Ontario set:** the Location dropdown lists **336 options (335
+  named)** — far more than the 204 tables on the default view.
+  Dropdown-only entries include Winchester, Sarnia, Goderich, Durham,
+  Wellington, Chatham, Kintore, Maxville, and others, plus duplicates
+  (Delhi ×4, Glencoe ×4, Hensall Thompson ×4, Sarnia ×4).
+- **Location-filter mechanism (repo evidence, not yet live-tested
+  against the dropdown):** existing collectors already build
+  `cash.php?location_filter={loc_id}` URLs
+  (`app/platform/market_data/sources/cash_bids_dynamic.py:91`) and the
+  legacy list uses numeric location IDs (e.g. Brinston Corn 3614).
+  **Cycle 3 task:** confirm the dropdown option values map to
+  `location_filter` IDs and fetch a dropdown-only location
+  (e.g. Winchester) to verify its table loads — that would unlock the
+  full 335-point FMN Ontario set from one collector pattern.
 | Great Lakes Grain | 36 locations incl. Embrun, MacEwen Farms | https://cashbids.greatlakesgrain.com/index.cfm | DTN index.cfm (Playwright) | corn, soy, wheat, IP soy | not stated | Verified live 200. Keep. |
 | London Agricultural Commodities | 18 elevators incl. Charwen (Thornton) | https://www.londonag-dtn.com/index.cfm?show=11 | DTN index.cfm (Playwright) | corn, soy, wheat | not stated | **URL updated 2026-11-19**: old `dtn.londonag.com` is dead (404); new domain verified live 200 with "Cash Bid" content. `lac_source.py` base URL still needs updating. |
 | The Andersons Canada | 14 locations (Blacks Lane, Blenheim, Granton, Hensall, Kent Bridge, Mitchell, Norwich, Pain Court, Pontypool, Port Albert, Claybanks, IGPC Ethanol, Kintore, Rannoch) | https://dtn-api.andersonscanada.com/cash-bids/blacks-lane | DTN HTML tables, plain requests | corn, soy, white/SRW wheat | basis daily ~5:10 pm EST | Verified live 200 (1 of 14 slugs probed). Keep. |
@@ -61,7 +110,10 @@ Peterborough-Norwood), Homeland Grain (Norwich), GFO SellSmart
   `londonag-dtn.com` and re-verify the cash-bids view; add North Gower
   Grains, Collwest, Mae-Mart, Mapleview to the config-driven collector
   lists; keep Bunge disabled; confirm Greenfield/Barchart handling
-  with Adam.
+  with Adam. **Cycle 3:** verify the FMN dropdown `location_filter`
+  mapping (see "Farm Market News cash page" section) — if it loads
+  dropdown-only locations, the FMN collector covers up to 335
+  Ontario points from one URL pattern.
 
 ## United States — existing list (verified 2026-11-19)
 

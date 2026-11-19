@@ -3724,3 +3724,25 @@ Last re-verified Cycles 26 (FAC) / 31 (Chandler, Cameron, CGS, Almota, Williams 
 
 - **Pricing page** (`fetch_mae_mart_html`, 1 GET): **35,781 bytes** — 171 bytes smaller than Cycles 18/29 (35,952). Structure unchanged: all three futures symbols present (`ZCZ26=F`, `ZSF27=F`, `ZWN27=F`), `grain-proxy` referenced, 4 tables, parse status ok, **4 rows** (Corn, Soybeans, Wheat, Rye — basis present on all; futures/cash empty without the proxy step, Rye carrying its static manual cash price as in Cycle 18). The byte difference is not diagnosed further — no saved Cycle 29 copy exists to diff against, and the pricing content is intact.
 - **Proxy** (1 GET, `grain-proxy?symbols=ZCZ26=F`, redirects followed): HTTP 200, `application/json; charset=utf-8`, **88 bytes** (was 89 in Cycles 19/29 — the 1-byte difference is the price value itself changing length, which is expected). JSON shape unchanged: keyed by symbol, numeric `price`, `currency` `"USX"`, integer `timestamp` and `fetched`. The extensionless canonical URL is served directly. Collector still viable as-is; no code change needed.
+
+## Cycle 38 — Web build re-run (passes) + config drift audit (clean) (2026-11-19)
+
+No GETs. Executed directly by the coordinator (subagent spawning still unavailable).
+
+### Web build — passes again (first full re-run since Cycle 17)
+
+`npm run build --workspace=grainbids-web` from `GrainBids/grainbids`: **✓ Compiled successfully, 33/33 static pages generated.** (The `apps/web` directory has no local `node_modules` — this is an npm-workspaces monorepo and dependencies are hoisted to the root `GrainBids/grainbids/node_modules/`; running plain `npm install` inside `apps/web` is a no-op that reports "up to date" without installing anything. The workspace-aware build command is the correct one.) The root `GrainBids/grainbids/package-lock.json` stray file reappeared during the build, as in earlier cycles — deleted, not committed (the real lockfile is `apps/web/package-lock.json`, already tracked).
+
+### Config / registry drift audit — clean
+
+Verified directly with `tomllib` + the real toggle loader (not from memory):
+
+| Check | Result |
+|---|---|
+| `us_elevators_urls.toml` | 121 entries, 102 enabled (same as Cycle 18) |
+| `config.toml` `[us]` | 121 entries, 102 enabled; per-entry name/url/type/enabled match with the urls toml |
+| Registry adapters (`ADAPTERS`) | 119 |
+| Disabled by `[sources]` toggle | 17 — bunge, mapleview, 13 DTN, Heartland, Mulvane (same set as Cycle 23) |
+| Seedable (adapters − disabled) | 102 |
+
+The AGP (Cycle 33) and Alliance Grain (Cycle 34) comment edits introduced no drift: both toml files still agree entry-for-entry, and the toggle-disabled set is unchanged.

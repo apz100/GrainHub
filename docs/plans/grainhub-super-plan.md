@@ -329,12 +329,12 @@ branch to GitHub frequently.
 - Elevator Ops: which ERP first (Agris / Agvance / AgTrax)?
 - US scope: Corn Belt first, or Corn Belt + Gulf / PNW from day one?
 
-## 9. Progress — Cycles 1–30 (2026-11-18/19)
+## 9. Progress — Cycles 1–31 (2026-11-18/19)
 
-Thirty overnight autonomous cycles on branches `overnight/grainhub-cycle-1`
-through `overnight/grainhub-cycle-30`, none merged to master. Full API test
-suite grew **179 → 291 → 320 → 359 → 364 → 380 → 407 → 407 → 454 → 488 → 536 → 558 → 590 → 617 → 629 → 638 → 643 → 646 → 656 → 692 → 692 → 696 → 697 → 702 → 704 → 709 → 709 → 709 → 709 → 710 passed, 0 failed**
-across the thirty cycles. Full detail in `docs/plans/overnight-cycle-N-report.md`.
+Thirty-one overnight autonomous cycles on branches `overnight/grainhub-cycle-1`
+through `overnight/grainhub-cycle-31`, none merged to master. Full API test
+suite grew **179 → 291 → 320 → 359 → 364 → 380 → 407 → 407 → 454 → 488 → 536 → 558 → 590 → 617 → 629 → 638 → 643 → 646 → 656 → 692 → 692 → 696 → 697 → 702 → 704 → 709 → 709 → 709 → 709 → 710 → 710 passed, 0 failed**
+across the thirty-one cycles. Full detail in `docs/plans/overnight-cycle-N-report.md`.
 Merge order, gates, and conflicts are in `docs/plans/merge-plan.md`.
 
 - **Cycle 1** (`overnight/grainhub-cycle-1`, 179 tests): Phase 0 hardening,
@@ -542,6 +542,11 @@ Merge order, gates, and conflicts are in `docs/plans/merge-plan.md`.
   sample #2 re-verified 6/6 exact matches (Hamer still Nov 18, one
   day stale); Mae-Mart proxy URL stored extensionless (1 new test);
   merge plan extended to Cycle 29 (77 commits, 0 merges).
+- **Cycle 31** (`overnight/grainhub-cycle-31`, 710 tests, docs only):
+  Bushel samples #3 + Cycle 4/5 sites re-verified 12/12 exact
+  matches; Almota joins the staleness watch (first stale probe —
+  watch list now five widgets); merge plan extended to Cycle 30
+  (79 commits, 0 merges).
 
 **Remaining blockers that need Adam:** NASS API key (free) and FAS /
 data.gov key (free); LLM provider + key for Advisor `/ask`; Barchart /
@@ -608,4 +613,6 @@ still one day stale); Mae-Mart still viable — page byte-identical
 to Cycle 18, proxy shape identical to Cycle 19, canonical URL now
 extensionless. **Cycle 30 additions:** Bushel sample #2 6/6 exact
 matches (Hamer still one day stale); Mae-Mart proxy URL stored
-extensionless.
+extensionless. **Cycle 31 additions:** Bushel samples #3 + Cycle
+4/5 sites 12/12 exact matches; Almota joins the staleness watch
+(watch list now five widgets).

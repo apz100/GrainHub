@@ -3413,3 +3413,210 @@ Chadbourn + Hamer + Skyland 3370/3621 staleness watch
 (exemption list; Hamer still one day stale, Nov 18 header, as
 in Cycles 16 and 24); Mae-Mart cash-price decision; poller
 scheduling decision; currency decision.
+
+---
+
+## Cycle 31 (added Cycle 32)
+
+### 0q. Branch chain — Cycle 31, verified from git
+
+The chain is **still linear**: `git log --oneline
+master..overnight/grainhub-cycle-31` gives **81 commits** (79
+through Cycle 30 + 2 in Cycle 31), **0 merge commits**, no
+branch points. Cycle 31's first commit `c1d1f74` has parent
+`d3e3b69` (the Cycle 30 tip), and merge-base(30, 31) is the
+Cycle 30 tip `d3e3b69`. Per-branch commit count for Cycle 31: 2
+(`c1d1f74`, `31b31be`).
+
+That means the §2 procedure continues unchanged: merge Cycle 31
+after 30, one branch at a time with `--no-ff`, running the §3
+gates at each step. A single fast-forward of `master` to the
+`cycle-31` tip (`31b31be`) would give the same tree as
+thirty-one sequential merges; prefer the sequential merges for
+the same reason as §0 (a review checkpoint and stop point per
+cycle).
+
+(The Cycle 30 section's "79 commits master..cycle-30" figure
+was re-verified in Cycle 32 and is correct — 79, 0 merge
+commits. `master` is still at `f2c3206` — no cycle work is on
+`master` yet.)
+
+### 1q. What the branch contains (Cycle 31)
+
+| Branch | Tip | Tests at tip | Web build at tip |
+|---|---|---|---|
+| Cycle 31 | `31b31be` | 710 passed, 0 failed | Not re-run (no web files changed; last full pass Cycle 17) |
+
+Tip commit hash (full): `31b31be00acca45119f2c22715e24406884da8e9`.
+No web files changed in Cycle 31, so there is no fresh
+web-build evidence in this range. **No code changed at all in
+Cycle 31** — docs/research only (4 files: the super-plan §9,
+the merge plan, the price-source catalogue, and the Cycle 31
+report itself) — so the test count is unchanged from Cycle 30
+and no new tests were added. 4 files changed in Cycle 31
+(377 insertions, 5 deletions): the super-plan §9 (16 lines
+changed), the merge plan (+213), the Cycle 31 report itself
+(+123), and the price-source catalogue (+30).
+
+- **Cycle 31** (`overnight/grainhub-cycle-31`; commits `c1d1f74`,
+  `31b31be`): Bushel per-location sample #3 re-verification —
+  **6/6 exact matches (one call per site, no retries)**. All 6
+  returned `status: ok` with row counts exactly matching the
+  Cycles 13–16 baselines. Counts only, no values recorded.
+
+  | Site | Rows now | Header date | Verdict |
+  |---|---|---|---|
+  | Skyland 2740 Moscow/Dermot/Kismet/Pleasant Valley | 7 | Nov 19 | Exact match |
+  | Skyland 3621 Vilas–Walsh | 5 | **Nov 18** | Exact match (count); still one day stale |
+  | Smithfield 2294 Chadbourn | 1 | **Nov 18** | Exact match (count); still one day stale |
+  | Smithfield 1725 Bladenboro | 1 | Nov 19 | Exact match |
+  | Smithfield 2064 Kinston JCH, NC | 3 | Nov 19 | Exact match |
+  | Smithfield 1683 Creswell | 2 | Nov 19 | Exact match |
+
+  4 of 6 headers fresh (Nov 19); Vilas-Walsh and Chadbourn
+  remain dated Nov 18 — same one-day lag as before, counts
+  unchanged, so site-side staleness, not a collector issue.
+- **Cycle 4/5 Bushel sites re-verification — 6/6 exact
+  matches (one call per site, no retries).** All 6 returned
+  `status: ok` with row counts exactly matching Cycle 5.
+  Counts only, no values recorded.
+
+  | Site | Rows now | Cycle 5 | Locations |
+  |---|---|---|---|
+  | Chandler Feed | 17 | 17 | 1 (Chandler) |
+  | Cameron Coop | 4 | 4 | 1 (Cameron) |
+  | CGS | 4 | 4 | 1 (Bazine) |
+  | Almota | 12 | 12 | 1 (Colfax) |
+  | Williams Gin | 2 | 2 | 1 ("Williams Gin & Grain" as location label; town still unconfirmed from the page, as in Cycle 5) |
+  | Rugby | 12 | 12 | 1 (Rugby) |
+
+  **New staleness note: Almota's widget header is dated Nov
+  18** — one day stale, the same lag pattern as Chadbourn /
+  Hugoton / Vilas-Walsh / Hamer. Its row count is still exactly
+  12, so the collector parses it fine; the page is serving
+  yesterday's board. **Almota joins the staleness watch list
+  (first stale probe for it).** The watch list is now **five
+  widgets**: Chadbourn, Hamer, Hugoton (3370), Vilas-Walsh
+  (3621), Almota — all exactly one day behind, all still on
+  the exemption list for any future freshness gate.
+- **Merge plan extended to Cycle 30** (213 lines added, 0
+  removed — verified from the `cycle-30..cycle-31` diff). The
+  Cycle 29 section's "77 commits" figure re-verified correct
+  in Cycle 31 (per the Cycle 31 report). No discrepancies
+  found between git and the Cycle 30 report.
+- **Super-plan §9 extended to Cycle 30** (heading/intro now
+  cover Cycles 1–30, test chain 179 → 710; Cycle 30 bullet
+  added; blockers updated — Bushel sample #2 6/6, Mae-Mart
+  proxy URL stored extensionless).
+- **Boundary applied:** zero references in any new Cycle 31
+  code, tests, fixtures, or docs (verified by grep on the added
+  lines of the commit). No contact made.
+  Full detail: `docs/plans/overnight-cycle-31-report.md`.
+
+### 3q. Gates — updated expectations for Cycle 31
+
+§3 applies unchanged, with these per-cycle numbers:
+
+1. **Full API test suite** — expect Cycle 31: 710 — **0 failed**.
+   (Unchanged from Cycle 30 — no code changed in this cycle, so
+   no new tests. The coordinator re-ran the suite to confirm.)
+2. **Web build** — re-run once at the Cycle 31 step so the final
+   tree is verified as a whole. No web files changed in Cycle 31,
+   so a re-run is a no-op confirmation; last full pass remains
+   Cycle 17.
+3. **Alembic heads** — expect exactly one head, `0019`
+   (unchanged since Cycle 7). Verified from git: no migration
+   file was added in Cycle 31 (`git log` on the Alembic versions
+   dir in `cycle-30..cycle-31` is empty, and the file list at
+   the Cycle 31 tip is `0001`–`0019`).
+4. **Boundary spot-check** — grep the Cycle 31 range diff for
+   the excluded elevator name; expect zero new references in
+   code, tests, fixtures, or docs.
+5. **No-secrets spot-check** — no new credentials, keys, or
+   tokens in the Cycle 31 diff (none are reported).
+
+### 4q. Known conflicts and overlaps — Cycle 31
+
+- **Files also touched by earlier cycles:** the price-source
+  catalogue (edited in every cycle — Cycle 31's additions are
+  the Bushel sample #3 6/6 re-verification results, the Cycle
+  4/5 sites 6/6 re-verification, and the Almota staleness
+  note; no earlier text was rewritten), the merge plan (pure
+  append of the Cycle 30 section, 213 lines added, 0 removed),
+  the super-plan §9 (Cycle 30 bullet + blockers update; no
+  earlier bullet was rewritten).
+- **`config.toml`** (`app/platform/market_data/sources/
+  config.toml`) — **not touched in Cycle 31** (`git log` on it
+  in `cycle-30..cycle-31` is empty; last touched in Cycle 23
+  with the two toggle flips). No toggle value changed this
+  cycle; Heartland/Mulvane stay `false`, all other AgriCharts
+  toggles stay `true`.
+- **No registry, orchestration, collector, or other code file
+  touched in Cycle 31** — the cycle is docs/research only, no
+  code changed. `app/services/source_registry.py`,
+  `app/services/source_orchestration.py`,
+  `us_agricharts_source.py`, `us_dtn_source.py`, and
+  `app/main.py` were not touched this cycle.
+- **Migration chain** — unchanged: `0015 → … → 0018` (Cycle 1)
+  then `0019` (Cycle 7), single head throughout Cycle 31.
+
+### 5q. What must NOT be merged as-is — update
+
+- **The CI workflow file is STILL not in any branch.** Verified
+  2026-11-19 (Cycle 32): `?? .github/` in `git status` on the
+  Cycle 32 checkout (`.github/workflows/api-tests.yml`).
+  Merging Cycle 31 as well as 1–30 will **not** bring it into
+  `master`. Same remedy as §5: Adam re-authenticates `gh` with
+  `workflow` scope, or adds the file via the GitHub web UI. Do
+  not hand-copy it into a merge commit.
+- **Nothing else new is held back in Cycle 31.** No new unpushed
+  files, secrets, or held-back work is reported in the Cycle 31
+  report. The §5 review-not-blocker list is unchanged and carried
+  forward: email-bid endpoint public by default, futures
+  endpoints still return prices `null` until a licensed feed is
+  wired (the Mae-Mart proxy now fills `futures_price` on
+  collector rows only — it does not feed the futures endpoints),
+  Advisor `/ask` is a 501 scaffold, eSign is a stub, normalized
+  price rows carry no currency (`currency: null`).
+- **Open decisions carried forward from Cycle 31 (not
+  blockers):** **nothing new needs Adam in Cycle 31.** The
+  staleness watch is now five widgets (Chadbourn, Hamer,
+  Hugoton 3370, Vilas-Walsh 3621, Almota — all exactly one day
+  behind, all on the exemption list for any future freshness
+  gate; no further re-checks needed). Playwright render checks
+  still pending (DTN family — Al-Corn + Sunrise first — FMN
+  filtered view (Winchester `location_filter=2523`), Mapleview,
+  StoneX family (Frontier, CRC, UFC), The Andersons — closed
+  for static collection, browser-only — and Landus, Vercel
+  checkpoint); DTN toggles stay `false` until verified;
+  scheduling the poller as a second cron job (deployment
+  decision, checklist §4 step 6); Mae-Mart `cash_price` from
+  futures + static basis (still open, gated on the
+  licensed-feed decision); at least one `Commodity` row must
+  exist before the first poller run. Still needs Adam (carried
+  from Cycles 1–30, nothing new in Cycle 31): NASS key,
+  FAS/data.gov key, LLM provider + key, Barchart/DTN licensed
+  feed decision (redistribution licence — now also gates the
+  CGB `cashbids-js.php` question and the Mae-Mart cash-price
+  decision), ERP choice (Agvance recommended), eSign provider,
+  pricing/hosting decisions, `gh` `workflow` scope, currency
+  column decision (four concrete choices in
+  `docs/plans/currency-design.md`), email-bid endpoint auth
+  decision (public vs admin-only).
+
+### 7q. After the merges — updated
+
+§7 applies with the Cycle 31 tip as the end state: Alembic head
+`0019` (unchanged since Cycle 7), test suite 710 passed / 0
+failed, web build last fully passed in Cycle 17 (re-run at the
+Cycle 31 merge step). The still-open decisions list in §7.4 is
+unchanged by Cycle 31 except for the additions in §5q above.
+Open work carried forward: Playwright render checks (DTN family
+— Al-Corn + Sunrise first — FMN filtered view, Mapleview,
+StoneX including Frontier, The Andersons — closed for static
+collection, browser-only — and Landus, Vercel checkpoint);
+Heartland / Mulvane closed for now (no new hypothesis);
+Chadbourn + Hamer + Skyland 3370/3621 + Almota staleness watch
+(now five widgets, exemption list; no further re-checks
+needed); Mae-Mart cash-price decision; poller scheduling
+decision; currency decision.

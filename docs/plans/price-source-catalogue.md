@@ -3544,3 +3544,35 @@ One call per site, no retries. **All 6 returned `status: ok` with exact row-coun
 | Rugby | 12 | 12 | 1 (Rugby) |
 
 **New staleness note: Almota's widget header is dated Nov 18** — one day stale, the same lag pattern as Chadbourn / Hugoton / Vilas-Walsh / Hamer. Its row count is still exactly 12, so the collector parses it fine; the page is serving yesterday's board. Almota joins the staleness watch list (first stale probe for it). The watch list is now five widgets: Chadbourn, Hamer, Hugoton (3370), Vilas-Walsh (3621), Almota — all exactly one day behind, all still on the exemption list for any future freshness gate.
+
+## Cycle 32 — Bushel samples #4 + Cycle 11/5 sites: 12/12 exact (2026-11-19)
+
+### Bushel per-location sample #4 (6 calls)
+
+One call per site, no retries. **All 6 returned `status: ok` with exact row-count matches** to the Cycles 13–14 baselines; all six headers fresh (Nov 19). Counts only, no values recorded.
+
+| Site | Rows now | Header date | Verdict |
+|---|---|---|---|
+| Skyland 2742 Johnson–Ulysses–N Sublette | 7 | Nov 19 | Exact match |
+| Skyland 2754 Olton Area | 5 | Nov 19 | Exact match |
+| Skyland 2763 Satanta–Ryus | 6 | Nov 19 | Exact match |
+| Smithfield Clarkton (1668) | 1 | Nov 19 | Exact match |
+| Smithfield 1672 LaGrange | 3 | Nov 19 | Exact match |
+| Smithfield 1674 Mount Olive | 3 | Nov 19 | Exact match |
+
+**Correction (coordinator brief error, caught by the worker):** the task listed "Smithfield 1666 Clarkton", but 1666 is Bentonville (verified Cycle 12, 3 rows) and Clarkton is 1668 (verified Cycle 13, 1 Soybeans row). The worker fetched Clarkton (1668), matching the town name and count. Bentonville (1666) was **not** re-fetched — it still needs its own call in a later sample.
+
+### Cycle 11 + Cycle 5 Bushel sites (6 calls)
+
+One call per site, no retries. **All 6 returned `status: ok` with exact row-count matches.** Counts only, no values recorded.
+
+| Site | Rows now | Prior | Header date | Verdict |
+|---|---|---|---|---|
+| Winchester 3439 | 10 | 10 (Cycle 11) | Nov 19 | Exact match |
+| Wheaton Grain | 5 | 5 (Cycle 11) | — (no capturable header date) | Exact match |
+| Synergy | 4 | 4 (Cycle 10) | Nov 19 | Exact match |
+| Skyland default (Cunningham Area) | 6 | 6 (Cycle 11) | Nov 19 | Exact match |
+| Lake Norden | 2 | 2 (Cycle 5) | Nov 19 | Exact match |
+| United Cooperative (Webster City) | 12 | 12 (Cycle 5) | Nov 19 | Exact match |
+
+**Note:** Wheaton Grain's tabbed widget carries no capturable header date (no `fcControlsSectionHeader` element) — structure observation only, not a failure; the 5 rows parsed cleanly via the Cycle 11 tabbed-widget fallback. If header-date freshness tracking matters for that site, it would need a different date source on the page.

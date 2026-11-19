@@ -207,6 +207,61 @@ def _compile_section(commodity: str, rows: list[dict[str, object]]) -> dict[str,
     }
 
 
+def append_research_section(report: MarketReport, research_reports: list[dict[str, object]]) -> MarketReport:
+    """Append a USDA research section to a built market report.
+
+    ``research_reports`` are serialized ResearchReport rows. When the
+    list is empty the report is returned unchanged. Values are only
+    ever those stored in the reports — nothing is invented here.
+    """
+    if not research_reports:
+        return report
+    section = {
+        "kind": "research",
+        "report_count": len(research_reports),
+        "reports": research_reports,
+        "data_as_of": None,
+    }
+    lines = ["", "USDA Research", "-"]
+    for item in research_reports:
+        values = item.get("payload") or {}
+        value_rows = values.get("values") if isinstance(values, dict) else None
+        summary = ""
+        if isinstance(value_rows, list) and value_rows:
+            summary = "; ".join(
+                f"{row.get('commodity')} {row.get('metric')}: {row.get('value')} {row.get('unit') or ''}".strip()
+                for row in value_rows[:5]
+            )
+        lines.append(
+            f"• {item.get('report_type')} — {item.get('commodity')} "
+            f"({item.get('vintage') or item.get('report_date')}); "
+            f"source: {item.get('source')}"
+            + (f"; {summary}" if summary else "; no values parsed from the file")
+        )
+    text = report.text + "\n" + "\n".join(lines) + "\n"
+    research_html = "".join(
+        f"<p style='font-size:14px'>{escape(str(item.get('report_type')))} — "
+        f"{escape(str(item.get('commodity')))} "
+        f"({escape(str(item.get('vintage') or item.get('report_date')))}); "
+        f"source: {escape(str(item.get('source')))}</p>"
+        for item in research_reports
+    )
+    html = report.html.replace(
+        "</div></body></html>",
+        f"<h2 style='margin-top:28px'>USDA Research</h2>{research_html}</div></body></html>",
+    )
+    return MarketReport(
+        issue_key=report.issue_key,
+        subject=report.subject,
+        region=report.region,
+        generated_at=report.generated_at,
+        data_as_of=report.data_as_of,
+        sections=(*report.sections, section),
+        text=text,
+        html=html,
+    )
+
+
 def _render_text(subject: str, sections: tuple[dict[str, object], ...], data_as_of: datetime | None) -> str:
     lines = [subject, "", f"Data as of: {_format_as_of(data_as_of)}", ""]
     for section in sections:

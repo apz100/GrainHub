@@ -3,6 +3,8 @@ from app.models.alert_rule import AlertRule
 from app.models.company import Company
 from app.models.company_source_priority import CompanySourcePriority
 from app.models.commodity import Commodity
+from app.models.contract import GrowerContract
+from app.models.crm_note import CrmNote
 from app.models.ingestion_run import IngestionRun
 from app.models.location import Location
 from app.models.market_report_delivery import MarketReportDelivery
@@ -13,12 +15,14 @@ from app.models.organization import Organization
 from app.models.price_snapshot import PriceSnapshot
 from app.models.quote_run import QuoteRun
 from app.models.raw_upload import RawUpload
+from app.models.research_report import ResearchReport
+from app.models.saved_search import SavedSearch
+from app.models.scale_ticket import ScaleTicket
 from app.models.signal_forecast import SignalForecast
 from app.models.source import Source
 from app.models.source_health_snapshot import SourceHealthSnapshot
 from app.models.user import User
 from app.models.watchlist import Watchlist
-from app.models.saved_search import SavedSearch
 
 __all__ = [
     "Alert",
@@ -26,6 +30,8 @@ __all__ = [
     "Company",
     "CompanySourcePriority",
     "Commodity",
+    "CrmNote",
+    "GrowerContract",
     "IngestionRun",
     "Location",
     "MarketReportDelivery",
@@ -36,7 +42,9 @@ __all__ = [
     "PriceSnapshot",
     "QuoteRun",
     "RawUpload",
+    "ResearchReport",
     "SavedSearch",
+    "ScaleTicket",
     "SignalForecast",
     "Source",
     "SourceHealthSnapshot",

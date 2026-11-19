@@ -6,6 +6,7 @@ type NavItem = { href: string; label: string };
 
 const USER_NAV: NavItem[] = [
   { href: "/bids", label: "Market" },
+  { href: "/research", label: "Research" },
   { href: "/alerts", label: "Alerts" },
   { href: "/quotes", label: "Quotes" },
   { href: "/watchlists", label: "Watchlists" },

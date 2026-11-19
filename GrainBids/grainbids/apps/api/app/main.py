@@ -13,6 +13,7 @@ from app.api.routes.newsletter import router as newsletter_router
 from app.api.routes.normalized_prices import router as normalized_prices_router
 from app.api.routes.quotes import router as quotes_router
 from app.api.routes.reference import router as reference_router
+from app.api.routes.research import router as research_router
 from app.api.routes.saved_searches import router as saved_searches_router
 from app.api.routes.settings import router as settings_router
 from app.api.routes.signals import router as signals_router
@@ -62,6 +63,7 @@ def create_app() -> FastAPI:
         return JSONResponse(status_code=503, content={"ok": False, "database": "error", "error": details, "env": settings.app_env})
 
     app.include_router(reference_router)
+    app.include_router(research_router)
     app.include_router(bids_router)
     app.include_router(sources_router)
     app.include_router(ingestion_router)

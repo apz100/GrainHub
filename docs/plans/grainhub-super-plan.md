@@ -328,3 +328,50 @@ branch to GitHub frequently.
 - Pricing: match Farmbucks / GrainFox benchmarks, or start free?
 - Elevator Ops: which ERP first (Agris / Agvance / AgTrax)?
 - US scope: Corn Belt first, or Corn Belt + Gulf / PNW from day one?
+
+## 9. Progress — Cycles 1–4 (2026-11-18/19)
+
+Four overnight autonomous cycles on branches `overnight/grainhub-cycle-1`
+through `overnight/grainhub-cycle-4`, none merged to master. Full API test
+suite grew **179 → 291 → 320 → 359 passed, 0 failed** across the four
+cycles. Full detail in `docs/plans/overnight-cycle-N-report.md`.
+
+- **Cycle 1** (`overnight/grainhub-cycle-1`, 179 tests): Phase 0 hardening,
+  `GET /api/market-search` (commodity + location + radius + delivery month,
+  top-N by month), Research v1 (NASS/FAS key-gated collectors, WASDE/Crop
+  Progress ingestion + pages), Advisor v1 (farm profile, breakeven,
+  sell/hold signals; `/ask` 501), Elevator Ops v1 (contracts, scale
+  tickets, CRM, eSign stub), and the price-source catalogue (Ontario 20
+  URLs probed, US 58 probed + 20 new candidates, 6 added to config).
+- **Cycle 2** (`overnight/grainhub-cycle-2`, 291 tests): basis tracker,
+  source-health dashboard, daily newsletter generator (delivery off),
+  futures strip + ICE canola desk (contract structure only, prices null),
+  price history + 5-year seasonal averages, report calendar, email-bid
+  OCR parsing module, and the public best-bid API + page. FMN cash page
+  read in full: 204 bid tables, 86 delivery points, but the location
+  dropdown lists 336 options — the default view is not the complete set.
+- **Cycle 3** (`overnight/grainhub-cycle-3`, 320 tests): prototypes
+  (mobile price finder, onboarding wizard, pricing page), new Ontario
+  collectors (Collwest, Mae-Mart, Mapleview stub), LAC base-URL fix,
+  FMN location-filter verification, Bushel collector research, USDA-mirror
+  verification, Grain Stocks / Export Sales / COT value parsers, and
+  design docs for Barchart/DTN and ERP integration.
+- **Cycle 4** (`overnight/grainhub-cycle-4`, 359 tests): email-bid ingest
+  endpoint (`POST /api/email-bids/parse`, parse-only), generic Bushel
+  collector (FAC verified live, 45 rows; Collwest cross-check 16/16),
+  USDA-mirror collector (both hosts, Gulf + Pacific Ports), and the
+  Crop Production value parser wired into ingest-file.
+
+**Remaining blockers that need Adam:** NASS API key (free) and FAS /
+data.gov key (free); LLM provider + key for Advisor `/ask`; Barchart /
+DTN licensed feed decision — Barchart docs prohibit redistribution, so
+a separate redistribution licence decides whether the Price Finder can
+use the feed at all; ERP choice (Agvance recommended first, Agris
+second, AgTrax third); eSign provider; `gh` re-authentication with
+`workflow` scope so the written CI workflow (`.github/workflows/
+api-tests.yml`) can be pushed; currency column or per-source currency
+mapping — normalized price rows carry no currency, so basis/best-bid
+responses report `currency: null`; email-bid endpoint is public by
+default (admin-only is a one-line change if wanted); pricing/hosting
+decisions. A Playwright render check of the FMN filtered view and of
+Mapleview's Grain Discovery shell needs a live browser session.

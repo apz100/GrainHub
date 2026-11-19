@@ -5,6 +5,7 @@ import { isAdminRole, USER_ROLE } from "@/lib/api";
 type NavItem = { href: string; label: string };
 
 const USER_NAV: NavItem[] = [
+  { href: "/today", label: "Today" },
   { href: "/bids", label: "Market" },
   { href: "/best-bids", label: "Best Bids" },
   { href: "/basis", label: "Basis" },

@@ -95,6 +95,7 @@ CONTACT_USER_AGENT = "GrainHub-Research/1.0 +https://github.com/apz100/GrainHub"
 FAC_URL = "https://www.faccooperative.com/cash-bids"
 COLLWEST_URL = "https://www.collwestgrain.com/"
 AGP_URL = "https://agp.o.bushelsites.com/cash-bids"
+SYNERGY_URL = "https://www.synergycoop.com"
 
 # Raw widget commodity label -> canonical commodity name.
 COMMODITY_MAP = {
@@ -373,6 +374,18 @@ BUSHEL_SITES: dict[str, BushelSite] = {
         "Soybeans, Nov 2026, 7-col layout, USD/bu; widget header "
         "dated Nov 18, 2026 11:40 PM. The iframe page shows a single "
         "location — other AGP locations are not on this page.",
+    ),
+    "synergy": BushelSite(
+        key="synergy",
+        company="Synergy Cooperative",
+        url=SYNERGY_URL,
+        currency="USD",
+        default_location="Cameron",
+        verified=True,
+        notes="Verified live 2026-11-19 (Cycle 10 sweep): 200, Bushel "
+        ".cbmod widget in static HTML, 4 rows (Corn 2 + Soybeans 2, "
+        "Cameron), 6-col layout, USD/bu; widget header dated Nov 19, "
+        "2026. Generic parser returns status ok against saved HTML.",
     ),
 }
 
@@ -889,3 +902,11 @@ def fetch_agp() -> dict[str, Any]:
     static HTML, 1 row (Soybeans, Nov 2026), USD/bu.
     """
     return fetch_bushel_site("agp")
+
+
+def fetch_synergy() -> dict[str, Any]:
+    """Fetch Synergy Cooperative (Cameron, WI). Verified live 2026-11-19
+    (Cycle 10 sweep): 200, Bushel .cbmod widget in static HTML, 4 rows
+    (Corn 2 + Soybeans 2), 6-col layout, USD/bu.
+    """
+    return fetch_bushel_site("synergy")

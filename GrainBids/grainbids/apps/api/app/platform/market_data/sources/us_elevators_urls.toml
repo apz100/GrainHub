@@ -204,7 +204,7 @@ url     = "https://www.centralregioncoop.com/grain"
 
 [[us.elevators]]
 enabled = false
-type    = "unknown"
+type    = "unreachable"  # reclassified 2026-11-19 (Cycle 10): HTTP 202, empty body (same as Cycle 1)
 name    = "CVA"
 url     = "https://www.cvacoop.com/cash-bids"
 
@@ -228,19 +228,19 @@ url     = "https://www.gatewayfs.com/markets/cash.php"
 
 [[us.elevators]]
 enabled = false
-type    = "unknown"
+type    = "unknown"  # Cycle 10: HTTP 404 at /cash-bids; the 404 page links /cashbids (different slug) — probe that next
 name    = "Hull Coop"
 url     = "https://www.hullcoop.com/cash-bids"
 
 [[us.elevators]]
 enabled = false
-type    = "unknown"
+type    = "unreachable"  # reclassified 2026-11-19 (Cycle 10): HTTP 429, Vercel Security Checkpoint page (browser verification, JS required) — blocked, no retry
 name    = "Landus"
 url     = "https://www.landus.ag/businesses/grain/grain-bids"
 
 [[us.elevators]]
 enabled = false
-type    = "unknown"
+type    = "unreachable"  # reclassified 2026-11-19 (Cycle 10): HTTP 522, empty body (same as Cycle 1)
 name    = "Mercer Landmark"
 url     = "https://www.mercerlandmark.com/cash-bids"
 
@@ -249,49 +249,49 @@ url     = "https://www.mercerlandmark.com/cash-bids"
 
 [[us.elevators]]
 enabled = false
-type    = "unknown"
+type    = "unknown"  # Cycle 10: AgriCharts-hosted homepage (s3 media.agricharts.com, quotelib.js); no bid widget on homepage, nav links /markets/cash.php — probe that next (do not follow the Barchart marketplace link)
 name    = "Pro Ag"
 url     = "https://www.proagfarmers.com"
 
 [[us.elevators]]
 enabled = false
-type    = "unknown"
+type    = "agricharts-embed"  # reclassified 2026-11-19 (Cycle 10): 3 AgriCharts cashbids.php embeds (procooperative.agricharts.com, locations 21297 + 21302); cashbids-js.php static-route check next, do not enable until verified
 name    = "PRO Coop"
 url     = "https://procooperative.com"
 
 [[us.elevators]]
 enabled = false
-type    = "unknown"
+type    = "dtn"  # reclassified 2026-11-19 (Cycle 10): DTN index.cfm iframes (show=87, combined_table_by_location; corn / soybeans / SRW wheat / milo); no static bid rows on homepage
 name    = "Ray Carroll"
 url     = "https://www.ray-carroll.com"
 
 [[us.elevators]]
 enabled = false
-type    = "unknown"
+type    = "bushel"  # reclassified 2026-11-19 (Cycle 10): Bushel FCCP family (portal.bushelpowered.com/skyland, /cashbidssingle- nav link); no .cbmod widget on homepage — probe /cashbidssingle- next
 name    = "Skyland Grain"
 url     = "https://www.skylandgrain.com"
 
 [[us.elevators]]
 enabled = false
-type    = "unknown"
+type    = "bushel"  # reclassified 2026-11-19 (Cycle 10): Bushel FCCP family ("Data provided by Bushel" footer, portal.bushelpowered.com/smithfield); no .cbmod widget on homepage, only a futures table — probe /fccp-cash-bids-east-region-20249 next
 name    = "Smithfield"
 url     = "https://smithfieldgrain.com"
 
 [[us.elevators]]
 enabled = false
-type    = "unknown"
+type    = "none"  # reclassified 2026-11-19 (Cycle 10): milling-company homepage, zero cash-bid mentions and no grain/bid links — no public bid page, do not add
 name    = "Star of the West"
 url     = "https://www.starofthewest.com"
 
 [[us.elevators]]
 enabled = false
-type    = "unknown"
+type    = "unknown"  # Cycle 10: homepage 200, no Cloudflare challenge this time (Cycle 1 reported one); no widget on homepage, nav links /cash-bids — probe the sub-page next (page CSS references table.cashbid_table, hinting at an embed there)
 name    = "StateLine Coop"
 url     = "https://www.statelinecoop.com"
 
 [[us.elevators]]
-enabled = false
-type    = "unknown"
+enabled = true  # enabled 2026-11-19 (Cycle 10): classic DTN CashBidTable, covered by existing us_dtn_source.py — Playwright render check still open
+type    = "dtn"  # reclassified 2026-11-19 (Cycle 10): classic DTN — <div id="target"> + CashBidTable(tableOptions), companyID 23043, CIHedging CashBidWidget.js, ATLAS DTN shell; no static bid rows
 name    = "Sunrise"
 url     = "https://www.sunriseco-op.com"
 
@@ -302,14 +302,14 @@ name    = "Superior Ag"
 url     = "https://www.superiorag.com"
 
 [[us.elevators]]
-enabled = false
-type    = "unknown"
+enabled = true
+type    = "bushel"  # reclassified 2026-11-19 (Cycle 10): static Bushel .cbmod widget, 4 rows (Corn 2 + Soybeans 2, Cameron), dated header Nov 19, 2026; generic bushel_source.py parses it (status ok, verified against saved HTML) — registry entry added in Cycle 10
 name    = "Synergy"
 url     = "https://www.synergycoop.com"
 
 [[us.elevators]]
 enabled = false
-type    = "unknown"
+type    = "unknown"  # Cycle 10: corporate Trade Group homepage, no widget; bid links /locations/cash-bids/ + /local-bids/locations-list/ — probe a sub-page next (distinct from The Andersons Canada, DTN, in the Ontario section)
 name    = "The Andersons"
 url     = "https://www.andersonsgrain.com"
 
@@ -327,7 +327,7 @@ url     = "https://www.unitedcooperative.com"
 
 [[us.elevators]]
 enabled = false
-type    = "unknown"
+type    = "stonex"  # reclassified 2026-11-19 (Cycle 10): redirects to centralunitedcoop.com (Central United Cooperative — same site/org as CRC); Cash Bids section is a StoneX component iframe (stonehedge.stonex.com/component/bids, hideRows=true); DTN widget hits are map/weather widgets, not cash bids
 name    = "UFC"
 url     = "https://www.ufcmn.com"
 
@@ -339,25 +339,25 @@ url     = "https://www.ursacoop.com"
 
 [[us.elevators]]
 enabled = false
-type    = "unknown"
+type    = "unknown"  # Cycle 10: AgriCharts-hosted homepage (s3 media.agricharts.com, quotelib.js); homepage cash widget is JS-filled (values blank in static HTML), locations Holloway / Appleton / Milbank / DLVD AGP Dawson / Aberdeen — probe /markets/cash.php next
 name    = "West-Con"
 url     = "https://www.west-con.com"
 
 [[us.elevators]]
 enabled = false
-type    = "unknown"
+type    = "unknown"  # Cycle 10: AgriCharts-hosted homepage (s3 media.agricharts.com, quotelib.js); homepage cash widget is JS-filled (values blank in static HTML), locations Wheaton / Dumont / Browns Valley / LaMars / Hankinson / Mantador / Sisseton — probe /markets/cash.php next
 name    = "Wheaton Dumont"
 url     = "https://www.wdcoop.com"
 
 [[us.elevators]]
 enabled = false
-type    = "unknown"
+type    = "bushel"  # reclassified 2026-11-19 (Cycle 10): static Bushel .cbmod widget, 5 rows (Corn 2 + Soybeans 3, Chippewa Falls), 6-col layout — BUT parser gap: tabbed widget (easyResponsiveTabs), commodity headings are bare h3.fcControls with no div.cbCommodity wrapper, so generic bushel_source.py returns "empty" against saved HTML; needs a parser extension + registry entry
 name    = "Wheaton Grain"
 url     = "https://www.wheatongrain.com"
 
 [[us.elevators]]
 enabled = false
-type    = "unknown"
+type    = "bushel"  # reclassified 2026-11-19 (Cycle 10): redirects to wheatongrain.com/fccp-winchester-locations-23823 — a Wheaton Grain FCCP location page with two Bushel /cashbidssingle- embeds (3439, 3440, ?embed=y), no static rows at the probed URL; probe the embed targets next
 name    = "Winchester Ag"
 url     = "https://www.winchesteragservice.com"
 

@@ -328,9 +328,9 @@ BUSHEL_SITES: dict[str, BushelSite] = {
         "3 rows, 7-col layout, USD/bu. Grade-prefixed commodity "
         "labels ('#1 Spring Wheat', '#2 Yellow Corn', '#2 Yellow "
         "Soybeans'). First section heads Bid as 'Cash Price' with a "
-        \"blank Delivery header; futures/change in fractional cents \"
-        \"notation ('630-0' -> 630.25). Footer address: Forest River, \"
-        \"ND 58233.\",
+        "blank Delivery header; futures/change in fractional cents "
+        "notation ('630-0' -> 630.25). Footer address: Forest River, "
+        "ND 58233.",
     ),
     "ace_ethanol": BushelSite(
         key="ace_ethanol",

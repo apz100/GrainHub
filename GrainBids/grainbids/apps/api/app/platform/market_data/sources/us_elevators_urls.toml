@@ -204,7 +204,7 @@ url     = "https://www.centralregioncoop.com/grain"
 
 [[us.elevators]]
 enabled = false
-type    = "unreachable"  # reclassified 2026-11-19 (Cycle 10): HTTP 202, empty body (same as Cycle 1)
+type    = "unreachable"  # reclassified 2026-11-19 (Cycle 10): HTTP 202, empty body (same as Cycle 1); re-checked 2026-11-19 (Cycle 18): still HTTP 202, 0 bytes — no change
 name    = "CVA"
 url     = "https://www.cvacoop.com/cash-bids"
 
@@ -234,13 +234,13 @@ url     = "https://www.hullcoop.com/cashbids"
 
 [[us.elevators]]
 enabled = false
-type    = "unreachable"  # reclassified 2026-11-19 (Cycle 10): HTTP 429, Vercel Security Checkpoint page (browser verification, JS required) — blocked, no retry
+type    = "unreachable"  # reclassified 2026-11-19 (Cycle 10): HTTP 429, Vercel Security Checkpoint page (browser verification, JS required) — blocked, no retry; re-checked 2026-11-19 (Cycle 18): still HTTP 429, Vercel Security Checkpoint page (25,097 bytes, no bid widget) — no change
 name    = "Landus"
 url     = "https://www.landus.ag/businesses/grain/grain-bids"
 
 [[us.elevators]]
 enabled = false
-type    = "unreachable"  # reclassified 2026-11-19 (Cycle 10): HTTP 522, empty body (same as Cycle 1)
+type    = "unreachable"  # reclassified 2026-11-19 (Cycle 10): HTTP 522, empty body (same as Cycle 1); re-checked 2026-11-19 (Cycle 18): still HTTP 522, 0 bytes — no change
 name    = "Mercer Landmark"
 url     = "https://www.mercerlandmark.com/cash-bids"
 

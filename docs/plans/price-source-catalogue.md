@@ -107,7 +107,7 @@ locations, crops, and structure only.
 |---|---|---|---|---|---|---|
 | North Gower Grains | North Gower | https://northgowergrains.com/ (daily blog post, e.g. /wednesday-november-18-2026-820-am/) | Plain HTML daily post table | corn, soy, SRW/HRW/HRS wheat (incl. protein) | daily ~7:00 am | **Collector added 2026-11-19 (Cycle 3):** `north_gower_source.py` parses the daily-post table (Name/Notes/Basis Month/Futures/Basis/Cash Price/Cash Price tonne); homepage `#cash-bids` is a CTA with no prices — collector follows the latest daily-post link. Ordinary source; no special treatment. |
 | Collwest Grain | Collingwood | https://www.collwestgrain.com/ | Homepage cash-bid widget (.cbmod) | corn, soy, SRW/HRW/HRS wheat, canola, barley, oats | daily | **Collector added 2026-11-19 (Cycle 3):** `collwest_source.py` parses the homepage widget (Delivery/Bid/Basis/Futures per crop-year). Verified live 200. **Cycle 4:** the generic Bushel collector (`bushel_source.py`, `fetch_collwest_bushel`) parses the same widget — verified live 2026-11-19, 16 rows, zero value differences vs `collwest_source.py`. **Country confirmed Canadian, CAD (2026-11-18):** footer address 2924 Sixth Line, Collingwood, ON L9Y 3Z1, phone 705-445-7276; canola/barley/oats per tonne, corn/soy/wheat per bushel; `collwestgrain.o.bushelsites.com` serves identical content — www domain is canonical. Do not enable in the US config. |
-| Mae-Mart Farms | Norfolk County | http://www.mae-martfarms.com/grain-pricing | Plain HTML tables (gp-table-*) | corn, soy, wheat, rye | continuous in market hours | **Collector added 2026-11-19 (Cycle 3):** `mae_mart_source.py` parses the tables. Basis is static; corn/soy/wheat cash prices are JS-filled from the site's futures proxy, so those rows carry basis with cash price empty + reason (never guessed). Rye has a static manualPrice, so its cash price is parsed. Homepage cards are "—" placeholders only. |
+| Mae-Mart Farms | Norfolk County | http://www.mae-martfarms.com/grain-pricing | Plain HTML tables (gp-table-*) | corn, soy, wheat, rye | continuous in market hours | **Collector added 2026-11-19 (Cycle 3):** `mae_mart_source.py` parses the tables. Basis is static; corn/soy/wheat cash prices are JS-filled from the site's futures proxy, so those rows carry basis with cash price empty + reason (never guessed). Rye has a static manualPrice, so its cash price is parsed. Homepage cards are "—" placeholders only. **Cycle 18 (2026-11-19):** proxy identified verbatim from the page's inline JS — `var PROXY = '/grain-proxy.php'`, called as `fetch(PROXY + '?symbols=' + encodeURIComponent(sym))`, one symbol per request, i.e. `http://www.mae-martfarms.com/grain-proxy.php?symbols=<SYMBOL>`. Symbols are Yahoo Finance format (`ZCZ26=F`, `ZSF27=F`, `ZWN27=F`). The proxy returns **futures quotes only**, not cash bids: JSON keyed by symbol, each entry with `price` and `currency`; `currency === 'USX'` means the price is in cents (client divides by 100) — `USX` is the Yahoo Finance currency code for CBOT grain futures. Cash is computed client-side as futures + static basis. No Barchart/DTN/AgriCharts markers anywhere in the page. Upstream is **not confirmed** (the proxy itself was not called — that is a later cycle's probe); the symbol format and `USX` handling are consistent with a Yahoo Finance public-quote relay, but that is inference from the client JS only. **Next probe (later cycle, 1 GET):** `GET /grain-proxy.php?symbols=ZCZ26=F` — confirm the response shape and whether the relay is live. Open decision for Adam/coordinator: even if live, using it means relying on the site's relay of third-party futures data plus the site's static basis to compute cash — the collector currently does not call it. |
 | Mapleview Grain | London | https://www.mapleviewgrain.ca/ → https://mapleview.graindiscovery.com/ | Grain Discovery JS app | corn, soy, wheat (old + new crop) | not stated | **No plain-HTML collector possible (Cycle 3):** homepage `#bids` is marketing copy; the bids page is a Next.js app shell with no bid content in static HTML. `mapleview_source.py` is a stub returning an explicit unsupported reason. Needs a Playwright render or a public Grain Discovery feed (later cycle). |
 | Charwen Farms | Thornton (Simcoe County) | https://charwenfarms.ca/ | Plain HTML | corn, soy, wheat | not stated | Partially verified — homepage live, cash-bids page exists per homepage but not yet fetched. Investigate: may duplicate LAC feed (Charwen is an LAC location). |
 | Addis Grain | Simcoe County area | https://www.addisgrain.com/ | Unknown | corn, soy, wheat (old + new crop) | not stated | Partially verified — homepage live only; bids page not yet located. Investigate. |
@@ -353,7 +353,7 @@ No prices are recorded here — row counts and widget patterns only.
 | Alliance Grain | https://www.alliance-grain.com/cash-bids | 200 | **Yes — 10 rows, Corn 5 + Soybeans 5, 7-col widget** | Bushel `.cbmod` widget in static HTML; location h2 "Gibson City - West"; compact delivery labels (`Nov26`) | Existing generic Bushel collector — verified against saved HTML, status ok |
 | Bunge | https://www.bungeag.com/cash-bids | read timeout (30 s) | — | — (unreachable this sweep) | Still do-not-add (Cycle 1: redirects to a locations archive); re-check later. **Cycle 8:** 200 (→ `/locations/`), still the locations archive; "Cash Bids" is nav text only, no bid table. Still do-not-add. |
 | CRC | https://www.centralregioncoop.com/grain | read timeout (30 s) | — | — (unreachable this sweep) | Re-check later, no retry. **Cycle 8:** back up — 200 (→ `/grain/`), but a generic grain-services page with no widget and no bid table; its Cash Bids links point to the homepage anchor `/home/#cash-bids`. Follow-up: one GET of the homepage. Site now brands as "Central United Cooperative" (assets on `centralunitedcoop.com`). **Cycle 9:** homepage GET (200) — anchor is actually `#cash-bids-futures`; the section holds a lazy-loaded StoneX component iframe, no static bid rows; no collector added. |
-| CGB | https://cgb.com/cgb-grain/ | 200 | No | Corporate grain page; no widget, no bid table | None at this URL; USDA SCL follow-up still open |
+| CGB | https://cgb.com/cgb-grain/ | 200 | No | Corporate grain page; no widget, no bid table | **Resolved 2026-11-19 (Cycle 18):** the cash-bid page was found by site navigation, not the USDA SCL report — `cgb.com/cgb-grain/` links to `https://www.cgbgrain.com`, whose homepage links `/cash-bids` → `https://cgbgrain.com/cash-bids/`. That page is a WordPress page with an **AgriCharts cash-bids widget**: `<script src="https://cgb.agricharts.com/inc/cashbids/cashbids.php?filter=all&location&commodity&groupby=location&width=100%&showtimestamp=1&hidenav=1&showchart=1&format=table&fields=name,delivery_start,delivery_end,basismonth,futures,futureschange,basis,price&groupheading=table&bidsort=commodity&dateformat=%m/%d/%Y&months=11">` plus `//www.agricharts.com/marketdata/quotelib.js`. No static bid rows (0 `<table>` in the HTML); the location dropdown lists 113 CGB locations statically, rows are JS-filled. The AgriCharts URL was **not fetched** (licensed feed — record and stop). Open decision: AgriCharts is licensed data, same bucket as the DTN/Barchart licensed-feed decision (Cycle 17 item 10); whether the `cashbids-js.php` static route used by the generic `cashbids_embed_source.py` collector exists for `cgb.agricharts.com` is a later-cycle question gated on that decision. The USDA SCL lead is no longer needed. |
 | Five Star Coop | https://www.fivestarcoop.com/cash-bids | read timeout (30 s) | — | — (unreachable this sweep) | Was DTN-ref in Cycle 1; re-check later, no retry. **Cycle 8:** back up — 200 (→ `/grain-elevators-and-services/five-star-cash-bids/`), **static bid rows: 299 rows, 21 locations, Corn 197 + Soybeans 102** in a server-rendered wpDataTables table (Location / Commodity / Delivery Periods / Bids / Basis / Change). New static pattern — plain-HTML parser feasible; see "Cycle 8 re-checks". |
 | Gateway FS | https://www.gatewayfs.com/markets/cash.php | 200 (→ `fscooperatives.com/gatewayfs`) | No | Homepage; `dtn` hits are nav links only (DTN News → `dtnpf.com`); nav links a cash-bids sub-page (`/gatewayfs/agriculture/cash-bids`, not fetched) | Unconfirmed — was DTN-ref in Cycle 1 on nav links alone; one GET of the sub-page in a later cycle. **Cycle 8:** sub-page fetched — 200, Next.js app shell with `<div id="cash-bids-root" data-slug="gateway">` and DTN widget classes, no static bid rows. JS-only; DTN Playwright / render check. |
 | Superior Ag | https://www.superiorag.com | 200 | No | AgriCharts `cashbids.php` embed (`superiorag-cb-jsi.agricharts.com`, location 82244) + ATLAS DTN tab (`dtn-cashbid-tab`) | **Resolved 2026-11-19 (Cycle 7):** static route proven — `cashbids-js.php` `var bids` JSON, 12 rows (CORN 8, SOYBEANS 4; `groupby=ccommodity`, location "Princeton Central"). Generic collector `cashbids_embed_source.py` (`fetch_superior_ag`). No Playwright needed. |
@@ -2262,14 +2262,14 @@ entirely the stale-disabled bushel + USDA-mirror entries below.
 | Name | URL | Toml | Catalogue verdict |
 |---|---|---|---|
 | Bunge | https://www.bungeag.com/cash-bids | unknown, off | Do-not-add. `/cash-bids` redirects to a locations archive; "Cash Bids" is nav text only, no bid table (Cycles 1, 6, 8). No replacement URL found. Ontario Bunge is a separate dead entry (`bunge = false`). |
-| CGB | https://cgb.com/cgb-grain/ | unknown, off | Corporate grain page; no widget, no bid table at this URL (Cycle 6). Open follow-up: chase the cash-bid module URL from the USDA SCL report — do not guess it. |
+| CGB | https://cgb.com/cgb-grain/ | unknown, off | **Resolved 2026-11-19 (Cycle 18):** cash-bid page found via site navigation — `https://cgbgrain.com/cash-bids/` (linked from `cgb.com/cgb-grain/` → `www.cgbgrain.com` → `/cash-bids`). AgriCharts cash-bids widget (`cgb.agricharts.com/inc/cashbids/cashbids.php?...`); no static bid rows; AgriCharts URL not fetched (licensed feed). USDA SCL lead closed as unnecessary. Open decision is the licensed-feed question, not a missing URL. |
 | The Andersons | https://www.andersonsgrain.com | unknown, off | **Closed for static collection.** GRAINweb "MyCashBids" picker (Cycle 11/13); facility pages carry static tables but they are Barchart-licensed data and are NOT collected (Cycle 16 Maumee check). No further probes. Only a rendered browser session against the picker remains, unchanged since Cycle 15. |
 | United Coop | https://www.unitedcooperative.com | unknown, off | ATLAS DTN shell on homepage (`dtn-cashbid-tab`); no static bid rows (Cycle 6). DTN Playwright render check needed. Distinct org from the Webster City, IA Bushel site (`unitedcoop.com`, enabled). |
 | Ursa Farmers Coop | https://www.ursacoop.com | unknown, off | DTN page: "Local Cash Bids loading..." with empty Basis/Cash cells in static HTML (Cycle 6). DTN Playwright render check needed (`us_dtn_source.py` parses rendered tables). |
 | CRC | https://www.centralregioncoop.com/grain | **stonex, off** (reclassified this audit) | StoneX family: homepage `#cash-bids-futures` section holds a lazy-loaded StoneX component iframe, no static bid rows (Cycles 9–10). Same family as Frontier Coop / UFC. No static route; render check only. |
-| CVA | https://www.cvacoop.com/cash-bids | unreachable, off | HTTP 202, empty body — same in Cycle 1 and Cycle 10. Do not retry aggressively; a later re-check is the only open item. |
-| Landus | https://www.landus.ag/businesses/grain/grain-bids | unreachable, off | HTTP 429, Vercel Security Checkpoint page (JS required) — blocked, no retry (Cycle 10). |
-| Mercer Landmark | https://www.mercerlandmark.com/cash-bids | unreachable, off | HTTP 522, empty body — same in Cycle 1 and Cycle 10. Re-check later only. |
+| CVA | https://www.cvacoop.com/cash-bids | unreachable, off | HTTP 202, empty body — same in Cycle 1, Cycle 10, and Cycle 18 (re-checked 2026-11-19: still 202, 0 bytes). Do not retry aggressively; a later re-check is the only open item. |
+| Landus | https://www.landus.ag/businesses/grain/grain-bids | unreachable, off | HTTP 429, Vercel Security Checkpoint page (JS required) — blocked, no retry (Cycle 10); re-checked 2026-11-19 (Cycle 18): still 429, checkpoint page, 25,097 bytes, no bid widget. |
+| Mercer Landmark | https://www.mercerlandmark.com/cash-bids | unreachable, off | HTTP 522, empty body — same in Cycle 1, Cycle 10, and Cycle 18 (re-checked 2026-11-19: still 522, 0 bytes). Re-check later only. |
 | Star of the West | https://www.starofthewest.com | none, off | Milling-company homepage; zero cash-bid mentions, no grain/bid links — no public bid page, do not add (Cycle 10). |
 | UFC | https://www.ufcmn.com | stonex, off | Redirects to Central United Cooperative; Cash Bids section is a StoneX component iframe (`stonehedge.stonex.com/component/bids`, `hideRows=true`) (Cycle 10). No static route; render check only. |
 
@@ -2383,10 +2383,17 @@ list, not a bid page); Raeford (1675) correctly has no entry
 **GET-probe items (1 GET each, polite, no retries):**
 
 4. CGB — chase the cash-bid module URL from the USDA SCL
-   report; do not guess it.
-5. CVA (202 empty body) and Mercer Landmark (522) — single
-   re-checks only; both were unchanged between Cycle 1 and
-   Cycle 10, so odds are low.
+   report; do not guess it. **Resolved 2026-11-19 (Cycle 18):**
+   found via site navigation instead — `https://cgbgrain.com/cash-bids/`
+   (AgriCharts widget; AgriCharts URL not fetched, licensed feed).
+   The USDA SCL lead is closed as unnecessary; the remaining
+   question is the licensed-feed decision, not a missing URL.
+5. CVA (202 empty body) and Mercer Landmark (522) — **done in
+   Cycle 18 (2026-11-19):** both re-checked, both unchanged
+   (CVA still 202 / 0 bytes; Mercer still 522 / 0 bytes), and
+   Landus re-checked too (still 429 Vercel checkpoint). All
+   three stay `unreachable` in the toml. No further re-checks
+   until a later cycle; odds of change remain low.
 6. Bunge — no replacement URL found in Cycles 1/6/8; only
    re-probe if a new URL surfaces.
 
@@ -2407,3 +2414,176 @@ list, not a bid page); Raeford (1675) correctly has no entry
     14/14 IDs, Smithfield 30/31 — Raeford posts no public
     bids). No further probes on either; do not spend GETs
     on Raeford unless its widget shape changes.
+
+## Cycle 18 — unreachable re-checks (2026-11-19)
+
+Re-check only: exactly 3 GETs, one per site, User-Agent
+`GrainHub-Research/1.0`, ~2s spacing, no retries. URLs taken
+verbatim from `us_elevators_urls.toml` (not guessed). Raw HTML
+saved to `/tmp/cycle18/` only; no prices copied anywhere
+(counts and structure only). All three are unchanged from
+Cycle 10 — still blocked/empty, so none was registered, no
+collector code or tests were added, and the toml
+classifications stay `unreachable` (comments updated with the
+new check date only).
+
+| Site | URL | Status | Body | Bid widget present? | Rows | Verdict |
+|---|---|---|---|---|---|---|
+| CVA | https://www.cvacoop.com/cash-bids | HTTP 202 | 0 bytes | No — empty body, no widget family markers (Bushel `.cbmod`, AgriCharts `writeBidRow`/cashbids embed, DTN `CashBidTable`, wpDataTables) | 0 | Still unreachable; unchanged since Cycle 1 |
+| Landus | https://www.landus.ag/businesses/grain/grain-bids | HTTP 429 | 25,097 bytes | No — body is the Vercel Security Checkpoint page (`<title>Vercel Security Checkpoint</title>`, JS/browser verification required); no bid widget markers | 0 | Still blocked; no retry |
+| Mercer Landmark | https://www.mercerlandmark.com/cash-bids | HTTP 522 | 0 bytes | No — empty body, no widget family markers | 0 | Still unreachable; unchanged since Cycle 1 |
+
+**Cycle 17 follow-ups closed by this check:** item 5 of the
+Cycle 17 remaining-work list (CVA / Mercer Landmark single
+re-checks) is done — both unchanged, plus Landus re-checked
+unchanged. No new follow-ups: the next re-check, if any,
+belongs to a later cycle; all three sites have now returned
+the same result in three consecutive checks (Cycles 1, 10,
+18) for CVA and Mercer Landmark, and two (Cycles 10, 18) for
+Landus.
+
+## Cycle 18 — Mae-Mart proxy + CGB cash-bid chase (2026-11-19)
+
+Research only: exactly 4 GETs, User-Agent `GrainHub-Research/1.0`,
+~2s spacing, no retries, no prices copied anywhere (endpoints and
+structure only). No code changes, no tests. Both Cycle 17 open
+items below are now closed as research questions; each leaves one
+decision for Adam / the coordinator.
+
+### Mae-Mart futures proxy — identified, not called
+
+GET 1: `http://www.mae-martfarms.com/grain-pricing` (200, 35,952
+bytes). The inline pricing JS names the proxy verbatim:
+
+- `var PROXY = '/grain-proxy.php';`
+- `fetch(PROXY + '?symbols=' + encodeURIComponent(sym))` — one
+  symbol per request, i.e.
+  `http://www.mae-martfarms.com/grain-proxy.php?symbols=<SYMBOL>`.
+- Symbols are Yahoo Finance format: `ZCZ26=F` (corn), `ZSF27=F`
+  (soybeans), `ZWN27=F` (wheat); rye has no symbol and a static
+  `manualPrice`.
+- Response shape (from the client JS, not from a call): JSON
+  keyed by symbol, each entry with `price` and `currency`; when
+  `currency === 'USX'` the price is in cents and the client
+  divides by 100. `USX` is the Yahoo Finance currency code for
+  CBOT grain futures quoted in cents/bu.
+- The proxy returns **futures quotes only, not cash bids**. Cash
+  is computed client-side as futures + the statically published
+  basis. That is why the collector's corn/soy/wheat rows carry
+  basis with cash price empty.
+- No Barchart / DTN / AgriCharts markers anywhere in the page
+  (zero hits for `barchart`, `dtn`, `agricharts`, `yahoo`,
+  `stooq`, `cme`, `marketdata`, `alphavantage`).
+- Upstream **not confirmed**: the proxy itself was deliberately
+  not called. The Yahoo-style `=F` symbols and `USX` handling
+  are consistent with a relay of Yahoo Finance public quote
+  data, but that is inference from the client JS only — the
+  relay could equally call another upstream server-side.
+
+**Next probe (later cycle, 1 GET):**
+`GET http://www.mae-martfarms.com/grain-proxy.php?symbols=ZCZ26=F`
+— confirm the response shape and whether the relay is live.
+**Open decision:** even if live, using it means the collector
+would rely on the site's relay of third-party futures data plus
+the site's static basis to compute cash. The collector
+currently does not call it, and that stays the case until Adam
+/ the coordinator decides. No change to `mae_mart_source.py`
+in this cycle.
+
+### CGB cash-bid page — found via site navigation
+
+- GET 2: `https://cgb.com/cgb-grain/` (200, 151,242 bytes).
+  Corporate grain page: zero hits for `bid`, `cash`, `futures`,
+  `market price`, `sitemap` in visible text; no sitemap linked;
+  no cash-bid link. It does link `https://www.cgbgrain.com`
+  (the CGB Grain division site).
+- GET 3: `https://www.cgbgrain.com` (200, 132,258 bytes, final
+  `https://cgbgrain.com/`). Homepage links `/cash-bids` with the
+  text "View Cash Bids — Select a location and view the current
+  bids for different crops." Also links `/futures-quotes/` and
+  the `https://my.cgbgrain.com` account portal.
+- GET 4: `https://cgbgrain.com/cash-bids/` (200, 102,876 bytes).
+  WordPress page, "Cash Bids — Select a location from the
+  drop-down menu below." **AgriCharts family**: it embeds
+  `<script src="https://cgb.agricharts.com/inc/cashbids/cashbids.php?filter=all&location&commodity&groupby=location&width=100%&showtimestamp=1&hidenav=1&showchart=1&format=table&fields=name,delivery_start,delivery_end,basismonth,futures,futureschange,basis,price&groupheading=table&bidsort=commodity&dateformat=%m/%d/%Y&months=11">`
+  plus `//www.agricharts.com/marketdata/quotelib.js`. No static
+  bid rows (0 `<table>` elements in the HTML); the location
+  dropdown lists 113 CGB locations statically and rows are
+  JS-filled by the AgriCharts script.
+- The AgriCharts URL was **not fetched** — licensed feed:
+  record and stop, per the cycle guardrails. The USDA SCL
+  report lead was not needed and was not chased; no GETs were
+  spent hunting for the SCL report.
+
+**Cycle 17 follow-ups closed:** item 4 of the Cycle 17
+remaining-work list (CGB cash-bid module URL) is resolved — the
+URL is `https://cgbgrain.com/cash-bids/`, found by following
+links present on the corporate page, not by guessing. The
+Mae-Mart proxy question (Cycle 17 audit item (a)) is resolved
+as far as identification goes — endpoint pattern, response
+shape, and futures-only nature are all on record from the page
+source.
+**Open decisions:** (1) AgriCharts is licensed data — CGB
+belongs in the same licensed-feed decision bucket as the
+DTN/Barchart decision (Cycle 17 item 10), not in a missing-URL
+bucket. Whether the `cashbids-js.php` static route used by the
+generic `cashbids_embed_source.py` collector exists for
+`cgb.agricharts.com` is a later-cycle question gated on that
+decision. (2) Mae-Mart proxy live-check (1 GET, above) plus the
+rely-on-relay decision.
+
+## Cycle 18 — config.toml [[us.elevators]] synced from us_elevators_urls.toml (2026-11-19)
+
+Code only, 0 GETs. The Cycle 17 audit found the drift: `config.toml`
+`[[us.elevators]]` held only 30 entries against 121 in
+`us_elevators_urls.toml` (91 missing — all Cycle 10–16 additions), plus
+4 type mismatches (Agtegra, Heritage Cooperative, Linn Coop, Midway
+Coop: `dtn` in config.toml vs `agricharts-embed` in the urls toml /
+registry). Enabled flags agreed wherever both lists overlapped.
+
+Fix, per the coordinator's SYNC decision — `config.toml`
+`[[us.elevators]]` is now a faithful copy of `us_elevators_urls.toml`
+(same entries, same name / url / type / enabled, same order, audit
+comments included), generated by script, not by hand:
+
+- New script `GrainBids/grainbids/apps/api/scripts/sync_us_elevators_config.py`
+  (run it to re-sync; `--check` exits 1 when out of sync). It replaces
+  only the `[[us.elevators]]` section of `config.toml` with the
+  corresponding span of `us_elevators_urls.toml`, transplanted verbatim,
+  and preserves everything else in `config.toml` byte-for-byte —
+  including the `[sources]` toggles, which it never touches. It validates
+  its output (both files must parse; the generated list must equal the
+  canonical list) before writing, and refuses to write on failure.
+  `us_elevators_urls.toml` is canonical: edit entries there, re-run the
+  script. Note: the script matches the `[[us.elevators]]` marker only at
+  line start — the marker text also appears inside a comment in the urls
+  file header.
+- Verified after the sync: **121 vs 121 entries, zero per-entry diffs**
+  on name / url / type / enabled, in order. The `[sources]` toggles block
+  is byte-identical to before the sync; the text before the generated
+  section and after it (`[notifications]` onward) is unchanged vs git
+  HEAD. (The brief said 122; the actual count in both files is 121 —
+  the Cycle 17 audit table above also totals 121.)
+- No legacy-only fields existed: every entry in both files carried
+  exactly `enabled` / `type` / `name` / `url`, so nothing per-entry had
+  to be preserved beyond those four fields. One pre-existing comment was
+  not carried over because it lived only in the old config.toml section:
+  the Heartland Coop `# verified writeBidRow 2026-11-19` note on its url
+  line; the urls toml does not carry it and the classification already
+  records the same fact.
+- Guard test `GrainBids/grainbids/apps/api/tests/test_source_config_sync.py`
+  (stdlib `tomllib` only, 3 tests): asserts the two lists match on
+  name / url / type / enabled, that entries carry exactly those four
+  fields with unique names, and that the generated header is present in
+  `config.toml`. Verified it fails on a tampered copy (one entry removed).
+- Behaviour note: the synced list now includes enabled entries whose
+  types the legacy GrainBidder does not handle (`bushel`,
+  `agricharts-embed`, `usda`, `wpdatatables`, `stonex`, `unknown`,
+  `unreachable`, `none`). GrainBidder already skips unknown types with a
+  `[SKIP]` line, so the legacy run is unaffected; the FastAPI platform
+  reads the registry, not this list.
+- Follow-up (not done here): the `[us]` intro comment in `config.toml`
+  still says "To add a new elevator: copy a block below…" — that advice
+  is now stale, since the section is generated. It sits outside the
+  replaced section, so it was left byte-for-byte; the wording should be
+  updated to point at `us_elevators_urls.toml` + the sync script.

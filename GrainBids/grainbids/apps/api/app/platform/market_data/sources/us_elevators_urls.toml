@@ -227,8 +227,8 @@ name    = "Gateway FS"
 url     = "https://www.gatewayfs.com/markets/cash.php"
 
 [[us.elevators]]
-enabled = false
-type    = "agricharts-embed"  # reclassified 2026-11-19 (Cycle 11): HTTP 200 at /cashbids (the /cash-bids 404 slug from Cycle 10 was wrong); page carries an AgriCharts cashbids.php embed (hullcoopresp.agricharts.com, groupby=ccommodity), no static bid rows — rows load via the embed; cashbids-js.php static-route check still open (same as PRO Coop); still disabled
+enabled = true  # enabled 2026-11-19 (Cycle 12): cashbids-js.php 200, var-bids JSON, 1 location (Hull, IA), 12 rows (Corn 6, Soybeans 6), groupby=ccommodity — collector-ready; registry wiring is the coordinator's step
+type    = "agricharts-embed"  # verified 2026-11-19 (Cycle 12): loader-derived cashbids-js.php URL (hullcoopresp.agricharts.com) serves the var-bids payload; reclassified agricharts-embed in Cycle 11, now proven
 name    = "Hull Coop"
 url     = "https://www.hullcoop.com/cashbids"
 
@@ -255,7 +255,7 @@ url     = "https://www.proagfarmers.com/markets/cash.php"
 
 [[us.elevators]]
 enabled = true
-type    = "agricharts-embed"  # verified 2026-11-19 (Cycle 11): cashbids-js.php 200, var-bids JSON, 1 location (AYRSHIRE.IA), 6 Corn rows — location 21297 embed only; the two location-21302 embeds on the same homepage were not checked (GET budget)
+type    = "agricharts-embed"  # verified 2026-11-19 (Cycle 11): cashbids-js.php 200, var-bids JSON, 1 location (AYRSHIRE.IA), 6 Corn rows — location 21297 embed only; the two location-21302 embeds on the same homepage: first (fields with delivery_end) verified live 2026-11-19 (Cycle 12) as the separate pro_coop_21302 registry entry (MANSON.IA, 12 rows: CORN 6, SOYBEANS 6); the second 21302 embed (fields without delivery_end) was NOT checked (GET budget)
 name    = "PRO Coop"
 url     = "https://procooperative.com"
 
@@ -272,10 +272,22 @@ name    = "Skyland Grain"
 url     = "https://www.skylandgrain.com/cashbidssingle-"
 
 [[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 12): HTTP 200 at the per-location target /cashbidssingle-2730 — static Bushel .cbmod widget, 6 rows (Corn 2, Milo 1, Red Wheat 2, Soybeans 1, Cunningham Area), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; 2730 is Cunningham Area's own per-location ID, so the rows duplicate the default /cashbidssingle- page — BUSHEL_SITES registry entry + fetch_skyland_2730() added in Cycle 12
+type    = "bushel"
+name    = "Skyland Grain — Cunningham Area (2730)"
+url     = "https://www.skylandgrain.com/cashbidssingle-2730"
+
+[[us.elevators]]
 enabled = false
-type    = "bushel"  # Cycle 11: HTTP 200 at /fccp-cash-bids-east-region-20249 — a per-location link list (NC / IN / OH / SC / VA, ~30 locations), no static bid rows; each location links /cashbidssingle-<id> and page JS iframes that target per location; probe one per-location target next (e.g. /cashbidssingle-1666, Bentonville); still disabled
+type    = "bushel"  # Cycle 11: HTTP 200 at /fccp-cash-bids-east-region-20249 — a per-location link list (NC / IN / OH / SC / VA, ~30 locations), no static bid rows; each location links /cashbidssingle-<id> and page JS iframes that target per location; probe one per-location target next (e.g. /cashbidssingle-1666, Bentonville); still disabled. Cycle 12 (2026-11-19): 1666 probed — 200, static .cbmod widget, 3 rows (Bentonville, NC) — enabled as a separate per-location entry below; this East Region link-list entry stays disabled
 name    = "Smithfield"
 url     = "https://smithfieldgrain.com"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 12): HTTP 200 at the per-location target /cashbidssingle-1666 (Bentonville, from the East Region per-location list) — static Bushel .cbmod widget, 3 rows (Soybeans 1, Wheat 1, Corn 1), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 3 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_smithfield_bentonville() added in Cycle 12; first Smithfield location verified, the other ~29 East Region locations still open
+type    = "bushel"
+name    = "Smithfield Grain — Bentonville (1666)"
+url     = "https://smithfieldgrain.com/cashbidssingle-1666"
 
 [[us.elevators]]
 enabled = false
@@ -284,8 +296,8 @@ name    = "Star of the West"
 url     = "https://www.starofthewest.com"
 
 [[us.elevators]]
-enabled = false
-type    = "agricharts-embed"  # reclassified 2026-11-19 (Cycle 11): HTTP 200 at /cash-bids; WordPress page carries an AgriCharts cashbids.php embed (statelinecoop.agricharts.com, groupby=location) plus custom CSS for table.cashbid_table, no static bid rows — rows load via the embed; cashbids-js.php static-route check still open (same as PRO Coop / Hull Coop); still disabled
+enabled = true  # enabled 2026-11-19 (Cycle 12): cashbids-js.php 200, var-bids JSON, 11 locations (Armstrong, Blue Earth, Cylinder, Emmetsburg-AGP, Fenton, Lakota, Ledyard, Marna, North Burt, Ringsted, Swea City), 126 rows (Corn 60, Soybeans 66; Emmetsburg-AGP Soybeans-only) — collector-ready; registry wiring is the coordinator's step
+type    = "agricharts-embed"  # verified 2026-11-19 (Cycle 12): loader-derived cashbids-js.php URL (statelinecoop.agricharts.com, groupby=location) serves the var-bids payload; reclassified agricharts-embed in Cycle 11, now proven
 name    = "StateLine Coop"
 url     = "https://www.statelinecoop.com/cash-bids"
 
@@ -338,16 +350,16 @@ name    = "Ursa Farmers Coop"
 url     = "https://www.ursacoop.com"
 
 [[us.elevators]]
-enabled = false
-type    = "agricharts"  # reclassified 2026-11-19 (Cycle 11): 84 static writeBidRow rows at /markets/cash.php (Corn / Soybeans / DNS Wheat, location param 'All') — BUT parser gap: delivery start/end are month-name labels ('Dec 2026', 'Jan 2027') not MM/DD/YYYY, so the existing us_agricharts_source.py _WRITEBIDROW_RX matches 0/84; needs a small regex extension before enabling
+enabled = true  # enabled 2026-11-19 (Cycle 12): fixed regex verified 84/84 against saved Cycle 11 HTML — month-name labels ('Dec 2026' … 'Oct 2027', 10 distinct, start == end on all rows), Corn / Soybeans / DNS Wheat, location param 'All'; month-only windows kept verbatim, no day invented
+type    = "agricharts"  # reclassified 2026-11-19 (Cycle 11): 84 static writeBidRow rows at /markets/cash.php (Corn / Soybeans / DNS Wheat, location param 'All') — parser gap was month-name delivery labels ('Dec 2026', 'Jan 2027') not MM/DD/YYYY, old _WRITEBIDROW_RX matched 0/84; fixed in Cycle 12 (regex accepts month-name labels, kept verbatim)
 name    = "West-Con"
 url     = "https://www.west-con.com/markets/cash.php"
 
 [[us.elevators]]
-enabled = false
-type    = "unknown"  # Cycle 10: AgriCharts-hosted homepage (s3 media.agricharts.com, quotelib.js); homepage cash widget is JS-filled (values blank in static HTML), locations Wheaton / Dumont / Browns Valley / LaMars / Hankinson / Mantador / Sisseton — probe /markets/cash.php next
+enabled = true  # enabled 2026-11-19 (Cycle 12): one GET of /markets/cash.php returned 200 with 43 static writeBidRow rows (Corn 18 / Soybeans 16 / Spring Wheat 9) — fixed regex matches 43/43; delivery labels are the SHORT month form ('Nov 26', 'Jan 27', 6 distinct), 6 rows span two adjacent months; 8 <h4> locations (Wheaton/Dumont/Browns Valley/LaMars/Hankinson/Mantador/Sisseton etc.)
+type    = "agricharts"  # reclassified 2026-11-19 (Cycle 12): AgriCharts-hosted /markets/cash.php, same writeBidRow family as West-Con — no registry adapter needed, orchestrator drives fetch_us_agricharts from this toml entry
 name    = "Wheaton Dumont"
-url     = "https://www.wdcoop.com"
+url     = "https://www.wdcoop.com/markets/cash.php"
 
 [[us.elevators]]
 enabled = true
@@ -357,9 +369,15 @@ url     = "https://www.wheatongrain.com"
 
 [[us.elevators]]
 enabled = true  # enabled 2026-11-19 (Cycle 11): HTTP 200 at the 3439 embed target — static Bushel .cbmod widget, 10 rows (Corn 5 + Soybeans 5, Winchester), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst (FAC shape); existing generic bushel_source.py parse_bushel_html verified status ok, 10 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_winchester() added in Cycle 11
-type    = "bushel"  # Cycle 11: embed target 3439 verified static; the 3440 target stays open
+type    = "bushel"  # Cycle 11: embed target 3439 verified static; the 3440 target was verified in Cycle 12 (see the Georgetown entry below)
 name    = "Winchester Ag"
 url     = "https://www.wheatongrain.com/cashbidssingle-3439?embed=y"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 12): HTTP 200 at the 3440 embed target — static Bushel .cbmod widget, 5 rows (Soybeans only), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; the location h2 is "Georgetown", so the 3440 embed serves Wheaton's Georgetown location, not Winchester (3439 is Winchester) — BUSHEL_SITES registry entry + fetch_winchester_3440() added in Cycle 12
+type    = "bushel"
+name    = "Winchester Ag — Georgetown (3440)"
+url     = "https://www.wheatongrain.com/cashbidssingle-3440?embed=y"
 
 # ── NOT FOUND (no cash bid page detected) ─────────────────────────────────────
 # CFE               — https://www.cfe.coop

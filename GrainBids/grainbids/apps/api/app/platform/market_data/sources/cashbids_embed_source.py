@@ -18,7 +18,7 @@ neither step needs a browser:
      is empty ``<tr class="odd/even">`` rows filled client-side from
      the JSON; the other eight sites server-render it).
 
-Bid object fields used (all present on every row of all nine sites
+Bid object fields used (all present on every row of all twelve sites
 checked): ``name`` (commodity), ``symbol`` (e.g. ``ZCZ26``),
 ``delivery_start`` / ``delivery_end`` (``MM/DD/YYYY``), ``basismonth``
 (``Dec 2026``), ``basis`` (integer cents, e.g. -90), ``futures`` /
@@ -84,6 +84,9 @@ CONTACT_USER_AGENT = "GrainHub-Research/1.0 +https://github.com/apz100/GrainHub"
 #   ALCIVIA        alciviacoop.agricharts.com     / filter=all
 #   TGM            totalgrain.agricharts.com      / filter=all
 #   PRO Coop       procooperative.agricharts.com  / 21297 (Ayrshire, IA)
+#   PRO Coop 21302 procooperative.agricharts.com  / 21302 (Manson, IA)
+#   Hull Coop      hullcoopresp.agricharts.com     / filter=all
+#   StateLine Coop statelinecoop.agricharts.com    / filter=all
 
 # Raw commodity label (lowercased, grade prefix stripped) -> canonical.
 COMMODITY_MAP = {
@@ -340,9 +343,81 @@ CASHBIDS_EMBED_SITES: dict[str, CashbidsEmbedSite] = {
         "the loader JS itself was not fetched (GET budget), so the "
         "URL is the derived form that served the payload, not the "
         "loader's own widgetURL verbatim. The homepage carries two "
-        "more embeds for location 21302 (groupby=ccommodity) that "
-        "were NOT checked — this entry covers the 21297 Ayrshire "
-        "view only. Embed at procooperative.com.",
+        "more embeds for location 21302 (groupby=ccommodity): the "
+        "first (fields delivery_start / delivery_end / price / basis / "
+        "futureschange) was verified live 2026-11-19 (Cycle 12) as "
+        "the separate 'pro_coop_21302' entry (MANSON.IA, 12 rows); "
+        "the second 21302 embed (fields without delivery_end) was "
+        "NOT checked. Embed at procooperative.com.",
+    ),
+    "pro_coop_21302": CashbidsEmbedSite(
+        key="pro_coop_21302",
+        company="PRO Coop",
+        js_url=(
+            "https://procooperative.agricharts.com/inc/cashbids/cashbids-js.php"
+            "?filter=location&location=21302&commodity=&groupby=ccommodity"
+            "&width=100%&showtimestamp=1&showchart=1"
+            "&enableScrollIntoView=1&format=table&fields=%0Adelivery_start"
+            "%2C%0Adelivery_end%2C%0Aprice%2C%0Abasis%2C%0Afutureschange"
+            "%0A&groupheading=table&bidsort=commodity&dateformat=%25m%2F"
+            "%25d%2F%25Y&months=11&noscript=1&&acCnt=1"
+        ),
+        default_location="MANSON.IA",
+        verified=True,
+        notes="Verified live 2026-11-19 (Cycle 12): 200, var-bids JSON, "
+        "1 location (MANSON.IA), 12 rows (CORN 6, SOYBEANS 6). "
+        "groupby=ccommodity: groups are named CORN / SOYBEANS, so the "
+        "row location comes from location_name. The js_url was derived "
+        "from the saved Cycle 11 homepage cashbids.php loader src "
+        "(filename swap to cashbids-js.php, newlines %0A-encoded, "
+        "+ noscript=1 & acCnt=1 per this module's documented method); "
+        "the loader's src carries literal newline characters in the "
+        "fields value, which requests percent-encodes to %0A on the "
+        "wire — the registry URL is that wire form, matching the "
+        "21297 entry. This is the FIRST of the homepage's two "
+        "location-21302 embeds; the second (fields without "
+        "delivery_end) was NOT checked. Embed at procooperative.com.",
+    ),
+    "hull_coop": CashbidsEmbedSite(
+        key="hull_coop",
+        company="Hull Coop",
+        js_url=(
+            "https://hullcoopresp.agricharts.com/inc/cashbids/cashbids-js.php"
+            "?filter=all&location=&commodity=&groupby=ccommodity&width="
+            "&showtimestamp=1&hidenav=1&&showchart=1&format=table&fields="
+            "delivery_start%2Cbasismonth%2Cfutureschange%2Cbasis%2Cprice"
+            "&groupheading=table&bidsort=commodity&dateformat=%25m%2F%25d"
+            "%2F%25Y&months=8&locations=&commodities=&noscript=1&&acCnt=1"
+        ),
+        default_location="Hull",
+        verified=True,
+        notes="Verified live 2026-11-19 (Cycle 12): 200, var-bids JSON, "
+        "1 location (Hull, IA), 12 rows (Corn 6, Soybeans 6). "
+        "groupby=ccommodity: groups are named Corn / Soybeans, so the "
+        "row location comes from location_name. The loader src carries "
+        "'hidenav=1&&showchart=1' (double ampersand mid-query), kept "
+        "verbatim in the js_url. Embed at hullcoop.com/cashbids.",
+    ),
+    "stateline_coop": CashbidsEmbedSite(
+        key="stateline_coop",
+        company="StateLine Coop",
+        js_url=(
+            "https://statelinecoop.agricharts.com/inc/cashbids/cashbids-js.php"
+            "?filter=all&location=&commodity=&groupby=location&width=90%"
+            "&enableScrollIntoView=1&format=table&fields=name%2Cdelivery_"
+            "start%2Cfutureschange%2Cbasis%2Cbasismonth%2Cfutures%2Cprice"
+            "%2Cnotes&groupheading=row&bidsort=commodity&dateformat=%25b"
+            "+%25d%2C+%25Y&months=8&locations=&commodities=&noscript=1"
+            "&&acCnt=1"
+        ),
+        verified=True,
+        notes="Verified live 2026-11-19 (Cycle 12): 200, var-bids JSON, "
+        "11 locations (Armstrong, Blue Earth, Cylinder, Emmetsburg-AGP, "
+        "Fenton, Lakota, Ledyard, Marna, North Burt, Ringsted, Swea City "
+        "— Iowa / Minnesota), 126 rows (Corn 60, Soybeans 66; "
+        "Emmetsburg-AGP is Soybeans-only, 6 rows). filter=all, "
+        "groupby=location, no single default location. Embed at "
+        "statelinecoop.com/cash-bids.",
     ),
 }
 
@@ -721,3 +796,20 @@ def fetch_pro_coop() -> dict[str, Any]:
     """Fetch PRO Coop (Ayrshire, IA — location 21297 view).
     Verified live 2026-11-19 (Cycle 11)."""
     return fetch_cashbids_embed_site("pro_coop")
+
+
+def fetch_pro_coop_21302() -> dict[str, Any]:
+    """Fetch PRO Coop (Manson, IA — location 21302 view, first embed).
+    Verified live 2026-11-19 (Cycle 12)."""
+    return fetch_cashbids_embed_site("pro_coop_21302")
+
+
+def fetch_hull_coop() -> dict[str, Any]:
+    """Fetch Hull Coop (Hull, IA). Verified live 2026-11-19 (Cycle 12)."""
+    return fetch_cashbids_embed_site("hull_coop")
+
+
+def fetch_stateline_coop() -> dict[str, Any]:
+    """Fetch StateLine Coop (Iowa / Minnesota, 11 locations).
+    Verified live 2026-11-19 (Cycle 12)."""
+    return fetch_cashbids_embed_site("stateline_coop")

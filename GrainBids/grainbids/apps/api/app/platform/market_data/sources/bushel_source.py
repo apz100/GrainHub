@@ -69,6 +69,22 @@ the wrapped path is untouched. Wheaton's Corn section also heads the
 Bid column "Cash" (mapped in HEADER_FIELDS alongside "Bid" and
 "Cash Price").
 
+Cycle 12 (2026-11-19) probed the three open per-location
+``/cashbidssingle-<id>`` targets, one polite GET each — all 200,
+all standard wrapped 7-col ``.cbmod`` widgets, all parsed by the
+generic parser with no changes:
+
+  * Winchester 3440 (``wheatongrain.com/cashbidssingle-3440?embed=y``):
+    the second Winchester embed serves Georgetown, not Winchester —
+    5 Soybeans rows, location h2 "Georgetown".
+  * Skyland 2730: the first ID from the 14-location picker is
+    Cunningham Area's own per-location ID — the same 6 rows (Corn 2,
+    Milo 1, Red Wheat 2, Soybeans 1) as the default
+    ``/cashbidssingle-`` page, so this entry duplicates that widget.
+  * Smithfield 1666 (Bentonville, NC): the first Smithfield location
+    verified — 3 rows (Soybeans, Wheat, Corn), location h2
+    "Bentonville, NC" mapped to "Bentonville".
+
 Units — published numbers, NOT normalized: futures and change keep
 the units each site publishes, and those vary. Decimal sites publish
 futures in dollars (FAC 4.3325) and change in cents (FAC -2.25) or
@@ -109,6 +125,9 @@ AGP_URL = "https://agp.o.bushelsites.com/cash-bids"
 SYNERGY_URL = "https://www.synergycoop.com"
 SKYLAND_URL = "https://www.skylandgrain.com/cashbidssingle-"
 WINCHESTER_URL = "https://www.wheatongrain.com/cashbidssingle-3439?embed=y"
+WINCHESTER_3440_URL = "https://www.wheatongrain.com/cashbidssingle-3440?embed=y"
+SKYLAND_2730_URL = "https://www.skylandgrain.com/cashbidssingle-2730"
+SMITHFIELD_BENTONVILLE_URL = "https://smithfieldgrain.com/cashbidssingle-1666"
 
 # Raw widget commodity label -> canonical commodity name.
 COMMODITY_MAP = {
@@ -447,7 +466,54 @@ BUSHEL_SITES: dict[str, BushelSite] = {
         ".cbmod widget, 10 rows (Corn 5 + Soybeans 5, Winchester), "
         "USD/bu; generic parser returns status ok. Winchester Ag is "
         "a Wheaton Grain location, not an independent site. The 3440 "
-        "embed target is still open.",
+        "embed target was verified in Cycle 12 (see winchester_3440).",
+    ),
+    # Cycle 12 (2026-11-19): the three open per-location
+    # /cashbidssingle-<id> targets, one polite GET each — all 200,
+    # all standard wrapped 7-col .cbmod widgets, all parsed by the
+    # generic parser with no changes.
+    "winchester_3440": BushelSite(
+        key="winchester_3440",
+        company="Winchester Ag",
+        url=WINCHESTER_3440_URL,
+        currency="USD",
+        default_location="Georgetown",
+        verified=True,
+        notes="Verified live 2026-11-19 (Cycle 12): 200 at the 3440 "
+        "embed target behind wheatongrain.com. Standard wrapped 7-col "
+        ".cbmod widget, 5 rows, Soybeans only, USD/bu. The location "
+        "h2 is 'Georgetown' — the 3440 embed serves Wheaton's "
+        "Georgetown location, not Winchester (3439 is Winchester).",
+    ),
+    "skyland_2730": BushelSite(
+        key="skyland_2730",
+        company="Skyland Grain",
+        url=SKYLAND_2730_URL,
+        currency="USD",
+        default_location="Cunningham Area",
+        verified=True,
+        notes="Verified live 2026-11-19 (Cycle 12): 200 at the "
+        "per-location target (first ID from the 14-location picker on "
+        "the default page). Standard wrapped 7-col .cbmod widget, 6 "
+        "rows (Corn 2, Milo 1, Red Wheat 2, Soybeans 1), USD/bu — "
+        "the same rows as the default /cashbidssingle- page, so 2730 "
+        "is Cunningham Area's own per-location ID and this entry "
+        "duplicates the 'skyland' widget.",
+    ),
+    "smithfield_bentonville": BushelSite(
+        key="smithfield_bentonville",
+        company="Smithfield Grain",
+        url=SMITHFIELD_BENTONVILLE_URL,
+        currency="USD",
+        default_location="Bentonville",
+        verified=True,
+        location_labels={"Bentonville, NC": "Bentonville"},
+        notes="Verified live 2026-11-19 (Cycle 12): 200 at the "
+        "per-location target (Bentonville, from the East Region "
+        "per-location list). Standard wrapped 7-col .cbmod widget, "
+        "3 rows (Soybeans 1, Wheat 1, Corn 1), USD/bu. First "
+        "Smithfield location verified; the other ~29 East Region "
+        "locations are still open.",
     ),
 }
 
@@ -1108,3 +1174,31 @@ def fetch_wheaton_grain() -> dict[str, Any]:
     USD/bu. Parsed by the tabbed-widget fallback.
     """
     return fetch_bushel_site("wheaton_grain")
+
+
+def fetch_winchester_3440() -> dict[str, Any]:
+    """Fetch the Winchester 3440 embed target (Georgetown, via Wheaton
+    Grain). Verified live 2026-11-19 (Cycle 12): 200, standard wrapped
+    7-col .cbmod widget, 5 rows (Soybeans only), USD/bu. Note the
+    location is Georgetown, not Winchester — 3439 is Winchester.
+    """
+    return fetch_bushel_site("winchester_3440")
+
+
+def fetch_skyland_2730() -> dict[str, Any]:
+    """Fetch Skyland Grain's per-location target 2730 (Cunningham
+    Area, KS). Verified live 2026-11-19 (Cycle 12): 200, standard
+    wrapped 7-col .cbmod widget, 6 rows (Corn 2, Milo 1, Red Wheat 2,
+    Soybeans 1), USD/bu — the same rows as the default
+    /cashbidssingle- page (2730 is Cunningham Area's per-location ID).
+    """
+    return fetch_bushel_site("skyland_2730")
+
+
+def fetch_smithfield_bentonville() -> dict[str, Any]:
+    """Fetch Smithfield Grain (Bentonville, NC) via the per-location
+    target 1666. Verified live 2026-11-19 (Cycle 12): 200, standard
+    wrapped 7-col .cbmod widget, 3 rows (Soybeans, Wheat, Corn),
+    USD/bu. First Smithfield location verified.
+    """
+    return fetch_bushel_site("smithfield_bentonville")

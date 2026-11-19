@@ -329,12 +329,12 @@ branch to GitHub frequently.
 - Elevator Ops: which ERP first (Agris / Agvance / AgTrax)?
 - US scope: Corn Belt first, or Corn Belt + Gulf / PNW from day one?
 
-## 9. Progress — Cycles 1–10 (2026-11-18/19)
+## 9. Progress — Cycles 1–11 (2026-11-18/19)
 
-Ten overnight autonomous cycles on branches `overnight/grainhub-cycle-1`
-through `overnight/grainhub-cycle-10`, none merged to master. Full API test
-suite grew **179 → 291 → 320 → 359 → 364 → 380 → 407 → 407 → 454 → 488 passed, 0 failed**
-across the ten cycles. Full detail in `docs/plans/overnight-cycle-N-report.md`.
+Eleven overnight autonomous cycles on branches `overnight/grainhub-cycle-1`
+through `overnight/grainhub-cycle-11`, none merged to master. Full API test
+suite grew **179 → 291 → 320 → 359 → 364 → 380 → 407 → 407 → 454 → 488 → 536 passed, 0 failed**
+across the eleven cycles. Full detail in `docs/plans/overnight-cycle-N-report.md`.
 Merge order, gates, and conflicts are in `docs/plans/merge-plan.md`.
 
 - **Cycle 1** (`overnight/grainhub-cycle-1`, 179 tests): Phase 0 hardening,
@@ -400,6 +400,16 @@ Merge order, gates, and conflicts are in `docs/plans/merge-plan.md`.
   Synergy registered as Bushel, Wheaton Grain parser gap found,
   StoneX family grows to 3 with UFC); currency design note (proposal
   only, no migration); web build re-verified passing.
+- **Cycle 11** (`overnight/grainhub-cycle-11`, 536 tests): FMN
+  jsquote feed fetched — all 449 futures-linked rows now filled
+  (futures price/change/cash price via the page's own render rule);
+  PRO Coop embed proven (9th embed site, Ayrshire only); Wheaton
+  Grain tabbed-widget parser fix; 9 sub-page probes (Pro Ag 78 rows,
+  Winchester 3439 10 rows, West-Con 84 rows but a regex gap, Hull +
+  StateLine embeds, Andersons proprietary picker, Smithfield link
+  list) — plus a coordinator correction: Skyland's
+  `/cashbidssingle-` page DOES serve a static widget (6 rows), and
+  was registered after the sweep worker wrongly reported none.
 
 **Remaining blockers that need Adam:** NASS API key (free) and FAS /
 data.gov key (free); LLM provider + key for Advisor `/ask`; Barchart /
@@ -416,12 +426,13 @@ responses report `currency: null` (a design note with four concrete
 decisions is now in `docs/plans/currency-design.md`); email-bid endpoint is public by
 default (admin-only is a one-line change if wanted); pricing/hosting
 decisions. **Newest findings:** the `cashbids.php` embed family is
-now 8 sites (ALCIVIA + TGM proven in Cycle 9, 543 rows); the FMN
-collector is built (453 rows, 87 points) but its futures price/change/
-cash price need the `jsquote.php` feed; Five Star's wpDataTables
-collector is built (299 rows); the DTN sweep found only 2 of 28 sites
-static-HTML, 20 JS-only, 6 unreachable, with Al-Corn the only classic
-inline `CashBidTable` fit for the DTN collector (Sunrise is a second
-classic-DTN fit, enabled in Cycle 10). A Playwright render
-check of the DTN-family JS-only sites, the FMN filtered view, and
-Mapleview's Grain Discovery shell still needs a live browser session.
+now 9 sites (PRO Coop proven in Cycle 11, Ayrshire only); the FMN
+collector is complete for the default view (453 rows, all 449
+futures-linked rows filled via the `jsquote.php` feed); Five Star's
+wpDataTables collector is built (299 rows); the DTN sweep found only
+2 of 28 sites static-HTML, 20 JS-only, 6 unreachable, with Al-Corn
+the only classic inline `CashBidTable` fit for the DTN collector
+(Sunrise is a second classic-DTN fit, enabled in Cycle 10). A
+Playwright render check of the DTN-family JS-only sites, the FMN
+filtered view, and Mapleview's Grain Discovery shell still needs a
+live browser session.

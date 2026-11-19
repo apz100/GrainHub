@@ -13,6 +13,16 @@ data directly in HTML as writeBidRow() function calls:
 Location names come from <h4> tags that precede each table/script block.
 Futures prices are fetched from the Agricharts jsquote.php API (same as ganaraska_source).
 
+Delivery windows: most sites emit full MM/DD/YYYY dates, but some
+AgriCharts-hosted cash pages emit month-name labels instead — 'Dec 2026',
+'January 2027' (West-Con), or the short form 'Nov 26', 'Jan 27' with a
+2-digit year (Wheaton Dumont) — one label per month, with start == end.
+Cycle 12 decision: month-only windows are kept VERBATIM in the
+Delivery / Delivery End columns.  No day is invented (no first-of-month
+synthesis), and no century is expanded for 2-digit years, because the
+source never states either; the label itself is the delivery window.
+MM/DD/YYYY rows are unaffected.
+
 Usage (called by GrainBidder.py via the [[us.elevators]] config):
     fetch_us_agricharts(url, company_name) -> pd.DataFrame
 
@@ -49,6 +59,18 @@ _HEADERS = {
     )
 }
 
+# A delivery window is either a full date (MM/DD/YYYY) or a month-name
+# label ('Dec 2026', 'January 2027', or the short 'Nov 26' / 'Jan 27'
+# with a 2-digit year) — see module docstring, Cycle 12.
+# Month names accept the abbreviated or full form, any case the page uses
+# is matched case-sensitively as emitted by AgriCharts (title case).
+_MONTH_LABEL = (
+    r"(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|"
+    r"Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|"
+    r"Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+(?:\d{4}|\d{2})"
+)
+_DELIVERY = r"(?:\d{2}/\d{2}/\d{4}|" + _MONTH_LABEL + r")"
+
 # Matches a writeBidRow() call and captures the parameters we care about.
 # Signature (0-indexed):
 #   0  name          commodity name
@@ -57,8 +79,8 @@ _HEADERS = {
 #   3  eod           bool
 #   4  incwt         bool
 #   5  rounding      float
-#   6  start         delivery start MM/DD/YYYY
-#   7  end           delivery end   MM/DD/YYYY
+#   6  start         delivery start MM/DD/YYYY or month label ('Dec 2026')
+#   7  end           delivery end   MM/DD/YYYY or month label ('Dec 2026')
 #   8  location      often 'All' — we prefer the surrounding <h4> name
 #   9  group         display group (often '&nbsp;')
 #   10 notes         (often '&nbsp;')
@@ -74,8 +96,8 @@ _WRITEBIDROW_RX = re.compile(
     r"\s*,\s*(?:true|false)"                      # 3: eod
     r"\s*,\s*(?:true|false)"                      # 4: incwt
     r"\s*,\s*[+-]?[\d.]*"                         # 5: rounding
-    r"\s*,\s*'(\d{2}/\d{2}/\d{4})'"              # 6: delivery start
-    r"\s*,\s*'(\d{2}/\d{2}/\d{4})'"              # 7: delivery end
+    r"\s*,\s*'(" + _DELIVERY + r")'"              # 6: delivery start
+    r"\s*,\s*'(" + _DELIVERY + r")'"              # 7: delivery end
     r"\s*,\s*'([^']*)'"                           # 8: location param
     r"\s*,\s*'[^']*'"                             # 9: group
     r"\s*,\s*'[^']*'"                             # 10: notes
@@ -180,8 +202,8 @@ def fetch_us_agricharts(url: str, company_name: str, playwright=None) -> pd.Data
             m = data
             name        = m.group(1).strip()
             basis_cents = float(m.group(2))
-            del_start   = m.group(3)          # MM/DD/YYYY
-            del_end     = m.group(4)          # MM/DD/YYYY
+            del_start   = m.group(3)          # MM/DD/YYYY or month label, verbatim (Cycle 12)
+            del_end     = m.group(4)          # MM/DD/YYYY or month label, verbatim (Cycle 12)
             # group(5) = location param in writeBidRow — often 'All', use h4 instead
             # group(6) = chartsym
             symbol      = m.group(7)

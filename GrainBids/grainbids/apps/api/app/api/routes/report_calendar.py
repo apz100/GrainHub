@@ -17,15 +17,33 @@ Release times (all ET unless noted):
   the Monday after Thanksgiving (Apr 6 – Nov 30, 2026).
 * Export Sales — Thursdays 8:30 am ET.
 * Commitments of Traders (CFTC, not USDA) — Fridays 3:30 pm ET.
+
+Ingestion status (Cycle 3 polish): every event carries
+``ingestion_status`` — whether that report's latest file has been
+ingested, from real ``ResearchReport`` rows — and the response carries
+a top-level ``ingestion_status`` summary per report. A report type
+with no ingested row is ``not_ingested_yet``, never assumed ingested.
+Prospective Plantings / Acreage / Small Grains Summary have no
+ingestion collector yet (see ``REPORT_NAME_TO_TYPE``), so they are
+always ``not_ingested_yet`` until one is added. The calendar is a
+public schedule, so ingestion status is deployment-wide (latest
+ingested file in this deployment), not scoped to one org. When no
+database is available the status is ``unknown``, not ``not_ingested_yet``.
 """
 
 from __future__ import annotations
 
-from datetime import date, datetime, time, timedelta
+from datetime import date, datetime, time, timedelta, timezone
 from typing import Any
 from zoneinfo import ZoneInfo
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from app.db.session import get_sessionmaker
+from app.models.research_report import ResearchReport
+from app.services.research import REPORT_TYPES
 
 router = APIRouter(prefix="/api/research", tags=["research"])
 
@@ -217,12 +235,160 @@ def build_calendar(year: int, today: date) -> list[dict[str, Any]]:
     return events
 
 
+def _optional_session():
+    """Best-effort DB session for the ingestion-status lookup.
+
+    Yields ``None`` when no database is configured, so the public
+    calendar stays available and reports ingestion as ``unknown``
+    instead of failing the whole request.
+    """
+    try:
+        session = get_sessionmaker()()
+    except Exception:
+        yield None
+        return
+    try:
+        yield session
+    finally:
+        session.close()
+
+
+# Calendar report name -> ResearchReport.report_type. ``None`` means no
+# ingestion collector exists for that report yet (ingest-file accepts
+# only REPORT_TYPES), so its status is always "not ingested yet".
+REPORT_NAME_TO_TYPE: dict[str, str | None] = {
+    "WASDE": "wasde",
+    "Grain Stocks": "grain_stocks",
+    "Prospective Plantings": None,
+    "Acreage": None,
+    "Small Grains Summary": None,
+    "Crop Progress": "crop_progress",
+    "Export Sales": "export_sales",
+    "Commitments of Traders": "commitments_of_traders",
+}
+
+_NO_COLLECTOR_NOTE = (
+    "No ingestion collector exists for this report type yet, so no "
+    "file can have been ingested."
+)
+_NO_DATABASE_NOTE = (
+    "Research ingestion data could not be read for this request (no "
+    "database available); ingestion status is unknown, not "
+    "'not ingested yet'."
+)
+_MIN_CREATED_AT = datetime.min.replace(tzinfo=timezone.utc)
+
+
+def _report_sort_key(report: ResearchReport) -> tuple[datetime, str]:
+    created = report.created_at
+    if created is not None and created.tzinfo is None:
+        created = created.replace(tzinfo=timezone.utc)
+    return (created or _MIN_CREATED_AT, str(report.report_date or ""))
+
+
+def build_ingestion_status(
+    reports: list[ResearchReport],
+) -> dict[str, dict[str, Any]]:
+    """Latest ingested row per report type, from real ResearchReport rows.
+
+    A type with no row is ``not_ingested_yet``. The latest row is the
+    one with the greatest ``created_at`` (ties broken by
+    ``report_date``); nothing is inferred from the schedule itself.
+    """
+    latest: dict[str, ResearchReport] = {}
+    for report in reports:
+        current = latest.get(report.report_type)
+        if current is None or _report_sort_key(report) > _report_sort_key(current):
+            latest[report.report_type] = report
+    statuses: dict[str, dict[str, Any]] = {}
+    for report_type in REPORT_TYPES:
+        row = latest.get(report_type)
+        if row is None:
+            statuses[report_type] = {
+                "status": "not_ingested_yet",
+                "latest_report_date": None,
+                "vintage": None,
+                "source": None,
+                "ingested_at": None,
+                "note": "No file of this type has been ingested yet.",
+            }
+        else:
+            statuses[report_type] = {
+                "status": "ingested",
+                "latest_report_date": row.report_date,
+                "vintage": row.vintage,
+                "source": row.source,
+                "ingested_at": row.created_at.isoformat() if row.created_at else None,
+                "note": (
+                    f"Latest {report_type} file ingested "
+                    f"(report date {row.report_date})."
+                ),
+            }
+    return statuses
+
+
+def ingestion_status_for_report(
+    report_name: str,
+    statuses: dict[str, dict[str, Any]],
+) -> dict[str, Any]:
+    """Ingestion status for one calendar report name."""
+    report_type = REPORT_NAME_TO_TYPE.get(report_name)
+    if report_type is None:
+        return {
+            "status": "not_ingested_yet",
+            "latest_report_date": None,
+            "vintage": None,
+            "source": None,
+            "ingested_at": None,
+            "note": _NO_COLLECTOR_NOTE,
+        }
+    return dict(statuses.get(report_type) or {
+        "status": "not_ingested_yet",
+        "latest_report_date": None,
+        "vintage": None,
+        "source": None,
+        "ingested_at": None,
+        "note": "No file of this type has been ingested yet.",
+    })
+
+
+def _unknown_ingestion_statuses() -> dict[str, dict[str, Any]]:
+    return {
+        report_type: {
+            "status": "unknown",
+            "latest_report_date": None,
+            "vintage": None,
+            "source": None,
+            "ingested_at": None,
+            "note": _NO_DATABASE_NOTE,
+        }
+        for report_type in REPORT_TYPES
+    }
+
+
 @router.get("/calendar")
-def report_calendar(year: int = Query(SUPPORTED_YEAR)):
+def report_calendar(year: int = Query(SUPPORTED_YEAR), db: Session | None = Depends(_optional_session)):
     try:
         events = build_calendar(year, datetime.now(ET).date())
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+    if db is None:
+        statuses = _unknown_ingestion_statuses()
+        ingestion_note = _NO_DATABASE_NOTE
+    else:
+        rows = db.execute(select(ResearchReport)).scalars().all()
+        reports = [row for row in rows if isinstance(row, ResearchReport)]
+        statuses = build_ingestion_status(reports)
+        ingestion_note = (
+            "Ingestion status is the latest ingested ResearchReport row "
+            "per report type in this deployment; 'not ingested yet' "
+            "means no row of that type exists. Prospective Plantings, "
+            "Acreage and Small Grains Summary have no ingestion "
+            "collector yet, so they are 'not ingested yet' until one "
+            "is added."
+        )
+    for event in events:
+        event["ingestion_status"] = ingestion_status_for_report(event["report"], statuses)
     today = datetime.now(ET).date()
     upcoming = [event for event in events if not event["is_past"]]
     return {
@@ -235,4 +401,9 @@ def report_calendar(year: int = Query(SUPPORTED_YEAR)):
         "upcoming": upcoming[:10],
         "events": events,
         "count": len(events),
+        "ingestion_status": {
+            report_name: ingestion_status_for_report(report_name, statuses)
+            for report_name in REPORT_NAME_TO_TYPE
+        },
+        "ingestion_status_note": ingestion_note,
     }

@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html><head><title>Synthetic page with no var-bids payload</title></head>
+<body>
+<!--
+  SYNTHETIC fixture for tests/test_cashbids_embed_collector.py.
+  A cashbids-js.php-shaped page that carries a rendered bid table but
+  NO `var bids` JSON payload — the collector must report "unsupported",
+  not parse the table (the table body is client-filled on at least one
+  live site, so it is not a reliable static route).
+-->
+<div class="ac-table-holder"><table cellspacing="0" cellpadding="0" border="0" width="100%" class="cashbid_table cashbid_fulltable"><thead><tr class="cashbid_group"><td class="cashbid_groupheader" colspan="7">Hecla</td></tr><tr class="cashbid_fields"></tr></thead><tbody><tr class="odd"></tr><tr class="even"></tr></tbody></table></div>
+</body></html>

@@ -80,7 +80,7 @@ url     = "https://agpartners.net/cash-bids"
 
 [[us.elevators]]
 enabled = true
-type    = "dtn"
+type    = "agricharts-embed"
 name    = "Agtegra"
 url     = "https://www.agtegra.com/cash-bids"
 
@@ -128,7 +128,7 @@ url     = "https://gpreinc.com/corn-bids/"
 
 [[us.elevators]]
 enabled = true
-type    = "dtn"
+type    = "agricharts-embed"
 name    = "Heritage Cooperative"
 url     = "https://www.heritagecooperative.com/grain/cash-bids"
 
@@ -140,7 +140,7 @@ url     = "https://www.kanzacoop.com/services/grain"
 
 [[us.elevators]]
 enabled = true
-type    = "dtn"
+type    = "agricharts-embed"
 name    = "Linn Coop"
 url     = "https://www.linncoop.com/grain/cash-bids"
 
@@ -152,7 +152,7 @@ url     = "https://www.luckeyfarmers.com/markets/cash.php"
 
 [[us.elevators]]
 enabled = true
-type    = "dtn"
+type    = "agricharts-embed"
 name    = "Midway Coop"
 url     = "https://www.midwaycoop.com/grain/cash-bids"
 
@@ -173,8 +173,8 @@ name    = "AGP"
 url     = "https://www.agp.com/grain/bids"
 
 [[us.elevators]]
-enabled = false
-type    = "unknown"
+enabled = true
+type    = "agricharts-embed"
 name    = "Ag State"
 url     = "https://www.agstate.org/grain"
 
@@ -296,8 +296,8 @@ name    = "Sunrise"
 url     = "https://www.sunriseco-op.com"
 
 [[us.elevators]]
-enabled = false
-type    = "unknown"
+enabled = true
+type    = "agricharts-embed"
 name    = "Superior Ag"
 url     = "https://www.superiorag.com"
 

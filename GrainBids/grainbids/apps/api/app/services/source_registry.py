@@ -49,6 +49,12 @@ ADAPTERS: dict[str, SourceAdapter] = {
     "ace_ethanol": SourceAdapter("ace_ethanol", "bushel_source", "fetch_ace_ethanol", "direct_dict", "scraper", 15, 90),
     "alliance_grain": SourceAdapter("alliance_grain", "bushel_source", "fetch_alliance_grain", "direct_dict", "scraper", 15, 90),
     "agp": SourceAdapter("agp", "bushel_source", "fetch_agp", "direct_dict", "scraper", 15, 90),
+    "agtegra": SourceAdapter("agtegra", "cashbids_embed_source", "fetch_agtegra", "direct_dict", "scraper", 15, 90),
+    "heritage_coop": SourceAdapter("heritage_coop", "cashbids_embed_source", "fetch_heritage_coop", "direct_dict", "scraper", 15, 90),
+    "linn_coop": SourceAdapter("linn_coop", "cashbids_embed_source", "fetch_linn_coop", "direct_dict", "scraper", 15, 90),
+    "midway_coop": SourceAdapter("midway_coop", "cashbids_embed_source", "fetch_midway_coop", "direct_dict", "scraper", 15, 90),
+    "ag_state": SourceAdapter("ag_state", "cashbids_embed_source", "fetch_ag_state", "direct_dict", "scraper", 15, 90),
+    "superior_ag": SourceAdapter("superior_ag", "cashbids_embed_source", "fetch_superior_ag", "direct_dict", "scraper", 15, 90),
     "usda_mirror_jvg": SourceAdapter("usda_mirror_jvg", "usda_mirror_source", "fetch_usda_mirror", "direct_dict", "scraper", 15, 90),
     "usda_mirror_fsg": SourceAdapter("usda_mirror_fsg", "usda_mirror_source", "fetch_usda_mirror_fs_grain", "direct_dict", "scraper", 15, 90),
 }

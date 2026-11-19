@@ -46,6 +46,12 @@ forest_river = true
 ace_ethanol = true  # Bushel .cbmod, verified live 2026-11-19 (Cycle 6)
 alliance_grain = true  # Bushel .cbmod, verified live 2026-11-19 (Cycle 6)
 agp        = true  # Bushel .cbmod iframe, verified live 2026-11-19 (Cycle 7; Chester, NE only on that page)
+agtegra    = true  # AgriCharts cashbids.php embed, verified live 2026-11-19 (Cycle 7)
+heritage_coop = true
+linn_coop  = true
+midway_coop = true
+ag_state   = true
+superior_ag = true
 usda_mirror_jvg = true  # USDA AMS cash-bid report mirror, verified live 2026-11-19 (Cycle 4)
 usda_mirror_fsg = true  # same report, second host (FS Grain)
 

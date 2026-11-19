@@ -5,6 +5,7 @@ from sqlalchemy import text
 
 from app.api.routes.alerts import router as alerts_router
 from app.api.routes.advisor import router as advisor_router
+from app.api.routes.best_bids import router as best_bids_router
 from app.api.routes.bids import router as bids_router
 from app.api.routes.elevator_ops import router as elevator_ops_router
 from app.api.routes.ingestion import router as ingestion_router
@@ -13,6 +14,7 @@ from app.api.routes.market_search import router as market_search_router
 from app.api.routes.market_report import router as market_report_router
 from app.api.routes.newsletter import router as newsletter_router
 from app.api.routes.normalized_prices import router as normalized_prices_router
+from app.api.routes.price_history import router as price_history_router
 from app.api.routes.quotes import router as quotes_router
 from app.api.routes.reference import router as reference_router
 from app.api.routes.research import router as research_router
@@ -69,6 +71,7 @@ def create_app() -> FastAPI:
     app.include_router(elevator_ops_router)
     app.include_router(reference_router)
     app.include_router(research_router)
+    app.include_router(best_bids_router)
     app.include_router(bids_router)
     app.include_router(sources_router)
     app.include_router(ingestion_router)
@@ -78,6 +81,7 @@ def create_app() -> FastAPI:
     app.include_router(newsletter_router)
     app.include_router(normalized_prices_router)
     app.include_router(alerts_router)
+    app.include_router(price_history_router)
     app.include_router(quotes_router)
     app.include_router(watchlists_router)
     app.include_router(saved_searches_router)

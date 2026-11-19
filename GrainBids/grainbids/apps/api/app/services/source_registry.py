@@ -37,6 +37,8 @@ ADAPTERS: dict[str, SourceAdapter] = {
     "north_gower": SourceAdapter("north_gower", "north_gower_source", "fetch_north_gower_latest", "direct_dict", "scraper", 15, 90),
     "mapleview": SourceAdapter("mapleview", "mapleview_source", "fetch_mapleview", "direct_dict", "scraper", 15, 90),
     "fac": SourceAdapter("fac", "bushel_source", "fetch_fac", "direct_dict", "scraper", 15, 90),
+    "usda_mirror_jvg": SourceAdapter("usda_mirror_jvg", "usda_mirror_source", "fetch_usda_mirror", "direct_dict", "scraper", 15, 90),
+    "usda_mirror_fsg": SourceAdapter("usda_mirror_fsg", "usda_mirror_source", "fetch_usda_mirror_fs_grain", "direct_dict", "scraper", 15, 90),
 }
 PILOT_ADAPTER_KEYS = ("agricharts", "glg", "hensall", "snobelen", "andersons")
 

@@ -16,6 +16,7 @@ from app.services.research import (
     fetch_nass_quick_stats,
     fetch_public_file_text,
     parse_commitments_of_traders_text,
+    parse_crop_production_text,
     parse_crop_progress_text,
     parse_export_sales_text,
     parse_grain_stocks_text,
@@ -149,6 +150,9 @@ def ingest_file(
     elif report_type == "commitments_of_traders":
         values = parse_commitments_of_traders_text(str(text))
         source = "CFTC Commitments of Traders"
+    elif report_type == "crop_production":
+        values = parse_crop_production_text(str(text))
+        source = "USDA NASS Crop Production"
     else:
         values = []
         source = f"USDA {report_type.replace('_', ' ').title()}"

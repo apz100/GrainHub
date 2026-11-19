@@ -13,7 +13,16 @@ Design, from the super plan:
   release, verified 2026-11-19); pass the current release's txt URL
   from the ESMIS Grain Stocks page. Only the "Domestic Units" summary
   table is parsed (on-farm / off-farm / total, latest year in the file).
-- Commitments of Traders is read from the CFTC Public Reporting
+- Crop Production is a monthly NASS txt release on ESMIS. Each release
+  has its own txt URL (see ``CROP_PRODUCTION_TXT_URL`` — the Nov 10
+  2026 release, verified 2026-11-19); pass the current release's txt
+  URL from the ESMIS Crop Production page. Only the per-crop "Area
+  Harvested, Yield, and Production - States and United States" tables
+  are parsed (Corn for Grain, Sorghum for Grain, Soybeans for Beans,
+  Rice — the four whose units were verified in the Nov 10 2026 file),
+  and only their "United States" rows. A row with fewer than the
+  expected 7 numbers (blank cells) is skipped, never positionally
+  guessed.
   Environment (Socrata JSON, no key): the Legacy futures-only dataset
   ``6dca-aqww``. The historical zip (``deacotYYYY.zip``) returned HTTP
   403 to a plain GET on 2026-11-19, so the API is the supported route.
@@ -53,6 +62,11 @@ CROP_PROGRESS_URL = "https://downloads.usda.gov/esmis/nass-crop-progress/crop-pr
 # For a new quarter, take the current release's "- txt" link from
 # https://esmis.nal.usda.gov/publication/grain-stocks
 GRAIN_STOCKS_TXT_URL = "https://esmis.nal.usda.gov/sites/default/release-files/796087/grst0926_0.txt"
+# Crop Production txt URL is release-specific: this is the Nov 10 2026
+# release, verified live 2026-11-19 (HTTP 200, 161,866 bytes).
+# For a new month, take the current release's "- txt" link from
+# https://esmis.nal.usda.gov/publication/crop-production
+CROP_PRODUCTION_TXT_URL = "https://esmis.nal.usda.gov/sites/default/release-files/796144/crop1126.txt"
 # CFTC Public Reporting Environment (Socrata, no key): Legacy COT,
 # futures only. Callers should request the latest week(s), e.g.
 # ?$order=report_date_as_yyyy_mm_dd DESC&$limit=200
@@ -375,8 +389,131 @@ def parse_grain_stocks_text(text: str) -> list[dict[str, object]]:
     return output
 
 
-# Legacy COT futures-only markets that are grains. Keys are the
-# ``contract_market_name`` values in the CFTC Public Reporting
+# Crop Production per-crop tables with the 7-column United States row
+# (area harvested prior/forecast year, yield prior/Oct 1/Nov 1,
+# production prior/forecast year). Only these four tables were verified
+# against the Nov 10 2026 release; other tables in the file (Peanut,
+# Cotton by type, Sugarbeet, Potato, ...) have different column shapes
+# and are deliberately not parsed.
+_CROP_PRODUCTION_TABLES = {
+    "Corn for Grain": "Corn",
+    "Sorghum for Grain": "Sorghum",
+    "Soybeans for Beans": "Soybeans",
+    "Rice": "Rice",
+}
+_CROP_PRODUCTION_HEADING = re.compile(
+    r"^(Corn for Grain|Sorghum for Grain|Soybeans for Beans|Rice)"
+    r" Area Harvested, Yield, and Production - States and United States: (\d{4})"
+)
+_CROP_PRODUCTION_FORECAST = re.compile(
+    r"Forecasted (\w+ 1, \d{4})"
+)
+_CROP_PRODUCTION_UNITS = re.compile(
+    r"1,000 acres\s+-+\s*(\w+)\s+-+\s+.*?(1,000 [a-z]+)"
+)
+_CROP_PRODUCTION_US_ROW = re.compile(r"^United States\s*(?:\.+\s*)?:\s*(.*?)\s*$")
+_CROP_PRODUCTION_NUMBER = re.compile(r"^[\d,]+(?:\.\d+)?$")
+
+
+def parse_crop_production_text(text: str) -> list[dict[str, object]]:
+    """Extract US area / yield / production from a Crop Production txt release.
+
+    Parses only the per-crop "Area Harvested, Yield, and Production -
+    States and United States" tables, and only their "United States"
+    rows (7 numbers: area harvested prior year / forecast year, yield
+    prior year / October 1 / November 1, production prior year /
+    forecast year). The yield and production units are read from the
+    table's own units line (bushels for corn/sorghum/soybeans, pounds
+    and 1,000 cwt for rice). A United States row with fewer than 7
+    numbers (blank cells — the estimation period has not begun) is
+    skipped, never positionally guessed. State rows and the summary
+    tables in the same file are ignored. Only values actually in the
+    file are returned.
+    """
+    lines = text.splitlines()
+    output: list[dict[str, object]] = []
+    index = 0
+    while index < len(lines):
+        heading = _CROP_PRODUCTION_HEADING.match(lines[index].strip())
+        if heading is None:
+            index += 1
+            continue
+        crop_label, prior_year_text = heading.group(1), heading.group(2)
+        commodity = _CROP_PRODUCTION_TABLES[crop_label]
+        prior_year = int(prior_year_text)
+        # The heading wraps across lines ("2025 and\nForecasted
+        # November 1, 2026", or "2025 and Forecasted\nNovember 1,
+        # 2026"), so search the heading plus the next two lines joined.
+        forecast_date: str | None = None
+        heading_window = " ".join(
+            line.strip() for line in lines[index : index + 3]
+        )
+        match = _CROP_PRODUCTION_FORECAST.search(heading_window)
+        if match:
+            forecast_date = match.group(1)
+        if forecast_date is None:
+            index += 1
+            continue
+        forecast_year = int(forecast_date.rsplit(", ", 1)[1])
+        # Scan the table body (bounded; stop at the next table heading).
+        yield_unit: str | None = None
+        production_unit: str | None = None
+        us_numbers: list[str] | None = None
+        scan = index + 1
+        while scan < len(lines) and scan < index + 120:
+            stripped = lines[scan].strip()
+            if (
+                scan > index + 1
+                and " Area Harvested, Yield, and Production - States and United States:" in stripped
+            ):
+                break  # next table — never attribute its rows to this crop
+            if yield_unit is None:
+                units = _CROP_PRODUCTION_UNITS.search(stripped)
+                if units:
+                    yield_unit = f"{units.group(1)} per acre"
+                    production_unit = units.group(2).replace("1,000", "thousand")
+            us_row = _CROP_PRODUCTION_US_ROW.match(stripped)
+            if us_row is not None:
+                tokens = [
+                    token
+                    for token in us_row.group(1).split()
+                    if _CROP_PRODUCTION_NUMBER.match(token)
+                ]
+                if len(tokens) == 7:
+                    us_numbers = tokens
+                break
+            scan += 1
+        index = scan + 1 if us_numbers is not None else scan
+        if us_numbers is None or yield_unit is None or production_unit is None:
+            continue
+        area_prior, area_forecast, yield_prior, yield_oct1, yield_nov1, prod_prior, prod_forecast = (
+            value.replace(",", "") for value in us_numbers
+        )
+        for metric, value, unit, year, forecast in (
+            ("area_harvested", area_prior, "thousand acres", prior_year, None),
+            ("area_harvested", area_forecast, "thousand acres", forecast_year, None),
+            ("yield", yield_prior, yield_unit, prior_year, None),
+            ("yield", yield_oct1, yield_unit, forecast_year, "October 1, " + str(forecast_year)),
+            ("yield", yield_nov1, yield_unit, forecast_year, forecast_date),
+            ("production", prod_prior, production_unit, prior_year, None),
+            ("production", prod_forecast, production_unit, forecast_year, None),
+        ):
+            row: dict[str, object] = {
+                "commodity": commodity,
+                "metric": metric,
+                "value": value,
+                "unit": unit,
+                "year": year,
+                "forecast_date": forecast_date,
+                "source": "USDA NASS Crop Production",
+            }
+            if forecast is not None:
+                row["forecast"] = forecast
+            output.append(row)
+    return output
+
+
+# Legacy COT futures-only markets that are grains. Keys are the# ``contract_market_name`` values in the CFTC Public Reporting
 # Environment dataset; values are the display names used downstream.
 _COT_GRAIN_MARKETS = {
     "CORN": "Corn",

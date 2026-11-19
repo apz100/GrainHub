@@ -13,6 +13,7 @@ from app.services.research import (  # noqa: E402
     ResearchKeyRequired,
     fetch_nass_quick_stats,
     parse_commitments_of_traders_text,
+    parse_crop_production_text,
     parse_crop_progress_text,
     parse_export_sales_text,
     parse_grain_stocks_text,
@@ -319,3 +320,89 @@ def test_append_research_section_labels_source_and_vintage() -> None:
     assert "2026-11-10" in updated.text
     assert "1758" in updated.text
     assert updated.sections[-1]["kind"] == "research"
+
+
+# --- Crop Production (Nov 10 2026 release, ESMIS crop1126.txt) ---
+# Table excerpts below are verbatim from the release file; the Rice
+# table heading wrap and the Sorghum units line (no trailing dashes)
+# are the two format quirks the parser must handle.
+_CROP_PRODUCTION_CORN = """Corn for Grain Area Harvested, Yield, and Production - States and United States: 2025 and
+Forecasted November 1, 2026
+----------------------------------------------------------------------------------------------
+                 :  Area harvested   :          Yield per acre          :     Production
+                 :----------------------------------------------------------------------------
+      State      :         :         :          :         2026          :          :
+                 :  2025   :  2026   :   2025   :-----------------------:   2025   :   2026
+                 :         :         :          : October 1 :November 1 :          :
+----------------------------------------------------------------------------------------------
+                 :    1,000 acres       ---------- bushels ----------    --- 1,000 bushels ---
+                 :
+Iowa ............: 13,150    12,800     210.0       219.0       219.0     2,761,500  2,803,200
+United States ...: 90,948    88,506     186.5       181.2       179.6    16,963,628 15,893,419
+----------------------------------------------------------------------------------------------
+"""
+
+_CROP_PRODUCTION_RICE = """Rice Area Harvested, Yield, and Production - States and United States: 2025 and Forecasted
+November 1, 2026
+-------------------------------------------------------------------------------------------------
+              :   Area harvested    :            Yield per acre            :    Production 1/
+              :----------------------------------------------------------------------------------
+     State    :          :          :            :          2026           :          :
+              :   2025   :   2026   :    2025    :-------------------------:   2025   :   2026
+              :          :          :            : October 1  : November 1 :          :
+-------------------------------------------------------------------------------------------------
+              :     1,000 acres         ------------ pounds -----------      ---- 1,000 cwt ---
+              :
+Arkansas ........:  1,200       900       7,600        7,700        7,700       91,200     69,300
+United States :  2,740      2,057       7,544        7,668        7,664      206,707    157,648
+-------------------------------------------------------------------------------------------------
+"""
+
+
+def test_parse_crop_production_text_extracts_us_rows() -> None:
+    values = parse_crop_production_text(_CROP_PRODUCTION_CORN + _CROP_PRODUCTION_RICE)
+    by_key = {
+        (v["commodity"], v["metric"], v["year"], v.get("forecast")): v["value"]
+        for v in values
+    }
+    assert by_key[("Corn", "production", 2026, None)] == "15893419"
+    assert by_key[("Corn", "production", 2025, None)] == "16963628"
+    assert by_key[("Corn", "area_harvested", 2026, None)] == "88506"
+    assert by_key[("Corn", "yield", 2026, "November 1, 2026")] == "179.6"
+    assert by_key[("Corn", "yield", 2026, "October 1, 2026")] == "181.2"
+    assert by_key[("Corn", "yield", 2025, None)] == "186.5"
+    # Rice uses different units, read from its own units line.
+    assert by_key[("Rice", "production", 2026, None)] == "157648"
+    assert by_key[("Rice", "yield", 2026, "November 1, 2026")] == "7664"
+    rice_yield = [v for v in values if v["commodity"] == "Rice" and v["metric"] == "yield"][0]
+    assert rice_yield["unit"] == "pounds per acre"
+    rice_prod = [v for v in values if v["commodity"] == "Rice" and v["metric"] == "production"][0]
+    assert rice_prod["unit"] == "thousand cwt"
+    corn_prod = [v for v in values if v["commodity"] == "Corn" and v["metric"] == "production"][0]
+    assert corn_prod["unit"] == "thousand bushels"
+    assert all(v["forecast_date"] == "November 1, 2026" for v in values)
+    assert all(v["source"] == "USDA NASS Crop Production" for v in values)
+    # State rows are ignored: no Iowa / Arkansas values in the output.
+    assert "2803200" not in {v["value"] for v in values}
+    assert "69300" not in {v["value"] for v in values}
+
+
+def test_parse_crop_production_text_returns_nothing_for_bad_input() -> None:
+    assert parse_crop_production_text("") == []
+    assert parse_crop_production_text("Crop Production\nCorn production is forecast at 15.9 billion bushels.\n") == []
+    # Heading present but the United States row is missing -> nothing.
+    assert parse_crop_production_text(
+        "Corn for Grain Area Harvested, Yield, and Production - States and United States: 2025 and\n"
+        "Forecasted November 1, 2026\n"
+        "Iowa ............: 13,150    12,800     210.0       219.0       219.0     2,761,500  2,803,200\n"
+    ) == []
+
+
+def test_parse_crop_production_text_skips_incomplete_us_row() -> None:
+    # A United States row with a blank cell (fewer than 7 numbers)
+    # must be skipped, never positionally guessed.
+    text = _CROP_PRODUCTION_CORN.replace(
+        "United States ...: 90,948    88,506     186.5       181.2       179.6    16,963,628 15,893,419",
+        "United States ...: 90,948    88,506     186.5       181.2               16,963,628 15,893,419",
+    )
+    assert parse_crop_production_text(text) == []

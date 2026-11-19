@@ -22,6 +22,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
+import requests
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -392,6 +393,105 @@ def test_tag_present_feed_empty_returns_basis_only_rows(empty_feed: str) -> None
         assert not (df[col] == 0).any()
     assert all(_NO_TAG_NOTE_FRAGMENT in (n or "") for n in df["Note"].tolist())
     assert all("never invented" in (n or "") for n in df["Note"].tolist())
+
+
+# ─── Cycle 26 — feed-fetch-raise degradation ───
+# Tag IS present and the jsquote feed fetch itself RAISES (HTTP
+# error, timeout, any exception from _fetch_jsquote): the
+# collector degrades exactly like the Cycle 24 no-tag and Cycle 25
+# empty-feed paths — rows parse as basis-only, Futures Month
+# decoded from the symbol, Futures Price / Change / cash None
+# with a Note, never invented. The page fetch itself failing is
+# different: with no HTML there is nothing to parse, so the
+# collector still returns an empty DataFrame (outer except).
+
+
+@pytest.mark.parametrize(
+    "feed_error",
+    [
+        requests.exceptions.HTTPError("503 Service Unavailable"),
+        requests.exceptions.ConnectTimeout("connect timed out"),
+        requests.exceptions.ReadTimeout("read timed out"),
+    ],
+)
+def test_tag_present_feed_fetch_raises_returns_basis_only_rows(
+    feed_error: Exception,
+) -> None:
+    """Cycle 26 (a): tag present + feed fetch raises → basis-only rows.
+
+    Same values as the no-tag / empty-feed tests, except the feed
+    fetch raises instead of returning empty: two GETs are attempted
+    (page + jsquote), the second raises, and the rows still parse.
+    Basis / Delivery / Location / Name filled, Futures Month
+    decoded from the symbol, feed-dependent values None with a
+    Note, never invented.
+    """
+    page = (FIXTURES / "us_agricharts_mixed_sample.html").read_text(encoding="utf-8")
+    assert "jsquote.php" in page
+    assert page.count("writeBidRow('") == 4
+
+    called_urls: list[str] = []
+
+    def _fake_get(url, params=None, headers=None, timeout=None):
+        called_urls.append(url)
+        if "jsquote" in url:
+            raise feed_error
+        return _Resp24(page)
+
+    with patch.object(ag.requests, "get", side_effect=_fake_get):
+        df = ag.fetch_us_agricharts(
+            "https://example.invalid/markets/cash.php", "Test Elevator"
+        )
+
+    assert len(df) == 4
+    assert called_urls == [
+        "https://example.invalid/markets/cash.php",
+        "https://www.agricharts.com/marketdata/jsquote.php",
+    ]
+    assert df["Basis"].tolist() == ["-25", "-20", "+10", "+12"]
+    assert df["Name"].tolist() == ["CORN", "CORN", "SOYBEANS", "SOYBEANS"]
+    assert df["Delivery"].tolist() == [
+        "12/01/2026", "Dec 2026", "January 2027", "Nov 26",
+    ]
+    assert set(df["Location"].tolist()) == {"Test Elevator - Riverside"}
+    # Futures Month decoded from the symbol, as on the no-tag path.
+    assert df["Futures Month"].tolist() == [
+        "Dec 2026", "Dec 2026", "Jan 2027", "Jul 2027",
+    ]
+    # Feed-dependent values are missing, not zero and not invented.
+    for col in ("Futures Price", "Change", "Bushel Cash Price", "MT Cash Price"):
+        assert df[col].map(lambda v: v is None).all(), col
+        assert not (df[col] == "").any()
+        assert not (df[col] == 0).any()
+    assert all(_NO_TAG_NOTE_FRAGMENT in (n or "") for n in df["Note"].tolist())
+    assert all("never invented" in (n or "") for n in df["Note"].tolist())
+
+
+@pytest.mark.parametrize(
+    "page_error",
+    [
+        requests.exceptions.HTTPError("500 Internal Server Error"),
+        requests.exceptions.ConnectTimeout("connect timed out"),
+    ],
+)
+def test_page_fetch_raises_still_returns_empty(page_error: Exception) -> None:
+    """Cycle 26 (b): the page fetch itself raises → empty, no crash.
+
+    A failed page fetch leaves no HTML to parse, so there are no
+    rows to degrade to — the outer except returns an empty
+    DataFrame, exactly as before Cycle 26. No invented rows, no
+    exception escaping to the caller.
+    """
+    def _fake_get(url, params=None, headers=None, timeout=None):
+        raise page_error
+
+    with patch.object(ag.requests, "get", side_effect=_fake_get):
+        df = ag.fetch_us_agricharts(
+            "https://example.invalid/markets/cash.php", "Test Elevator"
+        )
+
+    assert df.empty
+
 
 HERITAGE_FIXTURE = FIXTURES / "us_agricharts_heritage_sample.html"
 HERITAGE_SAVED = Path("/tmp/cycle22/heritage_cash.html")

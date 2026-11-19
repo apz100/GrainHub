@@ -48,6 +48,14 @@ present but the jsquote feed returns no data (empty quotes,
 e.g. `var quotes = null;`), the collector degrades the same
 way as the no-tag path instead of returning an empty DataFrame.
 
+Cycle 26: when the tag IS present but the jsquote feed fetch
+itself RAISES (HTTP error, timeout, any exception from
+_fetch_jsquote), the collector degrades the same way — the page
+already fetched successfully, so the basis-only rows survive.
+Only the feed call is wrapped: if the PAGE fetch itself fails
+there is no HTML to parse, and the outer except still returns
+an empty DataFrame.
+
 Usage (called by GrainBidder.py via the [[us.elevators]] config):
     fetch_us_agricharts(url, company_name) -> pd.DataFrame
 
@@ -294,8 +302,21 @@ def fetch_us_agricharts(url: str, company_name: str, playwright=None) -> pd.Data
             # no-tag path (basis-only rows, §9 scope note) instead
             # of returning an empty DataFrame. A feed WITH data
             # behaves exactly as before.
-            quotes = _fetch_jsquote(varname, symbols)
-            if not quotes:
+            # Cycle 26: a feed fetch that RAISES (HTTP error, timeout,
+            # any exception from _fetch_jsquote) degrades the same
+            # way — the page is already fetched, so the basis-only
+            # rows survive. Only the feed call is wrapped in this
+            # try: if the PAGE fetch itself fails there is no HTML
+            # to parse, and the outer except still returns empty.
+            try:
+                quotes = _fetch_jsquote(varname, symbols)
+            except Exception as e:
+                print(
+                    f"[US-AG WARN] {company_name}: jsquote fetch failed "
+                    f"({e}) — parsing basis-only rows"
+                )
+                degraded = True
+            if not quotes and not degraded:
                 print(
                     f"[US-AG WARN] {company_name}: jsquote returned no "
                     "data — parsing basis-only rows"

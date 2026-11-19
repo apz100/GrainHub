@@ -3407,3 +3407,23 @@ Tag present + jsquote feed returns empty (`var quotes = null;` or `{}`) now degr
 
 1. **Heartland / Mulvane — closed for now.** Default view, one filtered view (Heartland), and the feed derivation all return nothing. No further probes without a new hypothesis (e.g. a JS-rendered route, or a different AgriCharts host). Toggles stay `false`.
 2. **Feed-error degradation** (outer `except` path) — one-line follow-up, if wanted.
+
+## Cycle 26 — Live re-verification sweep: all five exact matches; feed-error degradation (2026-11-19)
+
+### Live re-verification sweep (5 site probes, Thu, Nov 19)
+
+All five key collectors re-verified live via their wrappers; **all returned `status='ok'` with row counts identical to the last verification — no drift, no failures.** Counts only, no values recorded.
+
+| Collector | Rows now | Last verified | Verdict |
+|---|---|---|---|
+| FMN (`fetch_fmn_cash`) | 453 rows (87 points, 204 tables; 449/449 futures-linked filled) | Cycle 10–11: 453 | Exact match |
+| Five Star Coop (`fetch_five_star_coop`) | 299 rows, 21 locations | Cycle 8–9: 299 | Exact match |
+| TGM embed (`fetch_tgm`) | 362 rows, 24 locations | Cycle 9: 362 | Exact match |
+| USDA mirror, James Valley (`fetch_usda_mirror`) | 197 rows, 29 regions, report id 7730, dated Nov 18 | Cycle 4: 197 | Exact match |
+| FAC, Bushel (`fetch_fac`) | 45 rows, 3 locations; header dated Nov 19 | Cycle 4–5: 45 | Exact match |
+
+Notes: FMN's dropdown still lists more points than the 204 tables (known limitation, unchanged); Five Star's page trade date is Nov 18; FAC's widget header is fresh (Nov 19). The five collectors' live behaviour is stable across cycles — the catalogue's verified counts stand.
+
+### Feed-error degradation implemented (mocked tests only, 0 GETs)
+
+Only the `_fetch_jsquote` call is now wrapped in its own `try/except`: a feed fetch that RAISES (HTTP error/timeout) degrades to basis-only rows, like the no-tag (Cycle 24) and empty-feed (Cycle 25) paths. A page fetch that raises still returns empty via the outer `except` (no HTML to parse, no invented rows). 5 new mocked tests (3 feed-raises, 2 page-raises); full suite 709 passed. This closes the last open follow-up from the Cycle 23 design note — all three degradation paths (no tag, empty feed, feed error) now behave the same way.

@@ -252,3 +252,17 @@ follow-up: treat empty quotes like the no-tag path.
   degrades; a feed fetch that *raises* (HTTP error/timeout) still
   returns empty via the outer `except` — a further one-line
   follow-up if wanted.
+
+### Cycle 26 update — feed-error degradation closes the design
+
+The last open follow-up from §5(a) is now implemented: a feed fetch
+that RAISES (HTTP error/timeout) degrades to basis-only rows — only
+the `_fetch_jsquote` call is wrapped in its own `try/except`, so a
+page fetch that raises still returns empty (no HTML to parse). All
+three degradation paths (no tag, empty feed, feed error) now behave
+the same way. 5 new mocked tests; suite 709 passed. **Live
+re-verification sweep (5 probes, Cycle 26): FMN 453 rows, Five Star
+299, TGM 362, USDA mirror 197, FAC 45 — all exact matches to their
+last verifications.** The design note's work is complete; the only
+remaining AgriCharts open item is Heartland/Mulvane, closed for now
+(see catalogue Cycle 25).

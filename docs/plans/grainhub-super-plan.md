@@ -329,12 +329,12 @@ branch to GitHub frequently.
 - Elevator Ops: which ERP first (Agris / Agvance / AgTrax)?
 - US scope: Corn Belt first, or Corn Belt + Gulf / PNW from day one?
 
-## 9. Progress — Cycles 1–24 (2026-11-18/19)
+## 9. Progress — Cycles 1–25 (2026-11-18/19)
 
-Twenty-four overnight autonomous cycles on branches `overnight/grainhub-cycle-1`
-through `overnight/grainhub-cycle-24`, none merged to master. Full API test
-suite grew **179 → 291 → 320 → 359 → 364 → 380 → 407 → 407 → 454 → 488 → 536 → 558 → 590 → 617 → 629 → 638 → 643 → 646 → 656 → 692 → 692 → 696 → 697 → 702 passed, 0 failed**
-across the twenty-four cycles. Full detail in `docs/plans/overnight-cycle-N-report.md`.
+Twenty-five overnight autonomous cycles on branches `overnight/grainhub-cycle-1`
+through `overnight/grainhub-cycle-25`, none merged to master. Full API test
+suite grew **179 → 291 → 320 → 359 → 364 → 380 → 407 → 407 → 454 → 488 → 536 → 558 → 590 → 617 → 629 → 638 → 643 → 646 → 656 → 692 → 692 → 696 → 697 → 702 → 704 passed, 0 failed**
+across the twenty-five cycles. Full detail in `docs/plans/overnight-cycle-N-report.md`.
 Merge order, gates, and conflicts are in `docs/plans/merge-plan.md`.
 
 - **Cycle 1** (`overnight/grainhub-cycle-1`, 179 tests): Phase 0 hardening,
@@ -509,6 +509,12 @@ Merge order, gates, and conflicts are in `docs/plans/merge-plan.md`.
   missing); staleness daytime re-check — none of the four refreshed
   (Chadbourn 4th consecutive stale probe); merge plan extended to
   Cycle 23 (65 commits, 0 merges).
+- **Cycle 25** (`overnight/grainhub-cycle-25`, 704 tests): Heartland
+  filtered view (`location_filter=22143`) still 0 rows — hypothesis
+  closed; Mulvane re-checked 0 rows (tag present, empty symbols —
+  correction extended); feed-down degradation implemented (empty
+  feed → basis-only rows), 2 new tests; Heartland/Mulvane closed
+  for now; merge plan extended to Cycle 24 (67 commits, 0 merges).
 
 **Remaining blockers that need Adam:** NASS API key (free) and FAS /
 data.gov key (free); LLM provider + key for Advisor `/ask`; Barchart /
@@ -558,4 +564,7 @@ still 0 rows — rows no longer in static HTML); (b) probe fails
 (feed returns `var quotes = null;`) and corrects the "tag missing"
 phrasing (tag present, empty symbols); staleness daytime re-check
 — none of the four refreshed, refresh-later hypothesis answered
-(no).
+(no). **Cycle 25 additions:** Heartland filtered view still 0 rows
+(hypothesis closed); Mulvane re-checked 0 rows, tag correction
+extended; feed-down degradation implemented; Heartland/Mulvane
+closed for now.

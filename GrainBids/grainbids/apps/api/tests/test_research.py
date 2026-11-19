@@ -12,7 +12,10 @@ from app.services.market_report import append_research_section, compile_market_r
 from app.services.research import (  # noqa: E402
     ResearchKeyRequired,
     fetch_nass_quick_stats,
+    parse_commitments_of_traders_text,
     parse_crop_progress_text,
+    parse_export_sales_text,
+    parse_grain_stocks_text,
     parse_nass_records,
     parse_wasde_text,
     research_status,
@@ -77,7 +80,204 @@ def test_parse_crop_progress_text_extracts_harvest_percent() -> None:
     }
 
 
-def test_append_research_section_is_noop_without_reports() -> None:
+def test_parse_grain_stocks_text_extracts_latest_year_totals() -> None:
+    # Lines copied verbatim from the Sep 30 2026 Grain Stocks txt release
+    # (ESMIS grst0926_0.txt), Domestic Units table; December 1 has no
+    # 2026 values yet, so no December rows are emitted for the latest year.
+    text = """Contents
+Grain Stocks by Position and Month in Domestic Units - United States: 2025 and 2026..........................  4
+Grain Stocks by Position and Month in Metric Units - United States: 2025 and 2026............................  5
+Grain Stocks by Position and Month in Domestic Units - United States: 2025 and 2026
+[Blank data cells indicate estimation period has not yet begun]
+----------------------------------------------------------------------------------------------
+                :                 2025                 :                 2026
+                :-----------------------------------------------------------------------------
+      Date      :     On     :    Off     : Total all  :     On     :    Off     : Total all
+                :   farms    :  farms 1/  : positions  :   farms    :  farms 1/  : positions
+----------------------------------------------------------------------------------------------
+                :                                1,000 bushels
+Corn            :
+March 1 ........: 4,500,000    3,647,437     8,147,437   5,432,000    3,598,190    9,030,190
+September 1 ....:   643,200      908,086     1,551,286     787,300    1,307,757    2,095,057
+December 1 .....: 8,699,000    4,606,825    13,305,825
+Soybeans        :
+September 1 ....:    91,500      233,306       324,806      90,400      224,733      315,133
+----------------------------------------------------------------------------------------------
+Grain Stocks by Position and Month in Metric Units - United States: 2025 and 2026
+Corn            :
+September 1 ....: 16,338,030   23,066,450   39,404,480   19,998,340   33,218,560   53,216,900
+"""
+    values = parse_grain_stocks_text(text)
+    by_key = {(v["commodity"], v["metric"], v["position_date"]): v["value"] for v in values}
+    assert by_key[("Corn", "total_stocks", "September 1, 2026")] == "2095057"
+    assert by_key[("Corn", "on_farm_stocks", "September 1, 2026")] == "787300"
+    assert by_key[("Corn", "off_farm_stocks", "September 1, 2026")] == "1307757"
+    assert by_key[("Corn", "total_stocks", "March 1, 2026")] == "9030190"
+    assert by_key[("Soybeans", "total_stocks", "September 1, 2026")] == "315133"
+    assert all("December 1, 2026" not in key[2] for key in by_key)
+    # Metric-units table must not leak in (its September corn total differs).
+    assert by_key[("Corn", "total_stocks", "September 1, 2026")] != "53216900"
+    assert all(v["unit"] == "thousand bushels" for v in values)
+    assert all(v["source"] == "USDA NASS Grain Stocks" for v in values)
+
+
+def test_parse_grain_stocks_text_returns_nothing_without_the_table() -> None:
+    assert parse_grain_stocks_text("Grain Stocks\nOld crop corn stocks totaled 2.10 billion bushels.\n") == []
+    assert parse_grain_stocks_text("") == []
+
+
+def test_parse_commitments_of_traders_text_keeps_latest_grain_week_only() -> None:
+    # First record is verbatim from the CFTC Public Reporting Environment
+    # Legacy futures-only dataset (2022-09-13 corn); the 2022-09-20 rows
+    # are synthetic fixtures with distinct values to test date filtering.
+    import json
+
+    payload = json.dumps(
+        [
+            {
+                "market_and_exchange_names": "CORN - CHICAGO BOARD OF TRADE",
+                "report_date_as_yyyy_mm_dd": "2022-09-13T00:00:00.000",
+                "contract_market_name": "CORN",
+                "open_interest_all": "1310411",
+                "noncomm_positions_long_all": "424311",
+                "noncomm_positions_short_all": "129742",
+                "noncomm_postions_spread_all": "181162",
+                "comm_positions_long_all": "588143",
+                "comm_positions_short_all": "822322",
+            },
+            {
+                "market_and_exchange_names": "CORN - CHICAGO BOARD OF TRADE",
+                "report_date_as_yyyy_mm_dd": "2022-09-20T00:00:00.000",
+                "contract_market_name": "CORN",
+                "open_interest_all": "1300000",
+                "noncomm_positions_long_all": "400000",
+                "noncomm_positions_short_all": "120000",
+                "noncomm_postions_spread_all": "180000",
+                "comm_positions_long_all": "580000",
+                "comm_positions_short_all": "820000",
+            },
+            {
+                "market_and_exchange_names": "SOYBEANS - CHICAGO BOARD OF TRADE",
+                "report_date_as_yyyy_mm_dd": "2022-09-20T00:00:00.000",
+                "contract_market_name": "SOYBEANS",
+                "open_interest_all": "900000",
+                "noncomm_positions_long_all": "100000",
+                "noncomm_positions_short_all": "50000",
+                "comm_positions_long_all": "400000",
+                "comm_positions_short_all": "450000",
+            },
+            {
+                "market_and_exchange_names": "GOLD - COMMODITY EXCHANGE INC.",
+                "report_date_as_yyyy_mm_dd": "2022-09-20T00:00:00.000",
+                "contract_market_name": "GOLD",
+                "open_interest_all": "500000",
+                "noncomm_positions_long_all": "200000",
+                "noncomm_positions_short_all": "100000",
+                "comm_positions_long_all": "150000",
+                "comm_positions_short_all": "160000",
+            },
+        ]
+    )
+    values = parse_commitments_of_traders_text(payload)
+    by_key = {(v["commodity"], v["metric"]): v["value"] for v in values}
+    assert by_key[("Corn", "open_interest")] == "1300000"
+    assert by_key[("Corn", "noncommercial_long")] == "400000"
+    assert by_key[("Corn", "noncommercial_spread")] == "180000"
+    assert by_key[("Soybeans", "open_interest")] == "900000"
+    # Soybeans fixture omits the spread field: it must be absent, not zero.
+    assert ("Soybeans", "noncommercial_spread") not in by_key
+    # Older week and non-grain markets are excluded entirely.
+    assert "1310411" not in by_key.values()
+    assert not any(v["commodity"] == "Gold" for v in values)
+    assert all(v["report_date"] == "2022-09-20" for v in values)
+    assert all(v["unit"] == "contracts" for v in values)
+    assert all(v["source"] == "CFTC Commitments of Traders" for v in values)
+
+
+def test_parse_commitments_of_traders_text_returns_nothing_for_bad_input() -> None:
+    assert parse_commitments_of_traders_text("not json") == []
+    assert parse_commitments_of_traders_text("{}") == []
+    assert parse_commitments_of_traders_text("") == []
+
+
+def test_parse_export_sales_text_sums_country_rows_for_latest_week() -> None:
+    # First row is verbatim from the AgTransport Export Sales mirror
+    # (Albania, corn, week ending 2007-10-18); other rows are synthetic
+    # fixtures with distinct values to test summing and date filtering.
+    import json
+
+    payload = json.dumps(
+        [
+            {
+                "date": "2007-10-18T00:00:00.000",
+                "week": "42",
+                "myear": "2007/2008",
+                "country": "ALBANIA",
+                "commodity": "Corn",
+                "unit": "Metric Tons",
+                "wkexportscmy": "5929",
+                "accexportscmy": "5929",
+                "outsalescmy": "0",
+                "grosalescmy": "5929",
+                "netsalescmy": "5929",
+                "totcommcmy": "5929",
+            },
+            {
+                "date": "2007-10-18T00:00:00.000",
+                "week": "42",
+                "myear": "2007/2008",
+                "country": "BRAZIL",
+                "commodity": "Corn",
+                "unit": "Metric Tons",
+                "wkexportscmy": "1000",
+                "netsalescmy": "1000",
+                "outsalescmy": "500",
+                "totcommcmy": "1500",
+            },
+            {
+                "date": "2007-10-18T00:00:00.000",
+                "week": "42",
+                "myear": "2007/2008",
+                "country": "JAPAN",
+                "commodity": "Wheat",
+                "unit": "Metric Tons",
+                "wkexportscmy": "200",
+                "netsalescmy": "300",
+                "outsalescmy": "400",
+                "totcommcmy": "700",
+            },
+            {
+                "date": "2007-10-11T00:00:00.000",
+                "week": "41",
+                "myear": "2007/2008",
+                "country": "ALBANIA",
+                "commodity": "Corn",
+                "unit": "Metric Tons",
+                "wkexportscmy": "99999",
+                "netsalescmy": "99999",
+                "outsalescmy": "99999",
+                "totcommcmy": "99999",
+            },
+        ]
+    )
+    values = parse_export_sales_text(payload)
+    by_key = {(v["commodity"], v["metric"]): v["value"] for v in values}
+    assert by_key[("Corn", "net_sales")] == "6929"
+    assert by_key[("Corn", "weekly_exports")] == "6929"
+    assert by_key[("Corn", "outstanding_sales")] == "500"
+    assert by_key[("Corn", "total_commitments")] == "7429"
+    assert by_key[("Wheat", "net_sales")] == "300"
+    assert "99999" not in by_key.values()
+    assert all(v["week_ending"] == "2007-10-18" for v in values)
+    assert all(v["marketing_year"] == "2007/2008" for v in values)
+    assert all(v["unit"] == "Metric Tons" for v in values)
+    assert all(v["source"] == "USDA FAS Export Sales" for v in values)
+
+
+def test_parse_export_sales_text_returns_nothing_for_bad_input() -> None:
+    assert parse_export_sales_text("not json") == []
+    assert parse_export_sales_text("[]") == []
+    assert parse_export_sales_text("") == []
     report = compile_market_report(
         {"Corn": [], "Soybeans": [], "Wheat": []},
         generated_at=datetime(2026, 11, 18, tzinfo=timezone.utc),

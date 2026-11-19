@@ -8,6 +8,24 @@ Design, from the super plan:
   URL (or accepts supplied text) and parses only what it can find,
   recording source + vintage on every row. It never invents a number:
   a value that is not in the file is simply absent.
+- Grain Stocks is a quarterly NASS txt release on ESMIS. Each release
+  has its own txt URL (see ``GRAIN_STOCKS_TXT_URL`` — the Sep 30 2026
+  release, verified 2026-11-19); pass the current release's txt URL
+  from the ESMIS Grain Stocks page. Only the "Domestic Units" summary
+  table is parsed (on-farm / off-farm / total, latest year in the file).
+- Commitments of Traders is read from the CFTC Public Reporting
+  Environment (Socrata JSON, no key): the Legacy futures-only dataset
+  ``6dca-aqww``. The historical zip (``deacotYYYY.zip``) returned HTTP
+  403 to a plain GET on 2026-11-19, so the API is the supported route.
+  The parser keeps only the latest report date present in the payload
+  and only grain markets.
+- Export Sales is read from the USDA AgTransport open-data mirror of
+  FAS Export Sales Reporting (Socrata JSON, no key). The dataset is
+  per-country rows with no TOTAL row (verified 2026-11-19), so the
+  parser sums the country rows for the latest week-ending date in the
+  payload. The canonical weekly report itself is a PDF, and the FAS
+  ESR API is key-gated (data.gov key, same as FAS PSD) — neither is
+  parsed here.
 - All network calls use a contact User-Agent, a timeout, and honour
   HTTP 429 by raising ``ResearchUpstreamError`` (the caller backs off).
 """
@@ -15,6 +33,7 @@ Design, from the super plan:
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 import re
 
 import requests
@@ -29,6 +48,19 @@ FAS_PSD_BASE_URL = "https://api.fas.usda.gov/api/psd"
 # ingest records the failure honestly instead of guessing.
 WASDE_TXT_URL = "https://www.usda.gov/sites/default/files/documents/wasde.txt"
 CROP_PROGRESS_URL = "https://downloads.usda.gov/esmis/nass-crop-progress/crop-progress.txt"
+# Grain Stocks txt URL is release-specific: this is the Sep 30 2026
+# release, verified live 2026-11-19 (HTTP 200, 104,567 bytes).
+# For a new quarter, take the current release's "- txt" link from
+# https://esmis.nal.usda.gov/publication/grain-stocks
+GRAIN_STOCKS_TXT_URL = "https://esmis.nal.usda.gov/sites/default/release-files/796087/grst0926_0.txt"
+# CFTC Public Reporting Environment (Socrata, no key): Legacy COT,
+# futures only. Callers should request the latest week(s), e.g.
+# ?$order=report_date_as_yyyy_mm_dd DESC&$limit=200
+COT_LEGACY_API_URL = "https://publicreporting.cftc.gov/resource/6dca-aqww.json"
+# USDA AgTransport open-data mirror of FAS Export Sales Reporting
+# (Socrata, no key). Per-country rows; callers should request the
+# latest week, e.g. ?$order=date DESC&$limit=5000
+EXPORT_SALES_API_URL = "https://agtransport.usda.gov/resource/wnn7-29tu.json"
 
 REPORT_TYPES = ("wasde", "crop_progress", "grain_stocks", "export_sales", "crop_production", "commitments_of_traders")
 
@@ -243,6 +275,281 @@ def parse_crop_progress_text(text: str) -> list[dict[str, object]]:
                     "value": match.group(3),
                     "unit": "percent",
                     "source": "USDA NASS Crop Progress",
+                }
+            )
+    return output
+
+
+_GRAIN_STOCKS_COMMODITIES = ("Corn", "Sorghum", "Oats", "Barley", "All wheat", "Durum wheat", "Soybeans")
+_GRAIN_STOCKS_DATES = ("March 1", "June 1", "September 1", "December 1")
+
+
+def parse_grain_stocks_text(text: str) -> list[dict[str, object]]:
+    """Extract US total stocks from a Grain Stocks txt release.
+
+    Parses only the "Grain Stocks by Position and Month in Domestic
+    Units" summary table (1,000 bushels), for the latest year shown in
+    that table's header, one row per commodity / position date / metric
+    (total / on-farm / off-farm). A position date with no value for the
+    latest year (blank cell — the estimation period has not begun) is
+    simply absent. State tables and the metric-units table in the same
+    file are ignored. Only values actually in the file are returned.
+    """
+    lines = text.splitlines()
+    start: int | None = None
+    end: int | None = None
+    # Anchor on the table heading itself, not the table-of-contents entry
+    # for the same table (which carries trailing dots + a page number).
+    heading_pattern = re.compile(
+        r"^Grain Stocks by Position and Month in Domestic Units - United States: \d{4} and \d{4}\s*$"
+    )
+    metric_pattern = re.compile(
+        r"^Grain Stocks by Position and Month in Metric Units - United States: \d{4} and \d{4}\s*$"
+    )
+    for index, line in enumerate(lines):
+        if start is None and heading_pattern.match(line.strip()):
+            start = index
+        elif start is not None and metric_pattern.match(line.strip()):
+            end = index
+            break
+    if start is None:
+        return []
+    section = lines[start:end]
+
+    years: list[int] = []
+    for line in section:
+        found = re.findall(r"\b(?:19|20)\d{2}\b", line)
+        if len(found) >= 2:
+            years = [int(year) for year in found]
+            break
+    if len(years) < 2:
+        return []
+    latest_year = max(years)
+    latest_index = years.index(latest_year)
+
+    commodity_pattern = re.compile(
+        r"^(Corn|Sorghum|Oats|Barley|All wheat|Durum wheat|Soybeans)(?:\s+\d/)?\s*:\s*$"
+    )
+    row_pattern = re.compile(
+        r"^(March 1|June 1|September 1|December 1)\s*\.+:\s*(.*?)\s*$"
+    )
+    number_pattern = re.compile(r"^[\d,]+$")
+
+    output: list[dict[str, object]] = []
+    current_commodity: str | None = None
+    for line in section:
+        heading = commodity_pattern.match(line.strip())
+        if heading:
+            current_commodity = heading.group(1).title()
+            continue
+        if current_commodity is None:
+            continue
+        row = row_pattern.match(line.strip())
+        if not row:
+            continue
+        tokens = [token for token in row.group(2).split() if number_pattern.match(token)]
+        # 6 numbers = both years (on, off, total per year); 3 = first year only.
+        if len(tokens) == 6:
+            triple = tokens[latest_index * 3 : latest_index * 3 + 3]
+        elif len(tokens) == 3 and latest_index == 0:
+            triple = tokens
+        else:
+            continue
+        on_farm, off_farm, total = (value.replace(",", "") for value in triple)
+        position_date = f"{row.group(1)}, {latest_year}"
+        for metric, value in (
+            ("total_stocks", total),
+            ("on_farm_stocks", on_farm),
+            ("off_farm_stocks", off_farm),
+        ):
+            output.append(
+                {
+                    "commodity": current_commodity,
+                    "metric": metric,
+                    "value": value,
+                    "unit": "thousand bushels",
+                    "position_date": position_date,
+                    "source": "USDA NASS Grain Stocks",
+                }
+            )
+    return output
+
+
+# Legacy COT futures-only markets that are grains. Keys are the
+# ``contract_market_name`` values in the CFTC Public Reporting
+# Environment dataset; values are the display names used downstream.
+_COT_GRAIN_MARKETS = {
+    "CORN": "Corn",
+    "SOYBEANS": "Soybeans",
+    "SOYBEAN OIL": "Soybean Oil",
+    "SOYBEAN MEAL": "Soybean Meal",
+    "WHEAT-SRW": "Wheat (SRW)",
+    "WHEAT-HRW": "Wheat (HRW)",
+    "WHEAT-HRS": "Wheat (HRS)",
+    "OATS": "Oats",
+    "ROUGH RICE": "Rice",
+}
+
+_COT_METRICS = (
+    ("open_interest", "open_interest_all"),
+    ("noncommercial_long", "noncomm_positions_long_all"),
+    ("noncommercial_short", "noncomm_positions_short_all"),
+    ("noncommercial_spread", "noncomm_postions_spread_all"),
+    ("commercial_long", "comm_positions_long_all"),
+    ("commercial_short", "comm_positions_short_all"),
+)
+
+
+def parse_commitments_of_traders_text(text: str) -> list[dict[str, object]]:
+    """Extract grain positioning from CFTC Legacy COT futures-only JSON.
+
+    Input is the JSON text of the CFTC Public Reporting Environment
+    Legacy futures-only dataset (``6dca-aqww``) — a list of records.
+    Only grain markets are kept, and only rows from the latest report
+    date present in the payload. Only fields actually present in a
+    record are emitted (a missing field is skipped, never filled in).
+    Note the upstream field name ``noncomm_postions_spread_all`` is
+    misspelled in the source data; it is read as-is.
+    """
+    try:
+        payload = json.loads(text)
+    except (ValueError, TypeError):
+        return []
+    if not isinstance(payload, list):
+        return []
+
+    rows: list[dict[str, object]] = []
+    latest_date: str | None = None
+    for record in payload:
+        if not isinstance(record, dict):
+            continue
+        market = str(record.get("contract_market_name") or "").strip().upper()
+        if market not in _COT_GRAIN_MARKETS:
+            continue
+        report_date = str(record.get("report_date_as_yyyy_mm_dd") or "")[:10]
+        if not re.match(r"^\d{4}-\d{2}-\d{2}$", report_date):
+            continue
+        if latest_date is None or report_date > latest_date:
+            latest_date = report_date
+        rows.append(record)
+    if latest_date is None:
+        return []
+
+    output: list[dict[str, object]] = []
+    for record in rows:
+        if str(record.get("report_date_as_yyyy_mm_dd") or "")[:10] != latest_date:
+            continue
+        market = str(record.get("contract_market_name") or "").strip().upper()
+        commodity = _COT_GRAIN_MARKETS[market]
+        for metric, field in _COT_METRICS:
+            raw = record.get(field)
+            if raw is None or str(raw).strip() == "":
+                continue
+            output.append(
+                {
+                    "commodity": commodity,
+                    "metric": metric,
+                    "value": str(raw).strip().replace(",", ""),
+                    "unit": "contracts",
+                    "report_date": latest_date,
+                    "market": str(record.get("market_and_exchange_names") or "").strip(),
+                    "source": "CFTC Commitments of Traders",
+                }
+            )
+    return output
+
+
+# FAS Export Sales fields, current marketing year, summed across the
+# per-country rows of the latest week in the payload. The dataset has
+# no TOTAL row (verified 2026-11-19), so the sums are the national
+# totals only when the caller supplies the full week's rows.
+_EXPORT_SALES_METRICS = (
+    ("net_sales", "netsalescmy"),
+    ("weekly_exports", "wkexportscmy"),
+    ("outstanding_sales", "outsalescmy"),
+    ("total_commitments", "totcommcmy"),
+)
+
+
+def _parse_export_sales_number(raw: object) -> int | None:
+    if raw is None:
+        return None
+    cleaned = str(raw).strip().replace(",", "")
+    if not re.match(r"^-?\d+(\.\d+)?$", cleaned):
+        return None
+    try:
+        return int(float(cleaned))
+    except ValueError:
+        return None
+
+
+def parse_export_sales_text(text: str) -> list[dict[str, object]]:
+    """Extract weekly export-sales totals from FAS Export Sales JSON.
+
+    Input is the JSON text of the USDA AgTransport open-data mirror of
+    FAS Export Sales Reporting — a list of per-country rows. Only rows
+    from the latest week-ending date present in the payload are used,
+    and each metric is the sum of that field across the country rows
+    for the commodity. A metric with no numeric value in any row is
+    absent. Only values present in the payload are returned.
+    """
+    try:
+        payload = json.loads(text)
+    except (ValueError, TypeError):
+        return []
+    if not isinstance(payload, list):
+        return []
+
+    dated_rows: list[tuple[str, dict[str, object]]] = []
+    latest_date: str | None = None
+    for record in payload:
+        if not isinstance(record, dict):
+            continue
+        week_ending = str(record.get("date") or "")[:10]
+        if not re.match(r"^\d{4}-\d{2}-\d{2}$", week_ending):
+            continue
+        if not str(record.get("commodity") or "").strip():
+            continue
+        if latest_date is None or week_ending > latest_date:
+            latest_date = week_ending
+        dated_rows.append((week_ending, record))
+    if latest_date is None:
+        return []
+
+    totals: dict[str, dict[str, int]] = {}
+    meta: dict[str, dict[str, str]] = {}
+    for week_ending, record in dated_rows:
+        if week_ending != latest_date:
+            continue
+        commodity = str(record.get("commodity") or "").strip().title()
+        totals.setdefault(commodity, {})
+        meta.setdefault(
+            commodity,
+            {
+                "unit": str(record.get("unit") or "Metric Tons"),
+                "marketing_year": str(record.get("myear") or ""),
+            },
+        )
+        for metric, field in _EXPORT_SALES_METRICS:
+            value = _parse_export_sales_number(record.get(field))
+            if value is None:
+                continue
+            totals[commodity][metric] = totals[commodity].get(metric, 0) + value
+
+    output: list[dict[str, object]] = []
+    for commodity in sorted(totals):
+        for metric, _field in _EXPORT_SALES_METRICS:
+            if metric not in totals[commodity]:
+                continue
+            output.append(
+                {
+                    "commodity": commodity,
+                    "metric": metric,
+                    "value": str(totals[commodity][metric]),
+                    "unit": meta[commodity]["unit"],
+                    "week_ending": latest_date,
+                    "marketing_year": meta[commodity]["marketing_year"],
+                    "source": "USDA FAS Export Sales",
                 }
             )
     return output

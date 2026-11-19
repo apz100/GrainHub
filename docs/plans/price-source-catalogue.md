@@ -84,7 +84,7 @@ locations, crops, and structure only.
 | Company | Location | URL | Type | Crops | Frequency | Status |
 |---|---|---|---|---|---|---|
 | North Gower Grains | North Gower | https://northgowergrains.com/ (daily blog post, e.g. /wednesday-november-18-2026-820-am/) | Plain HTML daily post table | corn, soy, SRW/HRW/HRS wheat (incl. protein) | daily ~7:00 am | **Collector added 2026-11-19 (Cycle 3):** `north_gower_source.py` parses the daily-post table (Name/Notes/Basis Month/Futures/Basis/Cash Price/Cash Price tonne); homepage `#cash-bids` is a CTA with no prices — collector follows the latest daily-post link. Ordinary source; no special treatment. |
-| Collwest Grain | Collingwood | https://www.collwestgrain.com/ | Homepage cash-bid widget (.cbmod) | corn, soy, SRW/HRW/HRS wheat, canola, barley, oats | daily | **Collector added 2026-11-19 (Cycle 3):** `collwest_source.py` parses the homepage widget (Delivery/Bid/Basis/Futures per crop-year). Verified live 200. |
+| Collwest Grain | Collingwood | https://www.collwestgrain.com/ | Homepage cash-bid widget (.cbmod) | corn, soy, SRW/HRW/HRS wheat, canola, barley, oats | daily | **Collector added 2026-11-19 (Cycle 3):** `collwest_source.py` parses the homepage widget (Delivery/Bid/Basis/Futures per crop-year). Verified live 200. **Country confirmed Canadian, CAD (2026-11-18):** footer address 2924 Sixth Line, Collingwood, ON L9Y 3Z1, phone 705-445-7276; canola/barley/oats per tonne, corn/soy/wheat per bushel; `collwestgrain.o.bushelsites.com` serves identical content — www domain is canonical. Do not enable in the US config. |
 | Mae-Mart Farms | Norfolk County | http://www.mae-martfarms.com/grain-pricing | Plain HTML tables (gp-table-*) | corn, soy, wheat, rye | continuous in market hours | **Collector added 2026-11-19 (Cycle 3):** `mae_mart_source.py` parses the tables. Basis is static; corn/soy/wheat cash prices are JS-filled from the site's futures proxy, so those rows carry basis with cash price empty + reason (never guessed). Rye has a static manualPrice, so its cash price is parsed. Homepage cards are "—" placeholders only. |
 | Mapleview Grain | London | https://www.mapleviewgrain.ca/ → https://mapleview.graindiscovery.com/ | Grain Discovery JS app | corn, soy, wheat (old + new crop) | not stated | **No plain-HTML collector possible (Cycle 3):** homepage `#bids` is marketing copy; the bids page is a Next.js app shell with no bid content in static HTML. `mapleview_source.py` is a stub returning an explicit unsupported reason. Needs a Playwright render or a public Grain Discovery feed (later cycle). |
 | Charwen Farms | Thornton (Simcoe County) | https://charwenfarms.ca/ | Plain HTML | corn, soy, wheat | not stated | Partially verified — homepage live, cash-bids page exists per homepage but not yet fetched. Investigate: may duplicate LAC feed (Charwen is an LAC location). |
@@ -192,10 +192,10 @@ Bunge `bungeag.com/cash-bids` (redirects to a locations archive — no bid table
 | Rugby Farmers Elevator | Rugby, ND | https://rugbyfarmers.com/ | Bushel (new type) | corn | daily, dated | Live. Disabled — needs Bushel collector. |
 | Lake Norden Farmers Elevator | Lake Norden, SD | https://www.lakenordenfarmerselevator.net/cash-bids | Bushel (new type) | corn, soybean | daily, dated | Live. Disabled — needs Bushel collector. |
 | United Cooperative | Beaver Dam, WI | https://www.unitedcoop.com/cash-bids | Bushel (new type) | corn, soybean | daily, dated | Live. Disabled — needs Bushel collector. (Domain differs from Batch 4 `unitedcooperative.com` — confirm same org.) |
-| Collwest Grain | — | https://collwestgrain.o.bushelsites.com | Bushel (new type) | barley, oats | daily, dated | Live, but **verify country first** — snippet prices look like CAD/tonne; may be Canadian. Do not enable in US config until confirmed. |
+| Collwest Grain | — | https://collwestgrain.o.bushelsites.com | Bushel (new type) | — | — | **Removed from US list 2026-11-18 — confirmed Canadian (Collingwood, ON; CAD). See the Ontario section.** |
 | Forest River Coop | Forest River, ND | https://www.forestrivercoop.com/ | Bushel (new type) | corn, soybean, wheat | daily, dated | Live. Disabled — needs Bushel collector. |
-| James Valley Grain | — | https://jamesvalleygrain.com/pages/usdacash.php | USDA mirror (new type) | corn, soybean, wheat, oats | daily (USDA AMS cycle) | Live. Republishes USDA daily cash-bid report incl. Gulf export rows. Disabled — needs a USDA-mirror collector. |
-| FS Grain | — | https://www.fsgrain.com/pages/usdacash.php | USDA mirror (new type) | corn, soybean, wheat, oats | daily (USDA AMS cycle) | Live. Same report family; snippet shows Gulf Coast Ports – LA export rows. Disabled — needs a USDA-mirror collector. |
+| James Valley Grain | — | https://jamesvalleygrain.com/pages/usdacash.php | USDA mirror (new type) | corn, soybean, wheat, oats | daily (USDA AMS cycle) | **Verified 2026-11-18** — direct fetch 200; report "USDA Cash Bid Report for Nov 18, 2026" (same-day fresh). 227-row static HTML table (`table table-condensed`), 25 region sections incl. "Gulf Coast Ports - LA" and "Pacific Ports"; prices in cents/bushel. History via `?id=N` (sequential numeric id; 7730 = Nov 18, 2026; archive on the page back to Nov 05, 2026). URL/format looks stable for a collector. Disabled — needs a USDA-mirror collector. |
+| FS Grain | — | https://www.fsgrain.com/pages/usdacash.php | USDA mirror (new type) | corn, soybean, wheat, oats | daily (USDA AMS cycle) | **Verified 2026-11-18** — direct fetch 200; same report as James Valley (same id 7730, "USDA Cash Bid Report for Nov 18, 2026", same rows incl. Gulf Coast Ports – LA). Same table shape and `?id=N` history. URL/format looks stable for a collector. Disabled — needs a USDA-mirror collector. |
 | Farmers Coop Equity | Zenda, KS | https://www.fceisabel.com/markets/cash.php | AgriCharts | — | — | **Dead 404.** Do not add. |
 
 ## United States — Gulf / PNW export terminals
@@ -205,7 +205,9 @@ terminal operator (CGB, ADM, Bunge, Cargill, United Grain, etc. — terminal
 bids are login-gated or unpublished). The public coverage route is USDA AMS
 reports: **Louisiana & Texas Export Bids** (Gulf) and **Portland Daily Grain
 Bids** (PNW, via Portland Merchant's Exchange), mirrored on the two
-USDA-mirror pages above (James Valley Grain, FS Grain).
+USDA-mirror pages above (James Valley Grain, FS Grain) — both verified
+same-day fresh on 2026-11-18, with "Gulf Coast Ports - LA" and "Pacific
+Ports" sections in the table and history via `?id=N`.
 
 ## United States — counts
 
@@ -213,7 +215,13 @@ USDA-mirror pages above (James Valley Grain, FS Grain).
   no-bid-table, 2 blocked, 2 uncertain, 7 dead. 47/58 HTTP 200.
 - New candidates: 20 probed — 19 live, 1 dead. 6 added to the active
   config (3 AgriCharts + 3 DTN), 11 Bushel + 2 USDA-mirror added
-  disabled pending new collectors, 1 dead not added.
+  disabled pending new collectors, 1 dead not added. **Cycle 3 update:**
+  Collwest was one of the 11 Bushel entries and is confirmed Canadian
+  (Collingwood, ON; CAD) — moved to the Ontario section, so the US
+  Bushel set is now 10. Bushel-collector research is done (see
+  docs/plans/bushel-collector-research.md): bids are in static HTML
+  on the two sites checked, so a plain-HTTP table parser looks
+  feasible — Playwright not needed for FAC or Collwest.
 - Config changes applied in Cycle 1: 4 dead entries disabled in
   `config.toml` (Cardinal Ethanol, Gold Eagle, POET, Luckey Farmers);
   Heartland URL switched to the verified cash.php; AGP / Five Star Coop /
@@ -223,5 +231,6 @@ USDA-mirror pages above (James Valley Grain, FS Grain).
 - Follow-ups for a later cycle: find cash-bid sub-pages for the 19 Batch 4
   homepages (Sunrise's sub-page is the priority); chase the CGB cash-bid
   module URL from the USDA SCL report (do not guess it); a Bushel
-  collector would unlock 11 more elevators and a USDA-mirror collector
+  collector would unlock 10 more US elevators (11th, Collwest, is
+  Canadian — see Ontario) and a USDA-mirror collector
   would unlock Gulf + Portland export bids in one fetch.

@@ -15,7 +15,10 @@ from app.services.research import (
     ResearchUpstreamError,
     fetch_nass_quick_stats,
     fetch_public_file_text,
+    parse_commitments_of_traders_text,
     parse_crop_progress_text,
+    parse_export_sales_text,
+    parse_grain_stocks_text,
     parse_nass_records,
     parse_wasde_text,
     research_status,
@@ -137,6 +140,15 @@ def ingest_file(
     elif report_type == "crop_progress":
         values = parse_crop_progress_text(str(text))
         source = "USDA NASS Crop Progress"
+    elif report_type == "grain_stocks":
+        values = parse_grain_stocks_text(str(text))
+        source = "USDA NASS Grain Stocks"
+    elif report_type == "export_sales":
+        values = parse_export_sales_text(str(text))
+        source = "USDA FAS Export Sales"
+    elif report_type == "commitments_of_traders":
+        values = parse_commitments_of_traders_text(str(text))
+        source = "CFTC Commitments of Traders"
     else:
         values = []
         source = f"USDA {report_type.replace('_', ' ').title()}"

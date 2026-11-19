@@ -1195,3 +1195,203 @@ collection, browser-only — and Landus, Vercel checkpoint); live
 verification of the 13 agricharts wrappers; Chadbourn + Hamer +
 Skyland 3370/3621 staleness watch; Mae-Mart cash-price decision;
 poller scheduling decision; currency decision.
+
+## Cycle 21 (added Cycle 22)
+
+### 0g. Branch chain — Cycle 21, verified from git
+
+The chain is **still linear**: `git log --oneline
+master..overnight/grainhub-cycle-21` gives **61 commits** (59
+through Cycle 20 + 2 in Cycle 21), **0 merge commits**, no
+branch points. Cycle 21's first commit `38bf6d5` has parent
+`9329169` (the Cycle 20 tip), and merge-base(20, 21) is the
+Cycle 20 tip `9329169`. Per-branch commit count for Cycle 21: 2
+(`38bf6d5`, `726f865`).
+
+That means the §2 procedure continues unchanged: merge Cycle 21
+after 20, one branch at a time with `--no-ff`, running the §3
+gates at each step. A single fast-forward of `master` to the
+`cycle-21` tip (`726f865`) would give the same tree as twenty-one
+sequential merges; prefer the sequential merges for the same
+reason as §0 (a review checkpoint and stop point per cycle).
+
+(The Cycle 20 section's "59 commits master..cycle-20" figure
+was re-verified in Cycle 22 and is correct — no correction
+needed.)
+
+### 1g. What the branch contains (Cycle 21)
+
+| Branch | Tip | Tests at tip | Web build at tip |
+|---|---|---|---|
+| Cycle 21 | `726f865` | 692 passed, 0 failed | Not re-run (no web files changed; last full pass Cycle 17) |
+
+Tip commit hash (full): `726f865d97f5fb4f2d0329010c37913f5d408848`.
+No web files changed in Cycle 21, so there is no fresh
+web-build evidence in this range. **No code changed at all in
+Cycle 21** — docs only (4 files: merge plan, super-plan §9,
+price-source catalogue, the Cycle 21 report itself) — so the
+test count is unchanged from Cycle 20 and no new tests were
+added.
+
+- **Cycle 21** (`overnight/grainhub-cycle-21`; commits `38bf6d5`,
+  `726f865`): live verification of the 13 agricharts wrappers
+  wired in Cycle 20 — **11 of 13 return rows, 642 rows total**
+  (13 GETs, 1 per wrapper). Batch A, 353 rows: Ag Plus 36 (Corn
+  12, Beans 12, Wheat 12; 6 locations), Farmers Win Coop 171
+  (Corn 90, Soybeans 81; 18 locations), Keller 14 (Corn 7,
+  Soybeans 7; 1 location), Kokomo Grain 63 (Corn 29, Soybeans
+  24, Wheat 5, NGMO Waxy 5; 8 locations), Legacy Farmers 66
+  (Beans 25, Corn 24, Wheat 17; 10 locations). Batch B, 289
+  rows: Pro Ag 78 (Soybeans 35, Corn 31, Wheat 12; 6
+  locations — identical count/locations to Cycle 11), West-Con
+  84 (Soybeans 44, Corn 30, DNS Wheat 10; 1 fallback location —
+  page has no `<h4>` headings — identical count to Cycles
+  11–12, month-name deliveries kept verbatim), Wheaton Dumont
+  43 (Corn 18, Soybeans 16, Spring Wheat 9; 8 locations —
+  identical count to Cycle 12, short month labels kept
+  verbatim), Central Farmers Coop 75 (Corn 44, Soybeans 30,
+  Winter Wheat 1; 11 locations — first live verification, was
+  Cycle 1 HTML only), Anthony Farmers Co-op 9 (Corn 3, Milo 3,
+  Soybeans 3; 3 locations — first live verification; thin but
+  structurally sound, 3 locs × 3 commodities, single delivery
+  09/01/2026). All returning wrappers produced the standard
+  10-column DataFrame. No wrapper bugs were found, so no code
+  was changed.
+- **Two site-side failures, same cause:** Heartland Coop and
+  Mulvane Coop both return 0 rows — HTTP 200, but the page no
+  longer carries the `jsquote.php` script tag the generic
+  parser requires, so `fetch_us_agricharts` returns empty
+  before parsing. Wrapper URLs/names verified correct against
+  the toml and Cycle 1 discovery. Needs a re-probe in a later
+  cycle (1 GET each); a future generic-collector fix
+  (alternate futures source) would cover both. Two of 13 sites
+  failing the same way suggests AgriCharts may be rolling out
+  a template change.
+- **Heritage Grain Cooperative — partial (3 rows):** rows parse,
+  but `Location` values are the commodity names ("CORN - CASH"
+  etc.) because the page's `<h4>` tags are commodity headings,
+  not location names — the generic parser's h4-as-location
+  assumption mislabels them. Open follow-up: does the page
+  genuinely list only 3 cash bids, or are more rows in a shape
+  the `writeBidRow` regex skips? A parser-level fix (detect
+  h4-as-commodity pages) is a later-cycle item.
+- **User-Agent discrepancy (noted, not changed):** the task brief
+  said the fetch functions send `GrainHub-Research/1.0`, but
+  `_HEADERS` in `us_agricharts_source.py` actually sends a
+  Chrome `Mozilla/5.0` UA. Wrappers were run as-is with no
+  override. The coordinator independently confirmed the Chrome
+  UA in the source (pre-existing from Cycle 1). Changing the UA
+  is a deliberate decision for a later cycle, not something
+  altered here.
+- **Price-source catalogue edited** (173 insertions, 24
+  deletions — 197 lines changed): the 13-wrapper verification
+  results, the Heartland/Mulvane failures, and the Heritage
+  h4 note recorded.
+- **Merge plan extended to Cycle 20** (227 lines added, 0
+  removed). The Cycle 19 section's "57 commits" figure
+  re-verified correct.
+- **Super-plan §9 extended to Cycle 20** (heading/intro now
+  cover Cycles 1–20, test chain 179 → 692; Cycle 20 bullet
+  added; blockers updated — registry 119 adapters, DTN toggles
+  off awaiting Playwright).
+  Full detail: `docs/plans/overnight-cycle-21-report.md`.
+
+### 3g. Gates — updated expectations for Cycle 21
+
+§3 applies unchanged, with these per-cycle numbers:
+
+1. **Full API test suite** — expect Cycle 21: 692 — **0 failed**.
+   (Unchanged from Cycle 20 — no code changed in this cycle, so
+   no new tests.)
+2. **Web build** — re-run once at the Cycle 21 step so the final
+   tree is verified as a whole. No web files changed in Cycle 21,
+   so a build failure at this step would point at an earlier
+   cycle, not the branch being merged. Last full pass was
+   Cycle 17.
+3. **Alembic chain** — head is **still `0019`**. Verified from
+   git: no migration file was added in Cycle 21 (`git log` on
+   the Alembic versions dir in `cycle-20..cycle-21` is empty, and
+   the file list at the Cycle 21 tip is `0001`–`0019`). The only
+   two commits ever touching that directory in
+   `master..cycle-21` are from Cycle 1 and Cycle 7 (which added
+   `0019`). Expect exactly one head, `0019`, at the Cycle 21 step.
+4. **Boundary spot-check** — the Cycle 21 report has its own
+   boundary section (zero new references, verified by grep on the
+   added lines). Re-check once at the Cycle 21 step as in §3.4.
+5. **No-secrets spot-check** — as §3.5; the report states none.
+
+### 4g. Known conflicts and overlaps — Cycle 21
+
+The chain is still linear, so a sequential merge still produces
+no conflicts. The §4 watch-list extends as follows:
+
+- **Price-source catalogue** (`docs/plans/price-source-catalogue.md`)
+  — edited in **Cycle 21** as well (197 lines changed; the 13
+  agricharts-wrapper verification results, the Heartland/Mulvane
+  failures, the Heritage h4 note). Same rule as §4: later wins.
+- **Merge plan** (`docs/plans/merge-plan.md`) — extended in
+  Cycle 21 (227 lines added, 0 removed: the Cycle 20 section).
+  Additive; no earlier text touched.
+- **Super-plan §9** (`docs/plans/grainhub-super-plan.md`) —
+  updated in **Cycle 21** (progress to Cycle 20, test chain
+  179 → 692). Linear, no conflict expected.
+- **No collector code changed in Cycle 21** — no overlap with
+  any code file. In particular `app/services/source_registry.py`
+  was not touched this cycle (last touched in Cycle 20 with the
+  26 adapter registrations — nothing to carry here), and neither
+  `us_agricharts_source.py` nor `us_dtn_source.py` was touched:
+  verification found no wrapper bugs to fix.
+- **Migration chain** — unchanged: `0015 → … → 0018` (Cycle 1)
+  then `0019` (Cycle 7), single head throughout Cycle 21.
+
+### 5g. What must NOT be merged as-is — update
+
+- **The CI workflow file is STILL not in any branch.** Verified
+  2026-11-19 (Cycle 22): `?? .github/` in `git status` on the
+  Cycle 22 checkout (`.github/workflows/api-tests.yml`).
+  Merging Cycle 21 as well as 1–20 will **not** bring it into
+  `master`. Same remedy as §5: Adam re-authenticates `gh` with
+  `workflow` scope, or adds the file via the GitHub web UI. Do
+  not hand-copy it into a merge commit.
+- **Nothing else new is held back in Cycle 21.** No new unpushed
+  files, secrets, or held-back work is reported in the Cycle 21
+  report. The §5 review-not-blocker list is unchanged and carried
+  forward: email-bid endpoint public by default, futures
+  endpoints still return prices `null` until a licensed feed is
+  wired (the Mae-Mart proxy now fills `futures_price` on
+  collector rows only — it does not feed the futures endpoints),
+  Advisor `/ask` is a 501 scaffold, eSign is a stub, normalized
+  price rows carry no currency (`currency: null`).
+- **Open decisions carried forward from Cycle 21 (not
+  blockers):** Heartland + Mulvane re-probes (1 GET each);
+  Heritage h4-as-commodity parser question (detect
+  h4-as-commodity pages, or confirm the page genuinely lists
+  only 3 bids); agricharts User-Agent decision (Chrome UA vs
+  `GrainHub-Research/1.0`); the Cycle 20 open item "live
+  verification of the 13 agricharts wrappers" is now closed
+  except for the two failing sites; Playwright render checks
+  still pending (DTN family — Al-Corn + Sunrise first — FMN
+  filtered view, Mapleview, StoneX including Frontier, The
+  Andersons — closed for static collection, browser-only — and
+  Landus, Vercel checkpoint); DTN toggles stay `false` until
+  verified; scheduling the poller as a second cron job
+  (deployment decision, checklist §4 step 6); Mae-Mart
+  `cash_price` from futures + static basis (still open, gated
+  on the licensed-feed decision); at least one `Commodity` row
+  must exist before the first poller run.
+
+### 7g. After the merges — updated
+
+§7 applies with the Cycle 21 tip as the end state: Alembic head
+`0019` (unchanged since Cycle 7), test suite 692 passed / 0
+failed, web build last fully passed in Cycle 17 (re-run at the
+Cycle 21 merge step). The still-open decisions list in §7.4 is
+unchanged by Cycle 21 except for the additions in §5g above.
+Open work carried forward: Playwright render checks (DTN family
+— Al-Corn + Sunrise first — FMN filtered view, Mapleview,
+StoneX including Frontier, The Andersons — closed for static
+collection, browser-only — and Landus, Vercel checkpoint);
+Heartland + Mulvane re-probes; Heritage parser question;
+agricharts User-Agent decision; Chadbourn + Hamer + Skyland
+3370/3621 staleness watch; Mae-Mart cash-price decision;
+poller scheduling decision; currency decision.

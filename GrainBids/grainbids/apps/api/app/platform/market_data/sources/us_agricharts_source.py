@@ -23,6 +23,17 @@ synthesis), and no century is expanded for 2-digit years, because the
 source never states either; the label itself is the delivery window.
 MM/DD/YYYY rows are unaffected.
 
+Cycle 22 (Heritage Grain Cooperative): forward-month rows carry the
+delivery label in the notes argument with an escaped quote, e.g.
+'DEC \'26' — the regex now allows an escaped quote in the group and
+notes arguments, or those rows fail to match entirely (11 of 14
+Heritage rows were skipped before this fix). The same page uses
+<h4> tags for commodity headings, not locations ('CORN - DEC 2026'
+precedes the row named 'CORN - DEC 2026'); an <h4> that is exactly
+the row's commodity name, or that starts with a commodity word, is
+treated as a commodity heading and the row falls back to the company
+name as its location.
+
 Usage (called by GrainBidder.py via the [[us.elevators]] config):
     fetch_us_agricharts(url, company_name) -> pd.DataFrame
 
@@ -99,8 +110,11 @@ _WRITEBIDROW_RX = re.compile(
     r"\s*,\s*'(" + _DELIVERY + r")'"              # 6: delivery start
     r"\s*,\s*'(" + _DELIVERY + r")'"              # 7: delivery end
     r"\s*,\s*'([^']*)'"                           # 8: location param
-    r"\s*,\s*'[^']*'"                             # 9: group
-    r"\s*,\s*'[^']*'"                             # 10: notes
+    r"\s*,\s*'(?:[^'\\]|\\.)*'"                   # 9: group (may hold an escaped quote)
+    r"\s*,\s*'(?:[^'\\]|\\.)*'"                   # 10: notes — Cycle 22: forward-month rows
+    # carry the delivery label here with an escaped quote, e.g. 'DEC \'26'
+    # (Heritage Grain Cooperative); the old '[^']*' stopped at the \'
+    # and the whole row failed to match, so 11 of 14 rows were skipped.
     r"\s*,\s*\d+"                                 # 11: weight
     r"\s*,\s*'[^']*'"                             # 12: rowclass
     r"\s*,\s*'([^']*)'"                           # 13: chartsym
@@ -108,6 +122,34 @@ _WRITEBIDROW_RX = re.compile(
 )
 
 _H4_RX = re.compile(r"<h4[^>]*>\s*([^<]+?)\s*</h4>", re.IGNORECASE)
+
+# Cycle 22 (Heritage Grain Cooperative): some pages use <h4> for commodity
+# headings, not locations — the h4 text is the row's commodity name
+# ('CORN - DEC 2026') or starts with a commodity word ('BEANS - CASH').
+# Such a heading is not a location; rows under it fall back to the
+# company name, the same "Company - Company" fallback shape as West-Con
+# (whose page has no <h4> headings at all).
+_COMMODITY_WORDS = (
+    "corn|soybeans?|beans|wheat|milo|sorghum|barley|oats|canola|rye|"
+    "sunflowers?|flax|peas|lentils?|chickpeas|durum"
+)
+_COMMODITY_HEADING_RX = re.compile(
+    r"^(?:" + _COMMODITY_WORDS + r")\b", re.IGNORECASE
+)
+
+
+def _is_commodity_heading(h4_text: str, row_name: str) -> bool:
+    """True when an <h4> heading names a commodity, not a location.
+
+    Either it is exactly the row's commodity name (Heritage: the h4
+    'CORN - DEC 2026' precedes the row named 'CORN - DEC 2026'), or it
+    starts with a commodity word ('BEANS - CASH'). A real place name
+    cannot match the second form — the word boundary keeps 'Wheatland'
+    and 'Cornwall' out — and the first form requires an exact match.
+    """
+    if h4_text.strip().lower() == row_name.strip().lower():
+        return True
+    return bool(_COMMODITY_HEADING_RX.match(h4_text.strip()))
 
 _JSQUOTE_SCRIPT_RX = re.compile(
     r"jsquote\.php\?varname=(\w+)&(?:amp;)?symbols=([A-Z0-9,]+)",
@@ -231,8 +273,12 @@ def fetch_us_agricharts(url: str, company_name: str, playwright=None) -> pd.Data
                 else str(basis_cents)
             )
 
+            # Cycle 22: an <h4> that is a commodity heading (Heritage)
+            # is not a location — fall back to the company name.
+            loc = company_name if _is_commodity_heading(current_loc, name) else current_loc
+
             rows.append({
-                "Location":          f"{company_name} - {current_loc}",
+                "Location":          f"{company_name} - {loc}",
                 "Name":              name,
                 "Delivery":          del_start,
                 "Delivery End":      del_end,

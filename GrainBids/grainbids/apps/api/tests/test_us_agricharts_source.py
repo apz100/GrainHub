@@ -171,3 +171,126 @@ def test_wdcoop_saved_html_row_count() -> None:
     assert {m.group(1).strip() for m in ms} == {
         "Corn", "Soybeans", "Spring Wheat",
     }
+
+
+# ─── Cycle 22 — Heritage: escaped-quote notes + commodity <h4> headings ───
+
+HERITAGE_FIXTURE = FIXTURES / "us_agricharts_heritage_sample.html"
+HERITAGE_SAVED = Path("/tmp/cycle22/heritage_cash.html")
+
+
+def test_escaped_quote_notes_parse() -> None:
+    """Cycle 22: forward-month rows whose notes hold 'DEC \\'26' parse.
+
+    Before the fix the group/notes `'[^']*'` stopped at the escaped
+    quote and the whole row failed to match — 11 of 14 Heritage rows
+    were skipped. The fixture's escaped-quote rows must all match.
+    """
+    html = HERITAGE_FIXTURE.read_text(encoding="utf-8")
+    ms = list(ag._WRITEBIDROW_RX.finditer(html))
+    assert len(ms) == 4
+    assert [m.group(1) for m in ms] == [
+        "CORN - CASH", "BEANS - DEC 2026", "CORN - JAN 2027", "SOYBEANS",
+    ]
+    assert [m.group(7) for m in ms] == ["ZCZ26", "ZSF27", "ZCH27", "ZSF27"]
+
+
+def test_is_commodity_heading() -> None:
+    """Cycle 22: h4-as-commodity detection, with location names kept out."""
+    # Exact match with the row's commodity name (Heritage shape).
+    assert ag._is_commodity_heading("CORN - DEC 2026", "CORN - DEC 2026")
+    assert ag._is_commodity_heading("corn - cash", "CORN - CASH")
+    # Starts with a commodity word, even if it differs from the row name.
+    assert ag._is_commodity_heading("BEANS - CASH", "BEANS - DEC 2026")
+    assert ag._is_commodity_heading("WHEAT", "WHEAT - JUL 2027")
+    # Real locations are never commodity headings — the word boundary
+    # keeps place names that merely start with a commodity word out.
+    assert not ag._is_commodity_heading("Riverside", "CORN")
+    assert not ag._is_commodity_heading("Wheatland", "WHEAT")
+    assert not ag._is_commodity_heading("Cornwall", "CORN")
+    assert not ag._is_commodity_heading("Garfield", "SOYBEANS")
+
+
+def test_commodity_h4_falls_back_to_company() -> None:
+    """Cycle 22 end-to-end (mocked HTTP): commodity <h4>s are not locations.
+
+    Rows under a commodity heading fall back to the company name
+    ('Test Elevator - Test Elevator', the West-Con fallback shape),
+    while a genuine location heading ('Riverside') is still used.
+    """
+    page = HERITAGE_FIXTURE.read_text(encoding="utf-8")
+    jsquote = (
+        "var quotes={'ZCZ26':{name:'Corn',month:'Dec 26',last:'450'},"
+        "'ZSF27':{name:'Soybeans',month:'Jan 27',last:'1100'},"
+        "'ZCH27':{name:'Corn',month:'Mar 27',last:'460'}};"
+    )
+
+    class _Resp:
+        def __init__(self, text: str) -> None:
+            self.text = text
+
+        def raise_for_status(self) -> None:
+            return None
+
+    def _fake_get(url, params=None, headers=None, timeout=None):
+        if "jsquote" in url:
+            return _Resp(jsquote)
+        return _Resp(page)
+
+    with patch.object(ag.requests, "get", side_effect=_fake_get):
+        df = ag.fetch_us_agricharts(
+            "https://example.invalid/markets/cash.php", "Test Elevator"
+        )
+
+    assert len(df) == 4
+    assert df["Name"].tolist() == [
+        "CORN - CASH", "BEANS - DEC 2026", "CORN - JAN 2027", "SOYBEANS",
+    ]
+    assert df["Location"].tolist() == [
+        "Test Elevator - Test Elevator",
+        "Test Elevator - Test Elevator",
+        "Test Elevator - Test Elevator",
+        "Test Elevator - Riverside",
+    ]
+    # No location value is a commodity name any more.
+    assert not any("CORN" in loc or "BEANS" in loc for loc in df["Location"])
+
+
+@pytest.mark.skipif(not HERITAGE_SAVED.exists(),
+                    reason="Cycle 22 saved Heritage HTML not present")
+def test_heritage_saved_html_row_count() -> None:
+    """Structure only: the fixed regex matches all 14 saved Heritage rows.
+
+    Cycle 21's live wrapper call returned 3 rows; the Cycle 22 capture
+    (/tmp/cycle22/heritage_cash.html, 1 direct GET) holds 14 writeBidRow
+    data calls under 14 commodity <h4> headings — the other 11 were
+    skipped pre-fix because their notes argument holds an escaped quote
+    ('DEC \\'26'). Counts and labels only, no prices.
+    """
+    html = HERITAGE_SAVED.read_text(encoding="utf-8")
+    assert html.count("writeBidRow('") == 14
+    ms = list(ag._WRITEBIDROW_RX.finditer(html))
+    assert len(ms) == 14
+    assert {m.group(1) for m in ms} == {
+        "CORN - CASH", "BEANS - CASH", "WHEAT - CASH",
+        "CORN - DEC 2026", "BEANS - DEC 2026",
+        "CORN - JAN 2027", "BEANS - JAN 2027",
+        "CORN - FEB 2027", "BEANS - FEB 2027",
+        "CORN - MAR 2027", "BEANS - MAR 2027",
+        "CORN - FALL 2027", "BEANS - FALL 2027",
+        "WHEAT - JUL 2027",
+    }
+    h4s = ag._H4_RX.findall(html)
+    assert len(h4s) == 14
+    # Every <h4> is a commodity heading, not a location: each equals
+    # its row's commodity name.
+    assert set(h4s) == {m.group(1) for m in ms}
+    # The jsquote tag lists a symbol for every row.
+    jm = ag._JSQUOTE_SCRIPT_RX.search(html)
+    assert jm is not None
+    assert {m.group(7) for m in ms} <= set(jm.group(2).split(","))
+    # All deliveries are full MM/DD/YYYY windows (7 distinct starts).
+    assert {m.group(3) for m in ms} == {
+        "10/01/2026", "12/01/2026", "01/01/2027", "02/01/2027",
+        "03/01/2027", "07/01/2027", "09/01/2027",
+    }

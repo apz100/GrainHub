@@ -172,8 +172,8 @@ Peterborough-Norwood), Homeland Grain (Norwich), GFO SellSmart
 |---|---|---|---|---|---|---|
 | Ag Plus | — | https://www.agplusinc.com/markets/cash.php | AgriCharts | corn, wheat | intraday | Verified 2026-11-19. Keep. **Cycle 21 (2026-11-19):** wrapper `fetch_ag_plus` verified live — 36 rows (Corn 12, Beans 12, Wheat 12), 6 locations (Churubusco, Edgerton, Garrett, Monroeville, Raber, South Whitley). |
 | Farmers Win Coop | — | https://www.farmerswin.com/markets/cash.php | AgriCharts | corn, soybean | intraday | Verified. Keep. **Cycle 21 (2026-11-19):** wrapper `fetch_farmers_win_coop` verified live — 171 rows (Corn 90, Soybeans 81), 18 locations. |
-| Heartland Coop | — | https://www.heartlandcoop.com/markets/cash.php | AgriCharts | corn | intraday | Verified. **Config fixed**: `config.toml` used `myaccount.heartlandcoop.com/bids.htm` (no bid marker); switched to cash.php. **Cycle 21 (2026-11-19):** wrapper `fetch_heartland_coop` returned 0 rows — page fetched (2xx) but no `jsquote.php` script tag in the HTML, so `fetch_us_agricharts` bailed before parsing. Site-side change (page restructured or tag removed); wrapper URL/name verified correct against config + Cycle 1 discovery, no wrapper change. Re-probe in a later cycle. |
-| Heritage Grain Cooperative | — | https://www.heritagegrain.com/markets/cash.php | AgriCharts | corn, wheat | intraday | Verified. Keep. (Page title says "Legacy Grain" — possible rebrand.) **Cycle 21 (2026-11-19):** wrapper `fetch_heritage_grain_cooperative` returned 3 rows only (CORN / BEANS / WHEAT - CASH, 1 each) and the `Location` labels are the commodity names — the page's `<h4>` tags hold commodity headings, not location names, so the generic parser's h4-as-location assumption mislabels them. Wrapper URL/name correct; site-structure quirk, not a wrapper bug. Follow-up: check whether the page genuinely lists only 3 cash bids or more rows in a format the regex skips. |
+| Heartland Coop | — | https://www.heartlandcoop.com/markets/cash.php | AgriCharts | corn | intraday | Verified. **Config fixed**: `config.toml` used `myaccount.heartlandcoop.com/bids.htm` (no bid marker); switched to cash.php. **Cycle 21 (2026-11-19):** wrapper `fetch_heartland_coop` returned 0 rows — page fetched (2xx) but no `jsquote.php` script tag in the HTML, so `fetch_us_agricharts` bailed before parsing. Site-side change (page restructured or tag removed); wrapper URL/name verified correct against config + Cycle 1 discovery, no wrapper change. Re-probe in a later cycle. **Cycle 22 (2026-11-19): re-probed through the wrapper — still 0 rows, `jsquote.php` tag still missing; wrapper unchanged.** |
+| Heritage Grain Cooperative | — | https://www.heritagegrain.com/markets/cash.php | AgriCharts | corn, wheat | intraday | Verified. Keep. (Page title says "Legacy Grain" — possible rebrand.) **Cycle 21 (2026-11-19):** wrapper `fetch_heritage_grain_cooperative` returned 3 rows only (CORN / BEANS / WHEAT - CASH, 1 each) and the `Location` labels are the commodity names — the page's `<h4>` tags hold commodity headings, not location names, so the generic parser's h4-as-location assumption mislabels them. Wrapper URL/name correct; site-structure quirk, not a wrapper bug. Follow-up: check whether the page genuinely lists only 3 cash bids or more rows in a format the regex skips. **Cycle 22 (2026-11-19): answered — the page lists 14 bids, not 3; 11 forward-month rows were skipped because their notes argument holds an escaped quote (`'DEC \'26'`), and all 14 `<h4>` tags are commodity headings. Generic parser fixed (escaped-quote support + commodity-heading fallback); see "Cycle 22 — Heartland/Mulvane re-probes + Heritage parser fix".** |
 | Keller | — | https://www.kellergrain.com/markets/cash.php | AgriCharts | corn, soybean, wheat | intraday | Verified. Keep. **Cycle 21 (2026-11-19):** wrapper `fetch_keller` verified live — 14 rows (Corn 7, Soybeans 7), 1 location (Keller). |
 | Kokomo Grain | Kokomo, IN | https://www.kokomograin.com/markets/cash.php?location_filter= | AgriCharts | corn, soybean, wheat | intraday | Verified. Keep. **Cycle 21 (2026-11-19):** wrapper `fetch_kokomo_grain` verified live — 63 rows (Corn 29, Soybeans 24, Wheat 5, NGMO Waxy 5), 8 locations. |
 | Legacy Farmers | — | https://www.legacyfarmers.com/markets/cash.php | AgriCharts | corn, wheat | intraday | Verified. Keep. **Cycle 21 (2026-11-19):** wrapper `fetch_legacy_farmers` verified live — 66 rows (Beans 25, Corn 24, Wheat 17), 10 locations. |
@@ -201,7 +201,7 @@ Bunge `bungeag.com/cash-bids` (redirects to a locations archive — no bid table
 |---|---|---|---|---|---|---|
 | Central Farmers Coop | Salem, SD | https://www.cenfarmcoop.com/markets/cash.php | AgriCharts | corn, soybean, wheat, oats | intraday | **Verified** `writeBidRow`. Added to active config. **Cycle 21 batch B (2026-11-19):** verified through the wrapper `fetch_central_farmers_coop()` — 75 rows (Corn 44, Soybeans 30, Winter Wheat 1; 11 locations). |
 | Anthony Farmers Co-op | Harper, KS | https://www.anthonycoop.com/markets/cash.php | AgriCharts | corn, soybean, wheat, milo, canola | intraday | **Verified** `writeBidRow`. Added to active config. **Cycle 21 batch B (2026-11-19):** verified through the wrapper `fetch_anthony_farmers_coop()` — 9 rows (Corn 3, Milo 3, Soybeans 3; ANTHONY, HARPER, SHARON). |
-| Mulvane Cooperative Union | Mulvane, KS | https://www.mulvanecoop.com/markets/cash.php | AgriCharts | corn, soybean, wheat, milo | intraday | **Verified** `writeBidRow`. Added to active config. **Cycle 21 batch B (2026-11-19):** wrapper `fetch_mulvane_coop()` returns **0 rows** — HTTP 200 but no `jsquote.php` script tag on the page (site-side; not a wrapper bug). Re-probe in a later cycle. |
+| Mulvane Cooperative Union | Mulvane, KS | https://www.mulvanecoop.com/markets/cash.php | AgriCharts | corn, soybean, wheat, milo | intraday | **Verified** `writeBidRow`. Added to active config. **Cycle 21 batch B (2026-11-19):** wrapper `fetch_mulvane_coop()` returns **0 rows** — HTTP 200 but no `jsquote.php` script tag on the page (site-side; not a wrapper bug). Re-probe in a later cycle. **Cycle 22 (2026-11-19): re-probed through the wrapper — still 0 rows, `jsquote.php` tag still missing; wrapper unchanged.** |
 | Brubaker Grain | West Alexandria, OH | https://dtn.brubakergrain.com/ | DTN | corn, soybean, wheat | intraday | Widget ref + live bid rows in search index. Added to active config; confirm rows in Playwright. |
 | Hoffman Ag Service | Marshall, MI | https://dtn.hoffmanag.com/ | DTN | corn, soybean, wheat | intraday | Same as above. Added to active config. |
 | Wilton Farmers Union Elevator | Wilton, ND | https://www.wiltonfarmerselevator.com/index.cfm?show=11&mid=5&theLocation=1&cmid=all&layout=19 | DTN | spring/durum wheat, soybean, corn, flax, canola, sunflower, barley, oats, peas, pinto beans | intraday | Broadest crop list in the survey. Added to active config; confirm rows in Playwright. |
@@ -1235,7 +1235,7 @@ breakdowns and widget patterns only.
 | Skyland Grain — Elkhart - Hough - Rolla Area (2761) | https://www.skylandgrain.com/cashbidssingle-2761 | 200 | **Yes — 6 rows** (Corn 2, Milo 1, Red Wheat 2, White Wheat 1), widget header dated Nov 19, 2026 | Bushel **`.cbmod` widget in static HTML**, standard wrapped shape — the FAC shape. Location h2 "Elkhart - Hough - Rolla Area" | **Collector-ready:** `parse_bushel_html` verified status ok, 6 rows, against saved HTML — no parser change needed. **Enabled** (new toml entry); registry entry `skyland_2761` + `fetch_skyland_2761()` added in Cycle 13 |
 | Smithfield Grain — Bladenboro (1725) | https://smithfieldgrain.com/cashbidssingle-1725 | 200 | **Yes — 1 row** (Soybeans), widget header dated Nov 19, 2026 | Bushel **`.cbmod` widget in static HTML**, standard wrapped shape — the FAC shape. Location h2 is "Bladenboro, NC" (mapped to "Bladenboro" in the registry entry). Thin page: a single Soybeans row | **Collector-ready:** `parse_bushel_html` verified status ok, 1 row, against saved HTML — no parser change needed. **Enabled** (new toml entry; the East Region link-list entry stays disabled); registry entry `smithfield_bladenboro` + `fetch_smithfield_bladenboro()` added in Cycle 13 |
 | Smithfield Grain — Bladenboro Feed Mill (1667) | https://smithfieldgrain.com/cashbidssingle-1667 | 200 | **Yes — 2 rows** (Corn 1, Wheat 1), widget header dated Nov 19, 2026 | Bushel **`.cbmod` widget in static HTML**, standard wrapped shape — the FAC shape. Location h2 is "Bladenboro Feed Mill, NC" (mapped to "Bladenboro Feed Mill"). Distinct from the Bladenboro Elevator target (1725). Delivery labels are descriptive ("November", "June Delivery") as on the Bentonville page | **Collector-ready:** `parse_bushel_html` verified status ok, 2 rows, against saved HTML — no parser change needed. **Enabled** (new toml entry); registry entry `smithfield_bladenboro_feed_mill` + `fetch_smithfield_bladenboro_feed_mill()` added in Cycle 13 |
-| Smithfield Grain — Chadbourn (2294) | https://smithfieldgrain.com/cashbidssingle-2294 | 200 | **Yes — 1 row** (Soybeans), widget header dated **Nov 18, 2026** | Bushel **`.cbmod` widget in static HTML**, standard wrapped shape — the FAC shape. Location h2 is "Chadbourn, NC" (mapped to "Chadbourn"). Thin page: a single Soybeans row. **The widget header is a day older than the other Cycle 13 pages (Nov 19)** — the Chadbourn widget had not refreshed at probe time; worth watching on the next fetch, not a parser issue. **Cycle 14 (2026-11-19): re-check — header STILL "Cash bids for Wednesday, November 18, 2026", still 1 Soybeans row (Last Trade 12:23 AM). Chadbourn lags a full day behind the other Smithfield pages; the widget is stale, not just slow to refresh — flag for the collector (a same-day freshness check would fail this location daily).** | **Collector-ready:** `parse_bushel_html` verified status ok, 1 row, against saved HTML — no parser change needed. **Enabled** (new toml entry); registry entry `smithfield_chadbourn` + `fetch_smithfield_chadbourn()` added in Cycle 13 |
+| Smithfield Grain — Chadbourn (2294) | https://smithfieldgrain.com/cashbidssingle-2294 | 200 | **Yes — 1 row** (Soybeans), widget header dated **Nov 18, 2026** | Bushel **`.cbmod` widget in static HTML**, standard wrapped shape — the FAC shape. Location h2 is "Chadbourn, NC" (mapped to "Chadbourn"). Thin page: a single Soybeans row. **The widget header is a day older than the other Cycle 13 pages (Nov 19)** — the Chadbourn widget had not refreshed at probe time; worth watching on the next fetch, not a parser issue. **Cycle 14 (2026-11-19): re-check — header STILL "Cash bids for Wednesday, November 18, 2026", still 1 Soybeans row (Last Trade 12:23 AM). Chadbourn lags a full day behind the other Smithfield pages; the widget is stale, not just slow to refresh — flag for the collector (a same-day freshness check would fail this location daily). **Cycle 22 (2026-11-19): re-check — header STILL "Cash bids for Wednesday, November 18, 2026", still 1 Soybeans row, `parse_bushel_html` status ok. Third consecutive stale probe (Cycles 13, 14, 22); persistent one-day lag, not a transient delay.** | **Collector-ready:** `parse_bushel_html` verified status ok, 1 row, against saved HTML — no parser change needed. **Enabled** (new toml entry); registry entry `smithfield_chadbourn` + `fetch_smithfield_chadbourn()` added in Cycle 13 |
 | Smithfield Grain — Clarkton (1668) | https://smithfieldgrain.com/cashbidssingle-1668 | 200 | **Yes — 1 row** (Soybeans), widget header dated Nov 19, 2026 | Bushel **`.cbmod` widget in static HTML**, standard wrapped shape — the FAC shape. Location h2 is "Clarkton, NC" (mapped to "Clarkton"). Thin page: a single Soybeans row | **Collector-ready:** `parse_bushel_html` verified status ok, 1 row, against saved HTML — no parser change needed. **Enabled** (new toml entry); registry entry `smithfield_clarkton` + `fetch_smithfield_clarkton()` added in Cycle 13 |
 
 ### Static-HTML sites — parser verification (saved HTML only, no new fetch)
@@ -1311,7 +1311,9 @@ all true. All other entries unchanged.
   **Cycle 14 (2026-11-19) re-check: STILL Nov 18, still 1 Soybeans
   row — Chadbourn lags a full day; the widget is stale, not just
   slow. Flag for the collector: a same-day freshness check would
-  fail this location daily.**
+  fail this location daily. **Cycle 22 (2026-11-19) re-check:
+  STILL Nov 18, still 1 Soybeans row — third consecutive stale
+  probe; the one-day lag is persistent.**
 - **Registry wiring (coordinator):** the eleven new Cycle 13
   registry entries (`pro_coop_21302b` in
   `CASHBIDS_EMBED_SITES`; `skyland_2731`, `skyland_2734`,
@@ -1700,8 +1702,8 @@ widget patterns only.
 | Skyland Grain — Sunray Area (2770) | https://www.skylandgrain.com/cashbidssingle-2770 | 200 | **Yes — 5 rows** (Corn 2, Milo 1, Red Wheat 2), widget header dated Nov 19, 2026 | Bushel **`.cbmod` widget in static HTML**, standard wrapped shape — the FAC shape. Location h2 "Sunray Area" | **Collector-ready:** `parse_bushel_html` verified status ok, 5 rows, against saved HTML — no parser change needed. **Enabled** (new toml entry); registry entry `skyland_2770` + `fetch_skyland_2770()` added in Cycle 14 |
 | Skyland Grain — Kendall - Midway - Lydia (2771) | https://www.skylandgrain.com/cashbidssingle-2771 | 200 | **Yes — 6 rows** (Corn 2, Milo 1, Red Wheat 2, White Wheat 1), widget header dated Nov 19, 2026 | Bushel **`.cbmod` widget in static HTML**, standard wrapped shape — the FAC shape. Location h2 "Kendall - Midway - Lydia" | **Collector-ready:** `parse_bushel_html` verified status ok, 6 rows, against saved HTML — no parser change needed. **Enabled** (new toml entry); registry entry `skyland_2771` + `fetch_skyland_2771()` added in Cycle 14 |
 | Skyland Grain — Buckeye - Syracuse (2778) | https://www.skylandgrain.com/cashbidssingle-2778 | 200 | **Yes — 6 rows** (Corn 2, Milo 1, Red Wheat 2, White Wheat 1), widget header dated Nov 19, 2026 | Bushel **`.cbmod` widget in static HTML**, standard wrapped shape — the FAC shape. Location h2 "Buckeye - Syracuse" | **Collector-ready:** `parse_bushel_html` verified status ok, 6 rows, against saved HTML — no parser change needed. **Enabled** (new toml entry); registry entry `skyland_2778` + `fetch_skyland_2778()` added in Cycle 14 |
-| Skyland Grain — Hugoton (3370) | https://www.skylandgrain.com/cashbidssingle-3370 | 200 | **Yes — 6 rows** (Corn 2, Milo 2, Red Wheat 2), widget header dated **Nov 18, 2026** | Bushel **`.cbmod` widget in static HTML**, standard wrapped shape — the FAC shape. Location h2 is "Hugoton, KS" (mapped to "Hugoton" in the registry entry). **The first Skyland page with two Milo rows.** **The widget header is a day older than the other Cycle 14 pages (Nov 19)** — like Chadbourn in Cycle 13; the Hugoton widget had not refreshed at probe time. | **Collector-ready:** `parse_bushel_html` verified status ok, 6 rows, against saved HTML — no parser change needed. **Enabled** (new toml entry); registry entry `skyland_3370` + `fetch_skyland_3370()` added in Cycle 14 |
-| Skyland Grain — Vilas - Walsh (3621) | https://www.skylandgrain.com/cashbidssingle-3621 | 200 | **Yes — 5 rows** (Corn 2, Milo 1, Red Wheat 2), widget header dated **Nov 18, 2026** | Bushel **`.cbmod` widget in static HTML**, standard wrapped shape — the FAC shape. Location h2 "Vilas - Walsh". **The widget header is a day older than the other Cycle 14 pages (Nov 19)** — like 3370 and Chadbourn in Cycle 13. | **Collector-ready:** `parse_bushel_html` verified status ok, 5 rows, against saved HTML — no parser change needed. **Enabled** (new toml entry); registry entry `skyland_3621` + `fetch_skyland_3621()` added in Cycle 14 |
+| Skyland Grain — Hugoton (3370) | https://www.skylandgrain.com/cashbidssingle-3370 | 200 | **Yes — 6 rows** (Corn 2, Milo 2, Red Wheat 2), widget header dated **Nov 18, 2026** | Bushel **`.cbmod` widget in static HTML**, standard wrapped shape — the FAC shape. Location h2 is "Hugoton, KS" (mapped to "Hugoton" in the registry entry). **The first Skyland page with two Milo rows.** **The widget header is a day older than the other Cycle 14 pages (Nov 19)** — like Chadbourn in Cycle 13; the Hugoton widget had not refreshed at probe time. **Cycle 22 (2026-11-19): re-check — header STILL "Cash bids for Wednesday, November 18, 2026", still 6 rows (Corn 2, Milo 2, Red Wheat 2), `parse_bushel_html` status ok. Second consecutive stale probe; persistent one-day lag.** | **Collector-ready:** `parse_bushel_html` verified status ok, 6 rows, against saved HTML — no parser change needed. **Enabled** (new toml entry); registry entry `skyland_3370` + `fetch_skyland_3370()` added in Cycle 14 |
+| Skyland Grain — Vilas - Walsh (3621) | https://www.skylandgrain.com/cashbidssingle-3621 | 200 | **Yes — 5 rows** (Corn 2, Milo 1, Red Wheat 2), widget header dated **Nov 18, 2026** | Bushel **`.cbmod` widget in static HTML**, standard wrapped shape — the FAC shape. Location h2 "Vilas - Walsh". **The widget header is a day older than the other Cycle 14 pages (Nov 19)** — like 3370 and Chadbourn in Cycle 13. **Cycle 22 (2026-11-19): re-check — header STILL "Cash bids for Wednesday, November 18, 2026", still 5 rows (Corn 2, Milo 1, Red Wheat 2), `parse_bushel_html` status ok. Second consecutive stale probe; persistent one-day lag.** | **Collector-ready:** `parse_bushel_html` verified status ok, 5 rows, against saved HTML — no parser change needed. **Enabled** (new toml entry); registry entry `skyland_3621` + `fetch_skyland_3621()` added in Cycle 14 |
 
 ### Static-HTML sites — parser verification (saved HTML only, no new fetch)
 
@@ -1746,6 +1748,9 @@ all true. All other entries unchanged.
   widget headers were dated Nov 18, 2026 while the other five
   Cycle 14 pages were Nov 19 — check on the next fetch whether
   they refresh daily or lag, as with Chadbourn (2294).
+  **Cycle 22 (2026-11-19) re-check: STILL Nov 18 at both, row
+  counts unchanged (6 and 5) — second consecutive stale probe;
+  the one-day lag is persistent, like Chadbourn.**
 - **Registry wiring (coordinator):** the seven new Cycle 14
   `BUSHEL_SITES` entries (`skyland_2763`, `skyland_2766`,
   `skyland_2770`, `skyland_2771`, `skyland_2778`, `skyland_3370`,
@@ -2116,7 +2121,7 @@ location/commodity breakdowns and widget patterns only.
 |---|---|---|---|---|---|
 | Smithfield Grain — Raeford (1675), re-probe | https://smithfieldgrain.com/cashbidssingle-1675 | 200 | **No — still empty** (0 rows, status "empty") | Generic site shell with an empty `.cbmod` widget: 1 `cbmod` marker, 0 `cbCommodity`, 0 `sevenColumnsBigFirst`; no location h2, no header date — identical shape to the Cycle 15 batch-A probe | **NOT registered** (second empty probe in a row). Per the Cycle 15 batch-A follow-up, treat Raeford as a location that posts no public bids and stop spending GETs on it. Pinned by a negative test in `tests/test_bushel_cycle16_raeford.py` (unknown site key + empty-widget shape parses to status "empty") |
 | Smithfield Grain — Lapaz (2067) | https://smithfieldgrain.com/cashbidssingle-2067 | 200 | **Yes — 2 rows** (Corn 2), widget header dated Thursday, November 19, 2026 (fresh) | Bushel **`.cbmod` widget in static HTML**, standard wrapped shape — the FAC shape. Location h2 is "Lapaz, IN" (mapped to "Lapaz"; the list page calls it IN - Lapaz Elevator (LAP)) | **Collector-ready:** `parse_bushel_html` verified status ok, 2 rows, against saved HTML — no parser change needed. **Enabled** (new toml entry); registry entry `smithfield_lapaz` + `fetch_smithfield_lapaz()` added in Cycle 16 |
-| Smithfield Grain — Hamer (2179) | https://smithfieldgrain.com/cashbidssingle-2179 | 200 | **Yes — 1 row** (Soybeans), widget header dated Wednesday, November 18, 2026 | Bushel **`.cbmod` widget in static HTML**, standard wrapped shape — the FAC shape. Location h2 is "Hamer, SC" (mapped to "Hamer"; the list page calls it SC - Hamer Elevator). Thin page: a single Soybeans row. **Header a day stale** — the Hamer widget had not refreshed at probe time, like Chadbourn (Cycle 13); worth watching on the next fetch, not a parser issue | **Collector-ready:** `parse_bushel_html` verified status ok, 1 row, against saved HTML — no parser change needed. **Enabled** (new toml entry); registry entry `smithfield_hamer` + `fetch_smithfield_hamer()` added in Cycle 16 |
+| Smithfield Grain — Hamer (2179) | https://smithfieldgrain.com/cashbidssingle-2179 | 200 | **Yes — 1 row** (Soybeans), widget header dated Wednesday, November 18, 2026 | Bushel **`.cbmod` widget in static HTML**, standard wrapped shape — the FAC shape. Location h2 is "Hamer, SC" (mapped to "Hamer"; the list page calls it SC - Hamer Elevator). Thin page: a single Soybeans row. **Header a day stale** — the Hamer widget had not refreshed at probe time, like Chadbourn (Cycle 13); worth watching on the next fetch, not a parser issue. **Cycle 22 (2026-11-19): re-check — header STILL "Cash bids for Wednesday, November 18, 2026", still 1 Soybeans row, `parse_bushel_html` status ok. Second consecutive stale probe; persistent one-day lag.** | **Collector-ready:** `parse_bushel_html` verified status ok, 1 row, against saved HTML — no parser change needed. **Enabled** (new toml entry); registry entry `smithfield_hamer` + `fetch_smithfield_hamer()` added in Cycle 16 |
 | The Andersons — Maumee facility page | https://www.andersonsgrain.com/locations/oh/maumee/ | 200 | **Yes — static tables, but NOT collectable (see right)** | Facility info page (title "Maumee Grain Elevator - The Andersons Trade Group", h1 "Maumee"): Hours, Discount Schedules, Important Info, DP/Storage Rates, Contacts, About This Facility, Google Maps embed — **plus 3 static `styled-table` bid tables** under a "Cash Bids" tab ("Corn, Beans, Red Wheat"): columns Delivery / Bid / Basis / Futures / Chg / Symbol / Last Trade; Corn 10 delivery rows, Soybeans 10, Red Wheat 3 (23 rows total); last-trade stamps in the early-morning hours. The "Bid and Basis Charts" section itself is JS-driven (empty-src `chartFrame` iframe), but the tables are plain static HTML. Disclaimer on the page: cash prices update at 10-minute intervals through the CBOT day session, basis values update daily at 5:10 pm EST, all bids subject to change | **NOT collected, NOT registered.** The page carries a Barchart disclaimer ("All market data is provided by Barchart Solutions", `barcharts-disclaimer` div, link to `barchart.com/solutions`) — the tables are **Barchart-licensed data**, out of scope for GrainHub collection under the no-licensed-data guardrail. This finding does NOT reopen the Andersons: the closure now rests on licensing, not on absence of static rows (see the Cycle 16 addendum under "The Andersons — GRAINweb investigation (Cycle 13)"). No collector, no toml entry |
 | The Andersons — Ohio per-state list page | https://www.andersonsgrain.com/local-bids/locations-list/location-list/ohio/ | 200 | **No** | Title "Ohio - The Andersons Trade Group". Same directory substance as the master list page (Cycle 15): body lists the same 7 Ohio facilities (Greenville, Maumee, Metamora, Port William, Toledo - Edwin Dr, Toledo - Kuhlman Dr, Toledo - Reynolds Rd) in 3 small layout tables (2 facility names each); the page also carries the full 41-facility directory in its nav links (all states). 0 bid tables, 0 price-like strings, 0 `styled-table` elements | None — directory only, confirms the master-list finding. No collector |
 
@@ -2167,7 +2172,11 @@ other entries unchanged.
   November 18, 2026 — a day stale, like Chadbourn (Cycle 13).
   If the collector adds a same-day freshness check, Hamer (and
   Chadbourn) will trip it; that is a data-freshness flag, not a
-  parser issue.
+  parser issue. **Cycle 22 (2026-11-19) re-check: STILL Nov 18,
+  still 1 Soybeans row — second consecutive stale probe; the
+  one-day lag is persistent. The watch now covers four locations
+  (Chadbourn, Hamer, Hugoton, Vilas - Walsh), all still one day
+  stale.**
 - **The Andersons is now fully closed.** Both confirmatory
   checks named in Cycle 15 are done: the Maumee facility page
   and the Ohio per-state list page. The Maumee check surfaced
@@ -2865,8 +2874,8 @@ or bid was invented.
 | --- | --- | --- | --- | --- |
 | Ag Plus | https://www.agplusinc.com/markets/cash.php | static-capable — writeBidRow confirmed, Cycle 1 discovery. **Cycle 21: verified live through wrapper `fetch_ag_plus` — 36 rows (Corn 12, Beans 12, Wheat 12), 6 locations** | `ag_plus` | true |
 | Farmers Win Coop | https://www.farmerswin.com/markets/cash.php | static-capable — writeBidRow confirmed, Cycle 1 discovery. **Cycle 21: verified live through wrapper `fetch_farmers_win_coop` — 171 rows (Corn 90, Soybeans 81), 18 locations** | `farmers_win_coop` | true |
-| Heartland Coop | https://www.heartlandcoop.com/markets/cash.php | static-capable — writeBidRow confirmed, Cycle 1 discovery. **Cycle 21: wrapper `fetch_heartland_coop` returned 0 rows — page fetched (2xx) but no `jsquote.php` script tag in HTML; site-side change, wrapper URL/name correct, no fix made. Re-probe in a later cycle** | `heartland_coop` | true |
-| Heritage Grain Cooperative | https://www.heritagegrain.com/markets/cash.php | static-capable — writeBidRow confirmed, Cycle 1 discovery; distinct from `heritage_coop` (Heritage Cooperative, agricharts-embed). **Cycle 21: wrapper `fetch_heritage_grain_cooperative` returned 3 rows only (CORN/BEANS/WHEAT - CASH, 1 each); page `<h4>` tags are commodity headings, so `Location` labels are commodity names — site-structure quirk, not a wrapper bug** | `heritage_grain_cooperative` | true |
+| Heartland Coop | https://www.heartlandcoop.com/markets/cash.php | static-capable — writeBidRow confirmed, Cycle 1 discovery. **Cycle 21: wrapper `fetch_heartland_coop` returned 0 rows — page fetched (2xx) but no `jsquote.php` script tag in HTML; site-side change, wrapper URL/name correct, no fix made. Re-probe in a later cycle. **Cycle 22 (2026-11-19): re-probed through the wrapper — still 0 rows, `jsquote.php` tag still missing; wrapper unchanged** | `heartland_coop` | true |
+| Heritage Grain Cooperative | https://www.heritagegrain.com/markets/cash.php | static-capable — writeBidRow confirmed, Cycle 1 discovery; distinct from `heritage_coop` (Heritage Cooperative, agricharts-embed). **Cycle 21: wrapper `fetch_heritage_grain_cooperative` returned 3 rows only (CORN/BEANS/WHEAT - CASH, 1 each); page `<h4>` tags are commodity headings, so `Location` labels are commodity names — site-structure quirk, not a wrapper bug. **Cycle 22 (2026-11-19): the page lists 14 bids, not 3 — 11 forward-month rows were skipped because their notes argument holds an escaped quote (`'DEC \'26'`), and all 14 `<h4>` tags are commodity headings. Generic parser fixed in `us_agricharts_source.py` (escaped-quote support in group/notes + commodity-heading location fallback); verified against the saved Cycle 22 capture to 14 correctly-labelled rows; see "Cycle 22 — Heartland/Mulvane re-probes + Heritage parser fix"** | `heritage_grain_cooperative` | true |
 | Keller | https://www.kellergrain.com/markets/cash.php | static-capable — writeBidRow confirmed, Cycle 1 discovery. **Cycle 21: verified live through wrapper `fetch_keller` — 14 rows (Corn 7, Soybeans 7), 1 location** | `keller` | true |
 | Kokomo Grain | https://www.kokomograin.com/markets/cash.php?location_filter= | static-capable — writeBidRow confirmed, Cycle 1 discovery. **Cycle 21: verified live through wrapper `fetch_kokomo_grain` — 63 rows (Corn 29, Soybeans 24, Wheat 5, NGMO Waxy 5), 8 locations** | `kokomo_grain` | true |
 | Legacy Farmers | https://www.legacyfarmers.com/markets/cash.php | static-capable — writeBidRow confirmed, Cycle 1 discovery. **Cycle 21: verified live through wrapper `fetch_legacy_farmers` — 66 rows (Beans 25, Corn 24, Wheat 17), 10 locations** | `legacy_farmers` | true |
@@ -2875,7 +2884,7 @@ or bid was invented.
 | Wheaton Dumont | https://www.wdcoop.com/markets/cash.php | static-capable — verified live Cycle 12: 43 static writeBidRow rows; short month labels ('Nov 26', 'Jan 27'), kept verbatim. **Cycle 21 batch B (2026-11-19): verified THROUGH the wrapper** `fetch_wheaton_dumont()` — 43 rows, identical count to Cycle 12 (Corn 18, Soybeans 16, Spring Wheat 9; 8 locations; deliveries 'Nov 26'–'Oct 27'). No wrapper bug. | `wheaton_dumont` | true |
 | Central Farmers Coop | https://www.cenfarmcoop.com/markets/cash.php | static-capable — writeBidRow confirmed in fetched HTML, Cycle 1 ("enable immediately"). **Cycle 21 batch B (2026-11-19): verified THROUGH the wrapper** `fetch_central_farmers_coop()` — 75 rows (Corn 44, Soybeans 30, Winter Wheat 1; 11 locations: Canova, Dimock, Freeman, Lyons, Marion, Montrose, Mt Vernon, Salem, Springfield, Tyndall, Viborg). No wrapper bug. | `central_farmers_coop` | true |
 | Anthony Farmers Co-op | https://www.anthonycoop.com/markets/cash.php | static-capable — writeBidRow confirmed in fetched HTML, Cycle 1 ("enable immediately"). **Cycle 21 batch B (2026-11-19): verified THROUGH the wrapper** `fetch_anthony_farmers_coop()` — 9 rows (Corn 3, Milo 3, Soybeans 3; 3 locations: ANTHONY, HARPER, SHARON; single delivery 09/01/2026). Thin page but structurally sound — 3 locations × 3 commodities, one delivery month each. No wrapper bug. | `anthony_farmers_coop` | true |
-| Mulvane Coop | https://www.mulvanecoop.com/markets/cash.php | static-capable — writeBidRow confirmed in fetched HTML, Cycle 1 ("enable immediately"). **Cycle 21 batch B (2026-11-19): FAILED through the wrapper** `fetch_mulvane_coop()` — HTTP 200 but **0 rows**: `[US-AG WARN] Mulvane Coop: jsquote script tag not found in page`. The page no longer carries the `jsquote.php` script tag the generic parser requires, so `fetch_us_agricharts` returns empty before parsing any rows. **Not a wrapper bug** — the wrapper passes the exact toml URL/name (`https://www.mulvanecoop.com/markets/cash.php`, "Mulvane Coop"); the failure is site-side (page template changed since Cycle 1, or the cash page is now JS-rendered / served differently). Wrapper left unchanged; toggle stays `true` for now but the adapter yields nothing until the site is re-probed. **Follow-up (later cycle, 1 GET):** re-probe the cash page and inspect what it serves now — if the jsquote tag is gone for good, the entry needs either a new static route or a toggle flip to `false`. | `mulvane_coop` | true |
+| Mulvane Coop | https://www.mulvanecoop.com/markets/cash.php | static-capable — writeBidRow confirmed in fetched HTML, Cycle 1 ("enable immediately"). **Cycle 21 batch B (2026-11-19): FAILED through the wrapper** `fetch_mulvane_coop()` — HTTP 200 but **0 rows**: `[US-AG WARN] Mulvane Coop: jsquote script tag not found in page`. The page no longer carries the `jsquote.php` script tag the generic parser requires, so `fetch_us_agricharts` returns empty before parsing any rows. **Not a wrapper bug** — the wrapper passes the exact toml URL/name (`https://www.mulvanecoop.com/markets/cash.php`, "Mulvane Coop"); the failure is site-side (page template changed since Cycle 1, or the cash page is now JS-rendered / served differently). Wrapper left unchanged; toggle stays `true` for now but the adapter yields nothing until the site is re-probed. **Follow-up (later cycle, 1 GET):** re-probe the cash page and inspect what it serves now — if the jsquote tag is gone for good, the entry needs either a new static route or a toggle flip to `false`. **Cycle 22 (2026-11-19): re-probed through the wrapper — still 0 rows, `jsquote.php` tag still missing; wrapper unchanged.** | `mulvane_coop` | true |
 
 ### Per-entry table — enabled DTN (13, all JS-only)
 
@@ -2992,6 +3001,9 @@ All 7 returned DataFrames have the standard 10 columns
    decides whether it is a transient template change or a real
    break. If the tag is gone for good, the fix belongs in the
    generic collector (alternate futures source), not the wrapper.
+   **Cycle 22 (2026-11-19): re-probed — still 0 rows, tag still
+   missing. Second consecutive failure; not transient. No toggle
+   change made here; see Cycle 22 section.**
 2. **Heritage Grain Cooperative — parser follow-up, not a wrapper
    bug.** Only 3 rows parsed and their `Location` values are
    commodity names. Open questions for a later cycle: does the page
@@ -3003,7 +3015,11 @@ All 7 returned DataFrames have the standard 10 columns
    teach the parser to detect h4-as-commodity pages (or to fall
    back to the company name as the location when the h4 text
    matches a commodity name). No change made here — out of scope
-   for a wrapper-verification task.
+   for a wrapper-verification task. **Cycle 22 (2026-11-19):
+   resolved — see "Cycle 22 — Heartland/Mulvane re-probes +
+   Heritage parser fix": the page lists 14 bids, 11 skipped by an
+   escaped quote in the notes argument; parser fixed and verified
+   to 14 correctly-labelled rows.**
 3. **User-Agent note for the coordinator:** the task brief said the
    fetch functions send `GrainHub-Research/1.0`, but
    `us_agricharts_source.py` `_HEADERS` actually sends a Chrome
@@ -3060,7 +3076,10 @@ All 5 non-empty DataFrames have the standard 10 columns
    re-probe decides whether it is transient or a real break. If
    the tag is gone for good, the fix belongs in the generic
    collector (alternate futures source), not the wrapper — and the
-   same fix would cover Heartland Coop.
+   same fix would cover Heartland Coop. **Cycle 22 (2026-11-19):
+   re-probed — still 0 rows, tag still missing. Second consecutive
+   failure; not transient. No toggle change made here; see Cycle 22
+   section.**
 2. **West-Con location fallback.** All 84 rows carry the single
    location `West-Con - West-Con`: the page has no `<h4>` location
    headings before its rows, so the parser's company-name fallback
@@ -3079,3 +3098,183 @@ All 5 non-empty DataFrames have the standard 10 columns
    `Mozilla/5.0` UA. The wrappers were run as-is (no override, per
    the brief); if the intended UA is `GrainHub-Research/1.0`, that
    is a deliberate change for a later cycle.
+
+## Cycle 22 — staleness re-checks: Chadbourn, Hamer, Hugoton, Vilas - Walsh (2026-11-19)
+
+Re-checked the four locations on the staleness watch, one polite
+GET each (4 GETs total, User-Agent `GrainHub-Research/1.0`, ~2 s
+spacing, no retries), in the early hours of Nov 19, 2026 (EST).
+Raw HTML saved to `/tmp/cycle22/` scratch only, never the repo.
+No prices are recorded here — counts and structure only.
+Research only: no code changes, no tests, full suite not run.
+
+**URL note:** the task brief listed the Smithfield URLs with a
+`www.` prefix, but the registry (`BUSHEL_SITES` in
+`bushel_source.py`) records them without it
+(`https://smithfieldgrain.com/cashbidssingle-2294` and
+`...-2179`). The registry URLs were used, per the brief's own
+"exact URLs from the registry" instruction. Both Skyland URLs
+match the registry exactly.
+
+### Per-location results
+
+| Location | URL probed | HTTP | Widget header date | Rows (vs earlier) | Verdict |
+| --- | --- | --- | --- | --- | --- |
+| Smithfield Grain — Chadbourn (2294) | https://smithfieldgrain.com/cashbidssingle-2294 | 200 | Wednesday, November 18, 2026 | 1 (Soybeans 1) — unchanged | **Still stale by one day** |
+| Smithfield Grain — Hamer (2179) | https://smithfieldgrain.com/cashbidssingle-2179 | 200 | Wednesday, November 18, 2026 | 1 (Soybeans 1) — unchanged | **Still stale by one day** |
+| Skyland Grain — Hugoton (3370) | https://www.skylandgrain.com/cashbidssingle-3370 | 200 | Wednesday, November 18, 2026 | 6 (Corn 2, Milo 2, Red Wheat 2) — unchanged | **Still stale by one day** |
+| Skyland Grain — Vilas - Walsh (3621) | https://www.skylandgrain.com/cashbidssingle-3621 | 200 | Wednesday, November 18, 2026 | 5 (Corn 2, Milo 1, Red Wheat 2) — unchanged | **Still stale by one day** |
+
+All four parsed cleanly with the existing generic parser
+(`parse_bushel_html` run against each saved `/tmp/cycle22/`
+HTML with its registry site — status ok, mapped locations
+"Chadbourn", "Hamer", "Hugoton", "Vilas - Walsh"). No parser
+change needed; the staleness is in the widgets' data, not the
+parse.
+
+### Verdict — staleness watch UNCHANGED (not resolved, not reduced)
+
+None of the four caught up: every widget header is still dated
+Wednesday, November 18, 2026, against a Nov 19 probe date, and
+every row count is identical to its earlier probe. Chadbourn is
+now stale on its third consecutive probe (Cycles 13, 14, 22);
+Hugoton and Vilas - Walsh on their second (Cycles 14, 22);
+Hamer on its second (Cycles 16, 22). The lag is a persistent
+one-day lag at all four locations, not a transient refresh
+delay — but it is still exactly one day, no worse. The watch
+stays in place for all four, and the standing collector note
+stands: a same-day freshness gate would fail these four
+locations daily, so they need an exemption / lag tolerance if
+such a gate is ever added. No new follow-up probe is opened
+beyond the existing watch (re-check again in a later cycle;
+a daytime re-check would also test whether the widgets refresh
+later in the day rather than overnight).
+
+## Cycle 22 — Heartland/Mulvane re-probes + Heritage parser fix (2026-11-19)
+
+Closes all three Cycle 21 follow-ups for the AgriCharts wrappers:
+the Heartland Coop re-probe (batch A item 1), the Mulvane Coop
+re-probe (batch B item 1), and the Heritage Grain Cooperative
+parser investigation (batch A item 2). 3 page GETs total, ~2 s
+spacing, no retries: `fetch_heartland_coop()` and
+`fetch_mulvane_coop()` live through the API venv (wrappers as-is,
+Chrome UA), plus one direct fetch of the Heritage cash page with
+`GrainHub-Research/1.0` (URL from `us_elevators_urls.toml`,
+`https://www.heritagegrain.com/markets/cash.php`), raw HTML saved
+to `/tmp/cycle22/heritage_cash.html` (64,855 bytes, HTTP 200).
+No live price, basis, or bid was saved to the repo — counts and
+structure only.
+
+### Per-target results
+
+| Target | Call | Rows | Finding | Status |
+| --- | --- | --- | --- | --- |
+| Heartland Coop | `fetch_heartland_coop()` | 0 | `[US-AG WARN] Heartland Coop: jsquote script tag not found in page` — same failure as Cycle 21 | STILL FAILING (site-side) — second consecutive failure, not transient |
+| Mulvane Coop | `fetch_mulvane_coop()` | 0 | `[US-AG WARN] Mulvane Coop: jsquote script tag not found in page` — same failure as Cycle 21 batch B | STILL FAILING (site-side) — second consecutive failure, not transient |
+| Heritage Grain Cooperative | direct page fetch | 14 data calls in HTML (was 3 parsed in Cycle 21) | 11 forward-month rows skipped by the regex (escaped quote in notes); all 14 `<h4>` tags are commodity headings | FIXED in the generic parser — see below |
+
+### Heartland / Mulvane — still failing, wrappers unchanged
+
+Both pages still serve HTTP 200 without the `jsquote.php` script
+tag, so `fetch_us_agricharts` still returns empty before parsing.
+Two consecutive failures (Cycles 21 and 22) rule out a transient
+template change: the tag is gone for good on both sites, or both
+cash pages are now served in a form the collector cannot use.
+No wrapper change was made (both wrappers pass the exact toml
+URL/name); no toggle change was made here. Next step for a later
+cycle: either a generic-collector alternate futures source (the
+fix Cycle 21 anticipated — it would cover both sites at once) or
+flipping both toggles to `false` so the adapters stop yielding
+nothing. The toggles stay `true` for now.
+
+### Heritage — the page lists 14 bids, not 3 (two parser bugs found)
+
+Reading the saved HTML verbatim:
+
+1. **14 `writeBidRow` data calls, not 3.** One per commodity
+   heading: CORN/BEANS/WHEAT - CASH (1 each, the 3 Cycle 21
+   parsed) plus CORN/BEANS - DEC 2026, JAN 2027, FEB 2027,
+   MAR 2027, FALL 2027 and WHEAT - JUL 2027 (11 more). All
+   deliveries are full MM/DD/YYYY windows. No other bid shape is
+   present — no second table, no `data-bid` attributes, no other
+   bid-row pattern; the 11 missing rows are ordinary
+   `writeBidRow` calls the regex failed to match.
+2. **Why the regex skipped them:** the forward-month rows carry
+   the delivery label in the notes argument (arg 10) with an
+   escaped quote — `'DEC \'26'`, `'JAN \'27'`, `'FALL \'27'`,
+   `'JUL \'27'` — and the regex's group/notes fields were
+   `'[^']*'`, which stops at the escaped quote, so the whole row
+   failed to match. The 3 cash rows have plain notes (`'CASH'`)
+   and matched. The `jsquote.php` tag is present and lists all 8
+   symbols the 14 rows reference
+   (`ZCZ26,ZSF27,ZWZ26,ZCH27,ZSH27,ZCZ27,ZSX27,ZWN27`), so
+   futures lookup covers every row.
+3. **The `<h4>` tags are commodity headings.** All 14 `<h4>`
+   texts are commodity headings (`CORN - CASH`,
+   `CORN - DEC 2026`, …), each exactly equal to the row name
+   beneath it, in document order (each `<h4>` precedes its row).
+   The generic parser's h4-as-location assumption therefore
+   mislabels every row's `Location` with a commodity name.
+
+### Parser fix (generic collector, not the wrapper)
+
+In `app/platform/market_data/sources/us_agricharts_source.py`:
+
+- **Escaped quotes:** the group (arg 9) and notes (arg 10)
+  fields in `_WRITEBIDROW_RX` changed from `'[^']*'` to
+  `'(?:[^'\\]|\\.)*'`, so an escaped quote inside either field
+  no longer breaks the match. Verified offline against the saved
+  capture: 14/14 rows match (was 3/14).
+- **Commodity headings:** new `_is_commodity_heading(h4_text,
+  row_name)` — true when the `<h4>` text exactly equals the
+  row's commodity name (case-insensitive), or starts with a
+  commodity word (`corn|soybeans?|beans|wheat|milo|sorghum|
+  barley|oats|canola|rye|sunflowers?|flax|peas|lentils?|
+  chickpeas|durum`). Rows under such a heading fall back to the
+  company name as the location — the same `Company - Company`
+  fallback shape West-Con already produces (no `<h4>` headings
+  there). The word-boundary check keeps real place names out
+  (`Wheatland`, `Cornwall` do not match); genuine location
+  `<h4>`s are unaffected. Verified end-to-end with mocked
+  futures against the saved capture: 14 rows, names as listed
+  above, single location
+  `Heritage Grain Cooperative - Heritage Grain Cooperative`.
+
+No live re-call of the Heritage wrapper was made after the fix
+(the 3-GET budget for this task was spent); the fix is verified
+against the saved capture plus synthetic fixtures, and the next
+live wrapper call should return 14 rows.
+
+### Tests
+
+4 new tests in
+`GrainBids/grainbids/apps/api/tests/test_us_agricharts_source.py`
+(+ synthetic fixture
+`tests/fixtures/us_agricharts_heritage_sample.html`, all values
+invented, neutral `Test Elevator` naming):
+
+- `test_escaped_quote_notes_parse` — fixture rows with escaped
+  quotes in notes and group all match the regex (4/4).
+- `test_is_commodity_heading` — exact-match and commodity-word
+  cases true; `Riverside`, `Wheatland`, `Cornwall`, `Garfield`
+  false.
+- `test_commodity_h4_falls_back_to_company` — mocked-HTTP
+  end-to-end: commodity-heading rows get the company fallback
+  location, the genuine `Riverside` heading is still used.
+- `test_heritage_saved_html_row_count` — structure only, skips
+  when `/tmp/cycle22/heritage_cash.html` is absent: 14 data
+  calls, 14 regex matches, 14 `<h4>`s equal to the row names,
+  jsquote symbols cover all row symbols, 7 distinct delivery
+  starts.
+
+Full API suite: **696 passed, 0 failed** (692 baseline + 4 new).
+
+### Follow-ups
+
+1. **Heartland Coop / Mulvane Coop — decide in a later cycle:**
+   alternate futures source in the generic collector, or flip
+   both toggles to `false`. Two consecutive 0-row probes each;
+   do not keep re-probing them every cycle without a fix plan.
+2. **Heritage Grain Cooperative — confirm live (1 GET):** call
+   `fetch_heritage_grain_cooperative()` once in a later cycle;
+   expect 14 rows with the company fallback location.

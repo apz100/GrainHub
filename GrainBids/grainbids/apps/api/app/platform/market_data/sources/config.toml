@@ -33,6 +33,7 @@ collwest   = true
 mae_mart   = true
 north_gower = true
 mapleview  = false  # stub only — bids are JS-rendered; needs Playwright in a later cycle
+fac        = true   # Bushel .cbmod widget, verified live 2026-11-19 (Cycle 4)
 
 [posted_bid]
 # Discount band applied to trimmed market average (CAD/MT)

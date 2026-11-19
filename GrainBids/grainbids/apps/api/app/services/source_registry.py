@@ -36,6 +36,7 @@ ADAPTERS: dict[str, SourceAdapter] = {
     "mae_mart": SourceAdapter("mae_mart", "mae_mart_source", "fetch_mae_mart", "direct_dict", "scraper", 15, 90),
     "north_gower": SourceAdapter("north_gower", "north_gower_source", "fetch_north_gower_latest", "direct_dict", "scraper", 15, 90),
     "mapleview": SourceAdapter("mapleview", "mapleview_source", "fetch_mapleview", "direct_dict", "scraper", 15, 90),
+    "fac": SourceAdapter("fac", "bushel_source", "fetch_fac", "direct_dict", "scraper", 15, 90),
 }
 PILOT_ADAPTER_KEYS = ("agricharts", "glg", "hensall", "snobelen", "andersons")
 

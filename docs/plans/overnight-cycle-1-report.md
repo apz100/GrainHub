@@ -2,7 +2,7 @@
 
 **Branch:** `overnight/grainhub-cycle-1` (remote `https://github.com/apz100/GrainHub`)
 **Date:** 2026-11-19 (overnight, America/Toronto)
-**Status:** core Cycle 1 done; US price-source discovery still running when this draft was written — see §6.
+**Status:** Cycle 1 complete — all six workstreams finished.
 
 **Never merged to master. No spending, no vendor contact, no secrets, no deployment changes.**
 
@@ -47,7 +47,15 @@
   - New candidates: **7 found** — North Gower Grains fully verified (daily blog-post bid table, Adam's own elevator, top priority); LAC replacement domain `londonag-dtn.com` verified live with "Cash Bid" content; Collwest, Mae-Mart Farms, Mapleview Grain verified by direct fetch; Charwen Farms and Addis Grain partially verified (homepage live, bids page not yet fetched).
   - Ruled out (app-only, no public web bids): P&H, Richardson Pioneer, ADM. Thompsons = Andersons (already covered).
 - `app/services/price_source_probe.py`: polite single-probe smoke test (one GET per source, contact UA, 2 s pause, records reachability + bid-content presence only — **no prices recorded**), with tests for the classifier (live probes are CLI-only, not in pytest).
-- **Not done:** collector code for the 4 newly verified sources (North Gower Grains, Collwest, Mae-Mart, Mapleview) is not written yet — next step. `lac_source.py` base URL still points at the dead domain and needs updating to `londonag-dtn.com` + re-verification.
+- **Not done:** collector code for the 4 newly verified Ontario sources (North Gower Grains, Collwest, Mae-Mart, Mapleview) is not written yet — next step. `lac_source.py` base URL still points at the dead domain and needs updating to `londonag-dtn.com` + re-verification.
+
+### Price-source discovery (US — done)
+- 58 existing US URLs probed (from `config.toml` + `us_elevators_urls.toml`): **8 verified** (bid-table marker in static HTML), 26 live with widget present (needs Playwright to confirm rows), 13 live with no bid table at that URL, 2 blocked (StateLine Coop Cloudflare challenge, Landus HTTP 429), 2 uncertain (Al-Corn, Elite Octane), 7 dead. 47/58 HTTP 200. Full detail: `~/workspace/us-probe/us-price-sources.md`.
+- 20 new US candidates probed: 19 live, 1 dead (Farmers Coop Equity, 404).
+  - **6 added to the active config** (`config.toml` + `us_elevators_urls.toml`): Central Farmers Coop, Anthony Farmers Co-op, Mulvane Coop (AgriCharts, `writeBidRow` verified); Brubaker Grain, Hoffman Ag, Wilton Farmers Union Elevator (DTN — widget + live rows in search index; confirm rows in Playwright on first run). Wilton has the broadest crop list in the survey (spring/durum wheat, canola, sunflowers, peas, etc.).
+  - **13 added disabled pending new collectors:** 11 Bushel-pattern sites (new collector type needed) + 2 USDA-mirror pages (James Valley Grain, FS Grain — republish the USDA AMS daily cash-bid report incl. Gulf export rows; the only public Gulf/PNW route found — no individual Gulf or PNW terminal publishes public bids).
+- Config clean-up applied: 4 dead entries disabled in `config.toml` (Cardinal Ethanol, Gold Eagle, POET, Luckey Farmers); Heartland URL switched to the verified `heartlandcoop.com/markets/cash.php`; AGP / Five Star Coop / Gateway FS reclassified to DTN.
+- Gulf/PNW finding: no public per-terminal bid page exists for any Gulf or PNW export terminal operator; coverage is via USDA AMS export-bid reports (Louisiana & Texas Export Bids; Portland Daily Grain Bids).
 
 ## 4. What is scaffold / stub (honest list)
 
@@ -66,12 +74,17 @@
 5. **Greenfield Global / Barchart marketplace** — the existing Playwright collector reads a Barchart-hosted page. Confirm whether that is acceptable or should be dropped (guardrail: no Barchart scraping).
 6. **ERP choice for Elevator Ops** — no ERP (Agris / Agvance / AgTrax) is referenced anywhere in the repo. Adam to decide which is first.
 7. **eSign provider** — DocuSign / Adobe Sign / other, before any real signing flow.
-8. **LAC base URL fix + new-source collectors** — approve updating `lac_source.py` to `londonag-dtn.com` and writing collectors for North Gower Grains, Collwest, Mae-Mart, Mapleview (Charwen only if its feed is independent of LAC).
+8. **LAC base URL fix + new-source collectors** — approve updating `lac_source.py` to `londonag-dtn.com` and writing collectors for North Gower Grains, Collwest, Mae-Mart, Mapleview (Charwen only if its feed is independent of LAC), plus a Bushel collector (unlocks 11 US elevators) and a USDA-mirror collector (unlocks Gulf + Portland export bids in one fetch). Collwest Grain's country must be verified first (snippet prices look like CAD/tonne — it may be Canadian, not US).
 9. **Pricing / hosting decisions** — not started; nothing deployed.
 
 ## 6. US price-source discovery
 
-**Still running when this draft was written** (worker `63dba572`). US section of `docs/plans/price-source-catalogue.md` is a placeholder to be merged when it returns: verification of `config.toml` / `us_elevators_urls.toml` (AgriCharts writeBidRow + DTN CashBidTable pages), Corn Belt + Gulf/PNW expansion, live/dead/redirect/blocked counts.
+**Complete.** 58 existing URLs + 20 new candidates probed; 6 new sources
+added to the active config, 13 added disabled pending Bushel/USDA-mirror
+collectors, 4 dead entries disabled, Heartland URL fixed, 3 entries
+reclassified to DTN. Full counts and tables in
+`docs/plans/price-source-catalogue.md` and the worker's detail file
+`~/workspace/us-probe/us-price-sources.md`.
 
 ## 7. Guardrails — compliance
 

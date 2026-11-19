@@ -17,7 +17,7 @@ name    = "Ag Plus"
 url     = "https://www.agplusinc.com/markets/cash.php"
 
 [[us.elevators]]
-enabled = true
+enabled = false  # verified dead 2026-11-19 (HTTP 404) - disabled in Cycle 1
 type    = "agricharts"
 name    = "Cardinal Ethanol"
 url     = "https://www.cardinalethanol.com/markets/cash.php"
@@ -29,7 +29,7 @@ name    = "Farmers Win Coop"
 url     = "https://www.farmerswin.com/markets/cash.php"
 
 [[us.elevators]]
-enabled = true
+enabled = false  # verified dead 2026-11-19 (HTTP 404) - disabled in Cycle 1
 type    = "agricharts"
 name    = "Gold Eagle Coop"
 url     = "https://goldeaglecoop.com/markets/cash.php"
@@ -65,7 +65,7 @@ name    = "Legacy Farmers"
 url     = "https://www.legacyfarmers.com/markets/cash.php"
 
 [[us.elevators]]
-enabled = true
+enabled = false  # verified dead 2026-11-19 (HTTP 404) - disabled in Cycle 1
 type    = "agricharts"
 name    = "POET"
 url     = "https://www.poet.com/markets/cash.php"
@@ -145,7 +145,7 @@ name    = "Linn Coop"
 url     = "https://www.linncoop.com/grain/cash-bids"
 
 [[us.elevators]]
-enabled = true
+enabled = false  # verified dead 2026-11-19 (HTTP 404) - disabled in Cycle 1
 type    = "dtn"
 name    = "Luckey Farmers"
 url     = "https://www.luckeyfarmers.com/markets/cash.php"
@@ -168,7 +168,7 @@ url     = "https://www.aceethanol.com/cash-bids"
 
 [[us.elevators]]
 enabled = false
-type    = "unknown"
+type    = "dtn"  # reclassified 2026-11-19: DTN refs in HTML
 name    = "AGP"
 url     = "https://www.agp.com/grain/bids"
 
@@ -216,13 +216,13 @@ url     = "https://cgb.com/cgb-grain/"
 
 [[us.elevators]]
 enabled = false
-type    = "unknown"
+type    = "dtn"  # reclassified 2026-11-19: DTN refs in HTML
 name    = "Five Star Coop"
 url     = "https://www.fivestarcoop.com/cash-bids"
 
 [[us.elevators]]
 enabled = false
-type    = "unknown"
+type    = "dtn"  # reclassified 2026-11-19: DTN refs in HTML
 name    = "Gateway FS"
 url     = "https://www.gatewayfs.com/markets/cash.php"
 
@@ -386,3 +386,133 @@ url     = "https://www.winchesteragservice.com"
 # ADM               — https://www.adm.com  (too large, no public cash bid page)
 # Ag Valley         — https://www.agvalley.com
 # Valero            — https://www.valero.com  (refinery, no grain bids)
+
+# ── ADDITIONS — verified 2026-11-19 (GrainHub Cycle 1, US price-source discovery) ──
+# AgriCharts — writeBidRow confirmed in fetched HTML; enable immediately.
+
+[[us.elevators]]
+enabled = true
+type    = "agricharts"
+name    = "Central Farmers Coop"
+url     = "https://www.cenfarmcoop.com/markets/cash.php"
+
+[[us.elevators]]
+enabled = true
+type    = "agricharts"
+name    = "Anthony Farmers Co-op"
+url     = "https://www.anthonycoop.com/markets/cash.php"
+
+[[us.elevators]]
+enabled = true
+type    = "agricharts"
+name    = "Mulvane Coop"
+url     = "https://www.mulvanecoop.com/markets/cash.php"
+
+# ── DTN subdomain / DTN-style — widget reference confirmed in HTML + live bid
+# rows visible in search-indexed page text; confirm rows in Playwright, then enable.
+
+[[us.elevators]]
+enabled = true
+type    = "dtn"
+name    = "Brubaker Grain"
+url     = "https://dtn.brubakergrain.com/"
+
+[[us.elevators]]
+enabled = true
+type    = "dtn"
+name    = "Hoffman Ag"
+url     = "https://dtn.hoffmanag.com/"
+
+[[us.elevators]]
+enabled = true
+type    = "dtn"
+name    = "Wilton Farmers Union Elevator"
+url     = "https://www.wiltonfarmerselevator.com/index.cfm?show=11&mid=5&theLocation=1&cmid=all&layout=19"
+
+# ── BUSHEL — NEW TYPE, needs a collector (JS-rendered "Cash bids for [date]"
+# pages, "Data provided by Bushel"). All verified live 2026-11-19. Keep
+# disabled until a bushel collector exists.
+
+[[us.elevators]]
+enabled = false
+type    = "bushel"
+name    = "Chandler Feed"
+url     = "https://chandlerfeed.o.bushelsites.com"
+
+[[us.elevators]]
+enabled = false
+type    = "bushel"
+name    = "FAC"
+url     = "https://www.faccooperative.com/cash-bids"
+
+[[us.elevators]]
+enabled = false
+type    = "bushel"
+name    = "Cameron Coop"
+url     = "https://www.cameroncoop.com/"
+
+[[us.elevators]]
+enabled = false
+type    = "bushel"
+name    = "CGS"
+url     = "https://www.cgscoop.net/"
+
+[[us.elevators]]
+enabled = false
+type    = "bushel"
+name    = "Almota Elevator"
+url     = "https://www.almotagrain.com/cash-bids"
+
+[[us.elevators]]
+enabled = false
+type    = "bushel"
+name    = "Williams Gin & Grain"
+url     = "https://williamsginandgrain.com/cashbidssingle-"
+
+[[us.elevators]]
+enabled = false
+type    = "bushel"
+name    = "Rugby Farmers Elevator"
+url     = "https://rugbyfarmers.com/"
+
+[[us.elevators]]
+enabled = false
+type    = "bushel"
+name    = "Lake Norden Farmers Elevator"
+url     = "https://www.lakenordenfarmerselevator.net/cash-bids"
+
+[[us.elevators]]
+enabled = false
+type    = "bushel"
+name    = "United Cooperative"
+url     = "https://www.unitedcoop.com/cash-bids"
+
+# Collwest Grain: VERIFY COUNTRY FIRST — snippet prices look like CAD/tonne,
+# may be a Canadian operation. Do not enable in the US config until confirmed.
+[[us.elevators]]
+enabled = false
+type    = "bushel"
+name    = "Collwest Grain"
+url     = "https://collwestgrain.o.bushelsites.com"
+
+[[us.elevators]]
+enabled = false
+type    = "bushel"
+name    = "Forest River Coop"
+url     = "https://www.forestrivercoop.com/"
+
+# ── USDA MIRRORS — NEW TYPE, needs a collector. One fetch returns the USDA
+# AMS daily cash-bid report incl. Gulf export rows (the only public Gulf/PNW
+# route found). Keep disabled until a usda collector exists.
+
+[[us.elevators]]
+enabled = false
+type    = "usda"
+name    = "James Valley Grain (USDA mirror)"
+url     = "https://jamesvalleygrain.com/pages/usdacash.php"
+
+[[us.elevators]]
+enabled = false
+type    = "usda"
+name    = "FS Grain (USDA mirror)"
+url     = "https://www.fsgrain.com/pages/usdacash.php"

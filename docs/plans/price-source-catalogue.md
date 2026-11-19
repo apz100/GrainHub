@@ -63,10 +63,99 @@ Peterborough-Norwood), Homeland Grain (Norwich), GFO SellSmart
   lists; keep Bunge disabled; confirm Greenfield/Barchart handling
   with Adam.
 
-## United States
+## United States — existing list (verified 2026-11-19)
 
-US elevator URL verification (config.toml / us_elevators_urls.toml,
-AgriCharts writeBidRow and DTN CashBidTable pages, Corn Belt +
-Gulf/PNW expansion) is in progress — US worker still running at the
-time this file was written. This section will be merged in when it
-returns. See the overnight-cycle-1 report for the final counts.
+58 unique URLs probed from `config.toml` + `us_elevators_urls.toml`.
+47 of 58 returned HTTP 200. Full detail:
+`~/workspace/us-probe/us-price-sources.md`.
+
+| Status | Count | Meaning |
+|---|---|---|
+| Verified live — bid-table marker in static HTML | **8** | `writeBidRow` ×7, `CashBidTable` ×1 |
+| Live — page served, bids JS-rendered (widget ref present) | 26 | Needs Playwright to confirm bid rows |
+| Live site — no bid table at this URL | 13 | Homepage / generic page / redirect target |
+| Blocked (confirmed challenge / rate-limit) | 2 | StateLine Coop (Cloudflare challenge), Landus (HTTP 429) |
+| Uncertain — possible bot-check strings | 2 | Al-Corn, Elite Octane |
+| Dead | 7 | Cardinal Ethanol, Gold Eagle, POET, Luckey Farmers, Hull Coop (all 404); Mercer Landmark (522); CVA (202 empty body) |
+
+### Verified live (AgriCharts `writeBidRow`)
+
+| Company | Location | URL | Type | Crops | Frequency | Status |
+|---|---|---|---|---|---|---|
+| Ag Plus | — | https://www.agplusinc.com/markets/cash.php | AgriCharts | corn, wheat | intraday | Verified 2026-11-19. Keep. |
+| Farmers Win Coop | — | https://www.farmerswin.com/markets/cash.php | AgriCharts | corn, soybean | intraday | Verified. Keep. |
+| Heartland Coop | — | https://www.heartlandcoop.com/markets/cash.php | AgriCharts | corn | intraday | Verified. **Config fixed**: `config.toml` used `myaccount.heartlandcoop.com/bids.htm` (no bid marker); switched to cash.php. |
+| Heritage Grain Cooperative | — | https://www.heritagegrain.com/markets/cash.php | AgriCharts | corn, wheat | intraday | Verified. Keep. (Page title says "Legacy Grain" — possible rebrand.) |
+| Keller | — | https://www.kellergrain.com/markets/cash.php | AgriCharts | corn, soybean, wheat | intraday | Verified. Keep. |
+| Kokomo Grain | Kokomo, IN | https://www.kokomograin.com/markets/cash.php?location_filter= | AgriCharts | corn, soybean, wheat | intraday | Verified. Keep. |
+| Legacy Farmers | — | https://www.legacyfarmers.com/markets/cash.php | AgriCharts | corn, wheat | intraday | Verified. Keep. |
+| Sunrise | — | https://www.sunriseco-op.com | DTN `CashBidTable` on homepage | — | intraday | Verified widget on homepage; find its cash-bids sub-page for a stable URL. |
+
+### Dead — disabled in config (2026-11-19)
+
+Cardinal Ethanol (404), Gold Eagle Coop (404), POET (404 — site redesigned, no cash.php), Luckey Farmers (404), Hull Coop (404). Mercer Landmark (522, may be transient — re-check later), CVA (202 empty body — re-check later).
+
+### Blocked / uncertain — do not retry aggressively
+
+StateLine Coop (Cloudflare "One moment, please..."), Landus (HTTP 429 Vercel checkpoint), Al-Corn + Elite Octane (captcha-related strings; page otherwise looks real — re-check with a browser/Playwright).
+
+### Reclassified
+
+AGP → DTN, Five Star Coop → DTN, Gateway FS → DTN (DTN refs found in HTML despite the .php URL).
+
+### Do not add
+
+Bunge `bungeag.com/cash-bids` (redirects to a locations archive — no bid table). ADM FarmView / CargillAg / GrainBridge: login-gated, no public page.
+
+## United States — new candidates (20 probed, 19 live, 1 dead, 2026-11-19)
+
+| Company | Location | URL | Type | Crops | Frequency | Status |
+|---|---|---|---|---|---|---|
+| Central Farmers Coop | Salem, SD | https://www.cenfarmcoop.com/markets/cash.php | AgriCharts | corn, soybean, wheat, oats | intraday | **Verified** `writeBidRow`. Added to active config. |
+| Anthony Farmers Co-op | Harper, KS | https://www.anthonycoop.com/markets/cash.php | AgriCharts | corn, soybean, wheat, milo, canola | intraday | **Verified** `writeBidRow`. Added to active config. |
+| Mulvane Cooperative Union | Mulvane, KS | https://www.mulvanecoop.com/markets/cash.php | AgriCharts | corn, soybean, wheat, milo | intraday | **Verified** `writeBidRow`. Added to active config. |
+| Brubaker Grain | West Alexandria, OH | https://dtn.brubakergrain.com/ | DTN | corn, soybean, wheat | intraday | Widget ref + live bid rows in search index. Added to active config; confirm rows in Playwright. |
+| Hoffman Ag Service | Marshall, MI | https://dtn.hoffmanag.com/ | DTN | corn, soybean, wheat | intraday | Same as above. Added to active config. |
+| Wilton Farmers Union Elevator | Wilton, ND | https://www.wiltonfarmerselevator.com/index.cfm?show=11&mid=5&theLocation=1&cmid=all&layout=19 | DTN | spring/durum wheat, soybean, corn, flax, canola, sunflower, barley, oats, peas, pinto beans | intraday | Broadest crop list in the survey. Added to active config; confirm rows in Playwright. |
+| Chandler Feed | Chandler, MN | https://chandlerfeed.o.bushelsites.com | Bushel (new type) | corn, soybean, oats | daily, dated | Live. **Disabled** — needs a Bushel collector. |
+| FAC | Arcadia, IA | https://www.faccooperative.com/cash-bids | Bushel (new type) | corn, soybean | daily, dated | Live. Disabled — needs Bushel collector. |
+| Cameron Coop | — | https://www.cameroncoop.com/ | Bushel (new type) | corn, soybean, oats | daily, dated | Live. Disabled — needs Bushel collector. |
+| CGS | — | https://www.cgscoop.net/ | Bushel (new type) | milo, corn | daily, dated | Live. Disabled — needs Bushel collector. |
+| Almota Elevator | Washington (PNW) | https://www.almotagrain.com/cash-bids | Bushel (new type) | soft white wheat, HRW wheat, barley | daily, dated | Live. PNW wheat coverage. Disabled — needs Bushel collector. |
+| Williams Gin & Grain | North Dakota | https://williamsginandgrain.com/cashbidssingle- | Bushel (new type) | corn, grain sorghum | daily, dated | Live (URL path looks truncated but loads). Disabled — needs Bushel collector. |
+| Rugby Farmers Elevator | Rugby, ND | https://rugbyfarmers.com/ | Bushel (new type) | corn | daily, dated | Live. Disabled — needs Bushel collector. |
+| Lake Norden Farmers Elevator | Lake Norden, SD | https://www.lakenordenfarmerselevator.net/cash-bids | Bushel (new type) | corn, soybean | daily, dated | Live. Disabled — needs Bushel collector. |
+| United Cooperative | Beaver Dam, WI | https://www.unitedcoop.com/cash-bids | Bushel (new type) | corn, soybean | daily, dated | Live. Disabled — needs Bushel collector. (Domain differs from Batch 4 `unitedcooperative.com` — confirm same org.) |
+| Collwest Grain | — | https://collwestgrain.o.bushelsites.com | Bushel (new type) | barley, oats | daily, dated | Live, but **verify country first** — snippet prices look like CAD/tonne; may be Canadian. Do not enable in US config until confirmed. |
+| Forest River Coop | Forest River, ND | https://www.forestrivercoop.com/ | Bushel (new type) | corn, soybean, wheat | daily, dated | Live. Disabled — needs Bushel collector. |
+| James Valley Grain | — | https://jamesvalleygrain.com/pages/usdacash.php | USDA mirror (new type) | corn, soybean, wheat, oats | daily (USDA AMS cycle) | Live. Republishes USDA daily cash-bid report incl. Gulf export rows. Disabled — needs a USDA-mirror collector. |
+| FS Grain | — | https://www.fsgrain.com/pages/usdacash.php | USDA mirror (new type) | corn, soybean, wheat, oats | daily (USDA AMS cycle) | Live. Same report family; snippet shows Gulf Coast Ports – LA export rows. Disabled — needs a USDA-mirror collector. |
+| Farmers Coop Equity | Zenda, KS | https://www.fceisabel.com/markets/cash.php | AgriCharts | — | — | **Dead 404.** Do not add. |
+
+## United States — Gulf / PNW export terminals
+
+No individual public cash-bid page was found for any Gulf or PNW export
+terminal operator (CGB, ADM, Bunge, Cargill, United Grain, etc. — terminal
+bids are login-gated or unpublished). The public coverage route is USDA AMS
+reports: **Louisiana & Texas Export Bids** (Gulf) and **Portland Daily Grain
+Bids** (PNW, via Portland Merchant's Exchange), mirrored on the two
+USDA-mirror pages above (James Valley Grain, FS Grain).
+
+## United States — counts
+
+- Existing list: 58 probed — 8 verified, 26 live widget-present, 13 live
+  no-bid-table, 2 blocked, 2 uncertain, 7 dead. 47/58 HTTP 200.
+- New candidates: 20 probed — 19 live, 1 dead. 6 added to the active
+  config (3 AgriCharts + 3 DTN), 11 Bushel + 2 USDA-mirror added
+  disabled pending new collectors, 1 dead not added.
+- Config changes applied in Cycle 1: 4 dead entries disabled in
+  `config.toml` (Cardinal Ethanol, Gold Eagle, POET, Luckey Farmers);
+  Heartland URL switched to the verified cash.php; AGP / Five Star Coop /
+  Gateway FS reclassified to DTN in `us_elevators_urls.toml`; 6 new
+  entries added to both `config.toml` and `us_elevators_urls.toml`;
+  13 Bushel/USDA entries added disabled.
+- Follow-ups for a later cycle: find cash-bid sub-pages for the 19 Batch 4
+  homepages (Sunrise's sub-page is the priority); chase the CGB cash-bid
+  module URL from the USDA SCL report (do not guess it); a Bushel
+  collector would unlock 11 more elevators and a USDA-mirror collector
+  would unlock Gulf + Portland export bids in one fetch.

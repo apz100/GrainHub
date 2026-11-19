@@ -3470,3 +3470,26 @@ Live re-verification sweep of the full 13-site AgriCharts-embed family plus the 
 **816 rows across the 13 embed sites** (TGM re-verified in Cycle 26; the other 12 this cycle). Structure unchanged everywhere: same location sets, commodity splits, and groupby behaviour (Ag State / Superior Ag still group by commodity with `location_name` authoritative; Midway still publishes the single "All Locations" label; StateLine still 12 rows per location except Emmetsburg-AGP, Soybeans-only with 6).
 
 USDA mirror, FS Grain (`fetch_usda_mirror_fs_grain`): **197 rows, report id 7730, dated Nov 18, 2026** — exact match to the James Valley re-verification in Cycle 26. Caveat: the region count was not re-tallied this run (rows grouped on `location`, which is "United States" for all rows); the 29-region figure stands from Cycle 26.
+
+## Cycle 29 — Bushel sample re-verification (6/6 exact); Mae-Mart still viable (2026-11-19)
+
+### Bushel per-location sample re-verification (6 calls)
+
+One call per site, no retries. **All 6 returned `status: ok` with exact row-count matches** to the Cycles 13–16 baselines. Counts only, no values recorded.
+
+| Site | Rows now | Header date | Verdict |
+|---|---|---|---|
+| Skyland 2731 Conlen–Hartley | 5 | Nov 19 | Exact match |
+| Skyland 3370 Hugoton, KS | 6 | **Nov 18** | Exact match (count); still one day stale |
+| Smithfield 1691 Waverly, VA | 7 | Nov 19 | Exact match — still the fattest page |
+| Smithfield 1671 Kinston, NC | 3 | Nov 19 | Exact match |
+| Smithfield 1689 Nichols, SC | 1 | Nov 19 | Exact match |
+| Smithfield 2067 Lapaz, IN | 2 | Nov 19 | Exact match |
+
+5 of 6 headers fresh (Nov 19); only Hugoton remains dated Nov 18 — same one-day lag as Cycles 14 and 24, row count/composition unchanged, so site-side staleness, not a collector issue. One Waverly delivery label carries the site's own call-ahead note ("Nov 2026 -starting 11/16/26. *Please Call Ahead*") — published text, not a price.
+
+### Mae-Mart live re-check (2 logical probes)
+
+- **Grain-pricing page:** HTTP 200, 35,952 bytes — **byte-identical size to Cycle 18**. Inline pricing JS still present (`var PROXY = '/grain-proxy.php';`, cosmetic whitespace only); symbols `ZCZ26=F`, `ZSF27=F`, `ZWN27=F` unchanged; all 4 tables present, 1 row each (basis numeric, cash/futures "—" in static HTML, as documented); rye `manualPrice` still in the inline `ALL_BIDS` JSON; `USX` cents rule still in the JS. No Barchart/DTN/AgriCharts/Yahoo markers.
+- **Proxy:** HTTP 200, `application/json`, **89 bytes — byte-identical size to Cycle 19**; JSON shape unchanged (keyed by symbol; `price` numeric, `currency` "USX", `timestamp`/`fetched` ints). **One change:** the `.php` URL now 301s to the extensionless `https://www.mae-martfarms.com/grain-proxy?symbols=ZCZ26=F` (Cycle 19's redirect kept the `.php`). Transparent to the collector (`requests` follows redirects by default) — no code change needed; the stored proxy URL could optionally be updated to the extensionless form.
+- **Verdict: collector still viable as-is.** Nothing restructured, no dead endpoints, no symbol changes.

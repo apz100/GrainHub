@@ -2782,3 +2782,207 @@ collection, browser-only — and Landus, Vercel checkpoint);
 Chadbourn + Hamer + Skyland 3370/3621 staleness watch
 (exemption list); Mae-Mart cash-price decision; poller
 scheduling decision; currency decision.
+
+---
+
+## Cycle 28 (added Cycle 29)
+
+### 0n. Branch chain — Cycle 28, verified from git
+
+The chain is **still linear**: `git log --oneline
+master..overnight/grainhub-cycle-28` gives **75 commits** (73
+through Cycle 27 + 2 in Cycle 28), **0 merge commits**, no
+branch points. Cycle 28's first commit `823bf2d` has parent
+`ba4df98` (the Cycle 27 tip), and merge-base(27, 28) is the
+Cycle 27 tip `ba4df98`. Per-branch commit count for Cycle 28: 2
+(`823bf2d`, `7e99076`).
+
+That means the §2 procedure continues unchanged: merge Cycle 28
+after 27, one branch at a time with `--no-ff`, running the §3
+gates at each step. A single fast-forward of `master` to the
+`cycle-28` tip (`7e99076`) would give the same tree as
+twenty-eight sequential merges; prefer the sequential merges for
+the same reason as §0 (a review checkpoint and stop point per
+cycle).
+
+(The Cycle 27 section's "73 commits master..cycle-27" figure
+was re-verified in Cycle 29 and is correct — 73, 0 merge
+commits. `master` is still at `f2c3206` — no cycle work is on
+`master` yet.)
+
+### 1n. What the branch contains (Cycle 28)
+
+| Branch | Tip | Tests at tip | Web build at tip |
+|---|---|---|---|
+| Cycle 28 | `7e99076` | 709 passed, 0 failed | Not re-run (no web files changed; last full pass Cycle 17) |
+
+Tip commit hash (full): `7e99076d033e0d36453981ca6f57c65e7a3e65ee`.
+No web files changed in Cycle 28, so there is no fresh
+web-build evidence in this range. 4 files changed in Cycle 28
+(359 insertions, 6 deletions): the price-source catalogue (24
+insertions), the merge plan (194 insertions), the super-plan §9
+(14 insertions, 6 deletions), and the Cycle 28 report itself
+(127 insertions). **No code changed at all in Cycle 28** —
+docs/research only — so the test count is unchanged from
+Cycle 27 and no new tests were added.
+
+- **Cycle 28** (`overnight/grainhub-cycle-28`; commits `823bf2d`,
+  `7e99076`): embed family re-verification — **all 13 exact
+  matches (13 calls, 1 per site, no retries)**. All 13 returned
+  `status='ok'` with row counts exactly matching their earlier
+  verifications — no drift, no failures. **816 rows across the
+  13 embed sites** (TGM re-verified in Cycle 26; the other 12
+  this cycle). Counts only, no values recorded.
+
+  | Site | Rows now | Prior | Locations |
+  |---|---|---|---|
+  | Agtegra | 8 | 8 (Cycle 7) | 1 (Hecla) |
+  | Heritage Cooperative (embed) | 15 | 15 (Cycle 7) | 1 (Ada) |
+  | Linn Coop | 51 | 51 (Cycle 7) | 5 |
+  | Midway Coop | 8 | 8 (Cycle 7) | 1 ("All Locations") |
+  | Ag State | 11 | 11 (Cycle 7) | 1 |
+  | Superior Ag | 12 | 12 (Cycle 7) | 1 |
+  | ALCIVIA | 181 | 181 (Cycle 9) | 15 |
+  | TGM | 362 | 362 (Cycle 9) | 24 |
+  | PRO Coop 21297 (Ayrshire) | 6 | 6 (Cycle 11) | 1 |
+  | PRO Coop 21302 (Manson) | 12 | 12 (Cycle 12) | 1 |
+  | PRO Coop 21302b (Manson dup) | 12 | 12 (Cycle 13) | 1 |
+  | Hull Coop | 12 | 12 (Cycle 12) | 1 |
+  | StateLine Coop | 126 | 126 (Cycle 12) | 11 |
+
+  Structure unchanged everywhere: same location sets,
+  commodity splits, and groupby behaviour (Ag State /
+  Superior Ag still group by commodity with `location_name`
+  authoritative; Midway still publishes the single "All
+  Locations" label; StateLine still 12 rows per location except
+  Emmetsburg-AGP, Soybeans-only with 6). The separate
+  AgriCharts wrapper for the other Heritage-named source was
+  not probed (already confirmed live in Cycle 23).
+- **FS Grain USDA mirror confirmed (1 call):**
+  `fetch_usda_mirror_fs_grain()`: **197 rows, report id 7730,
+  dated Nov 18, 2026** — exact match to the James Valley
+  re-verification in Cycle 26. Caveat: the region count was not
+  re-tallied this run (rows grouped on `location`, which is
+  "United States" for all rows); the 29-region figure stands
+  from Cycle 26.
+- **Merge plan extended to Cycle 27** (194 lines added, 0
+  removed — verified from the `cycle-27..cycle-28` diff). The
+  Cycle 26 section's "71 commits" figure re-verified correct in
+  Cycle 28. No discrepancies found between git and the Cycle 27
+  report.
+- **Super-plan §9 extended to Cycle 27** (14 insertions, 6
+  deletions — heading/intro now cover Cycles 1–27, test chain
+  179 → 709; Cycle 27 bullet added; blockers updated — all 10
+  wrappers re-verified, every live-verified collector re-checked
+  with zero drift).
+- **Boundary applied:** zero references in any new Cycle 28
+  code, tests, fixtures, or docs — the single match in the
+  range diff is the Cycle 27 report's own boundary-attestation
+  heading, not a reference in content. No contact made.
+  Full detail: `docs/plans/overnight-cycle-28-report.md`.
+
+### 3n. Gates — updated expectations for Cycle 28
+
+§3 applies unchanged, with these per-cycle numbers:
+
+1. **Full API test suite** — expect Cycle 28: 709 — **0 failed**.
+   (Unchanged from Cycle 27 — no code changed in this cycle, so
+   no new tests. The coordinator re-ran the suite to confirm.)
+2. **Web build** — re-run once at the Cycle 28 step so the final
+   tree is verified as a whole. No web files changed in Cycle 28,
+   so a re-run is a no-op confirmation; last full pass remains
+   Cycle 17.
+3. **Alembic heads** — expect exactly one head, `0019`
+   (unchanged since Cycle 7). Verified from git: no migration
+   file was added in Cycle 28 (`git log` on the Alembic versions
+   dir in `cycle-27..cycle-28` is empty, and the file list at
+   the Cycle 28 tip is `0001`–`0019`, 19 files).
+4. **Boundary spot-check** — grep the Cycle 28 range diff for
+   the excluded elevator name; expect zero new references in
+   code, tests, fixtures, or docs (the report's own
+   boundary-attestation heading is the only match).
+5. **No-secrets spot-check** — no new credentials, keys, or
+   tokens in the Cycle 28 diff (none are reported).
+
+### 4n. Known conflicts and overlaps — Cycle 28
+
+- **Files also touched by earlier cycles:** the price-source
+  catalogue (edited in every cycle — Cycle 28's additions are
+  the 13-site embed re-verification results and the FS Grain
+  mirror confirmation; no earlier text was rewritten), the merge
+  plan (pure append of the Cycle 27 section, 194 lines added, 0
+  removed), the super-plan §9 (Cycle 27 bullet + blockers
+  update; no earlier bullet was rewritten).
+- **`config.toml`** (`app/platform/market_data/sources/
+  config.toml`) — **not touched in Cycle 28** (`git log` on it
+  in `cycle-27..cycle-28` is empty; last touched in Cycle 23
+  with the two toggle flips). No toggle value changed this
+  cycle; Heartland/Mulvane stay `false`, all other AgriCharts
+  toggles stay `true`.
+- **No collector, registry, or code file touched in Cycle 28**
+  — docs/research only (4 files changed, all under
+  `docs/plans/`). `us_agricharts_source.py`,
+  `app/services/source_registry.py`, `us_dtn_source.py`, and
+  `app/main.py` were not touched this cycle.
+- **Migration chain** — unchanged: `0015 → … → 0018` (Cycle 1)
+  then `0019` (Cycle 7), single head throughout Cycle 28.
+
+### 5n. What must NOT be merged as-is — update
+
+- **The CI workflow file is STILL not in any branch.** Verified
+  2026-11-19 (Cycle 29): `?? .github/` in `git status` on the
+  Cycle 29 checkout (`.github/workflows/api-tests.yml`).
+  Merging Cycle 28 as well as 1–27 will **not** bring it into
+  `master`. Same remedy as §5: Adam re-authenticates `gh` with
+  `workflow` scope, or adds the file via the GitHub web UI. Do
+  not hand-copy it into a merge commit.
+- **Nothing else new is held back in Cycle 28.** No new unpushed
+  files, secrets, or held-back work is reported in the Cycle 28
+  report. The §5 review-not-blocker list is unchanged and carried
+  forward: email-bid endpoint public by default, futures
+  endpoints still return prices `null` until a licensed feed is
+  wired (the Mae-Mart proxy now fills `futures_price` on
+  collector rows only — it does not feed the futures endpoints),
+  Advisor `/ask` is a 501 scaffold, eSign is a stub, normalized
+  price rows carry no currency (`currency: null`).
+- **Open decisions carried forward from Cycle 28 (not
+  blockers):** **nothing new needs Adam in Cycle 28.** The full
+  embed family is now re-verified (all 13 exact matches, 816
+  rows) and the FS Grain USDA mirror is confirmed — the
+  catalogue's verified counts stand. Playwright render checks
+  still pending (DTN family — Al-Corn + Sunrise first — FMN
+  filtered view (Winchester `location_filter=2523`), Mapleview,
+  StoneX family (Frontier, CRC, UFC), The Andersons — closed for
+  static collection, browser-only — and Landus, Vercel
+  checkpoint); DTN toggles stay `false` until verified;
+  scheduling the poller as a second cron job (deployment
+  decision, checklist §4 step 6); Mae-Mart `cash_price` from
+  futures + static basis (still open, gated on the
+  licensed-feed decision); at least one `Commodity` row must
+  exist before the first poller run; agricharts User-Agent
+  decision resolved in Cycle 23 (Chrome UA kept). Still needs
+  Adam (carried from Cycles 1–27, nothing new in Cycle 28):
+  NASS key, FAS/data.gov key, LLM provider + key, Barchart/DTN
+  licensed feed decision (redistribution licence — now also
+  gates the CGB `cashbids-js.php` question and the Mae-Mart
+  cash-price decision), ERP choice (Agvance recommended),
+  eSign provider, pricing/hosting decisions, `gh` `workflow`
+  scope, currency column decision (four concrete choices in
+  `docs/plans/currency-design.md`), email-bid endpoint auth
+  decision (public vs admin-only).
+
+### 7n. After the merges — updated
+
+§7 applies with the Cycle 28 tip as the end state: Alembic head
+`0019` (unchanged since Cycle 7), test suite 709 passed / 0
+failed, web build last fully passed in Cycle 17 (re-run at the
+Cycle 28 merge step). The still-open decisions list in §7.4 is
+unchanged by Cycle 28 except for the additions in §5n above.
+Open work carried forward: Playwright render checks (DTN family
+— Al-Corn + Sunrise first — FMN filtered view, Mapleview,
+StoneX including Frontier, The Andersons — closed for static
+collection, browser-only — and Landus, Vercel checkpoint);
+Heartland / Mulvane closed for now (no new hypothesis);
+Chadbourn + Hamer + Skyland 3370/3621 staleness watch
+(exemption list); Mae-Mart cash-price decision; poller
+scheduling decision; currency decision.

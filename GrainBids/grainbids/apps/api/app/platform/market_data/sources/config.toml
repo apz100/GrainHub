@@ -22,7 +22,10 @@ posted_bids_dir = "\\\\DERKS-SERVER\\Current\\Adam\\Code\\CashGrainBids\\PostedB
 agricharts = true
 glg        = true
 lac        = true
-andersons  = true
+andersons  = false  # PARKED 2026-11-19 at Adam's request: targets the legacy DTN API host
+# (dtn-api.andersonscanada.com); do not re-enable or probe that host until the
+# Barchart/DTN licensed-feed decision is re-opened. Reversible one-line flip.
+# See docs/plans/barchart-dtn-integration-design.md §8 (feed plug-in checklist).
 snobelen   = true
 hensall    = true
 dg_global  = true

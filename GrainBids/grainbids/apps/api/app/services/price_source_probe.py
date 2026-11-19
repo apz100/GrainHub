@@ -24,7 +24,9 @@ SAMPLE_SOURCES: tuple[tuple[str, str], ...] = (
     ("AgriCharts FMN", "https://fmn1.agricharts.com/markets/cash.php"),
     ("Great Lakes Grain", "https://cashbids.greatlakesgrain.com/index.cfm"),
     ("LAC (new domain)", "https://www.londonag-dtn.com/index.cfm?show=11"),
-    ("Andersons Canada", "https://dtn-api.andersonscanada.com/cash-bids/blacks-lane"),
+    # NOTE (Cycle 40, 2026-11-19): the Andersons Canada legacy DTN API host
+    # entry was removed at Adam's request — Barchart/DTN is parked, do not
+    # probe that host. The andersons registry adapter stays, toggled off.
     ("DG Global", "https://dgglobal.ca/cash-bids"),
     ("North Gower Grains", "https://northgowergrains.com/"),
     ("Collwest Grain", "https://www.collwestgrain.com/"),

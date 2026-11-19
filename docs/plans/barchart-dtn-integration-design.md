@@ -1,8 +1,14 @@
 # Barchart / DTN Licensed Feed — Integration Design
 
-**Status: design only.** No vendor has been contacted, no contract or key
-exists, and no pricing is quoted anywhere in this document. Every price
-figure below is either marked as a stale third-party report that must be
+**Status: design only — PARKED 2026-11-19 at Adam's request.** Do
+not contact the vendors, do not probe the Andersons legacy DTN
+host, and do not spend cycles on Barchart/DTN pricing or licensing
+until Adam re-opens it. The `andersons` adapter is toggled off and
+its probe-list entry removed (Cycle 40). This document stays as the
+plug-in spec: §8 is the checklist for adding a licensed feed later.
+No vendor has been contacted, no contract or key exists, and no
+pricing is quoted anywhere in this document. Every price figure
+below is either marked as a stale third-party report that must be
 re-confirmed with the vendor, or explicitly labelled "ask the vendor".
 Nothing here authorises spending, contact, or a trial sign-up.
 
@@ -319,6 +325,103 @@ repo. No pricing is quoted in this document because none is published.
 - **The Greenfield/Barchart-page collector** (Cycle 1, item 5) is a
   separate decision from the feed and stays as-is until Adam rules
   on it.
+- **Parked 2026-11-19 (Cycle 40, Adam's request).** Barchart/DTN is
+  not a blocker for the current build and is not on the needs-Adam
+  list. The `andersons` adapter (legacy DTN host) is toggled off
+  and its probe-list entry removed; the 13 DTN-family widget
+  adapters were already toggled off (Cycle 20). When/if Adam
+  re-opens it, follow the §8 checklist — no design rework is
+  needed first.
+
+## 8. Feed plug-in checklist — adding a licensed feed later
+
+Proven in code by `tests/test_licensed_feed_plugin.py` (Cycle 40):
+a synthetic adapter registered through the registry, seeded
+through the toggles, and surfaced by market search and the public
+best-bid page with **no route changes**. A real licensed feed
+follows the same steps — config + one adapter, nothing else.
+
+**Preconditions (do not start until both are true):**
+
+1. The redistribution question (§6 Q2) is answered **in writing**:
+   the licence covers showing cash bids to GrainHub end users
+   (republication), not just internal use. A plain OnDemand key
+   does not cover the Price Finder.
+2. A trial/sandbox key exists, stored in env only
+   (`BARCHART_API_KEY`, `DTN_API_KEY` or the DTN-product-specific
+   name) — never in code, config, logs, or git. Key presence is
+   reported only as a boolean, mirroring `/api/research/status`
+   for NASS/FAS.
+
+**Plug-in steps (in order):**
+
+3. Write the thin client (`app/services/barchart_client.py` and/or
+   `app/services/dtn_client.py`, §2): `get_grain_bids()`,
+   `get_quote()`, `get_history()`. Key from env only. Raise a
+   `FeedKeyRequired`-style error when unconfigured, mirroring
+   `ResearchKeyRequired` — the collector must refuse to call the
+   API without a key, and the ingestion run must record that
+   honestly instead of failing silently.
+4. Write the collector (`app/services/licensed_feed_collector.py`,
+   §2): one collector per vendor implementing the existing
+   collector interface — a zero-arg `fetch_<vendor>()` returning
+   a DataFrame (or the `{"rows": [...]}` dict the `direct_dict`
+   mode converts), mapped to `NormalizedPrice` rows per §4.
+   Record the raw payload, run status, parse success rate, and
+   errors into `ingestion_runs` like every other collector.
+   Honour HTTP 429 with backoff; on 401/403 mark the source
+   `broken` with the vendor's error — never silently fall back
+   and pretend the feed is live.
+5. Register **one adapter** in `app/services/source_registry.py`:
+   `SourceAdapter("<vendor>", "<module>", "fetch_<vendor>",
+   "direct", "api", <poll_minutes>, <timeout_seconds>)` — the
+   same shape as the `andersons` entry (mode `direct`,
+   source_class `api`). No other registry change is needed.
+6. Add the toggle in `config.toml` `[sources]` (`<vendor> =
+   false` until the key exists, then `true`). Only an explicit
+   `false` disables; a missing toggle defaults to enabled, so
+   add the entry explicitly. Seeding (`seed_sources_from_registry`)
+   and scheduled polling (`list_due_sources`) both honour it —
+   no seeding or poller change is needed.
+7. Add the `licensed_feeds` config section (§2, env-gated,
+   disabled by default) listing which vendors are enabled and
+   which endpoints are in scope. No key in config files —
+   `.env.example` only.
+8. Verify the seed: `POST /api/sources/seed?scope=all` (or the
+   equivalent seed call) creates the `Source` row for the new
+   key, and a toggled-off key is reported in `skipped_disabled`.
+9. Verify the flow end to end on a test org: run one ingestion
+   for the new source and confirm rows land in `normalized_prices`
+   with `source_name` `<vendor>/<endpoint>` (e.g.
+   `barchart/getGrainBids`), the feed's quote time as
+   `captured_at`, and `delay_label` honest (real-time vs
+   delayed). Confirm the overlap rule (§5): a feed row that
+   duplicates a scraped row for the same location/commodity/month
+   is kept as a second row under its own `source_name` — never
+   silently overwriting the scraped row.
+10. Verify **no route changes were needed**: market search, the
+    public best-bid page, the basis tracker, the newsletter, and
+    the market report all read `NormalizedPrice` rows generically
+    (market search / newsletter / market report via
+    `_load_preview_payload(..., source_name=None, ...)`; best-bids
+    and basis via direct `NormalizedPrice` selects with no
+    source-name allowlist; advisor signals take a duck-typed
+    price row). Confirm the new rows surface in each with the
+    feed's `source_name` shown, and that the source-health
+    dashboard shows the feed (`live`, or `broken` with the real
+    reason on auth/quota failure).
+11. Confirm fallback (§5): free sources keep running; feed down /
+    key expired / quota exhausted leaves the feed's health row
+    `broken`/`stale` with the real reason while the basis tracker
+    and best-bid page keep showing free data with their normal
+    staleness labels. No price is ever invented to fill a feed gap.
+
+**What stays disabled until a licence/key exists:** the adapter
+toggle (`false`), the `licensed_feeds` config section, and any
+futures/canola desk wiring that depends on the feed. The futures
+strip keeps returning contract structure with prices `null` and
+the ICE canola desk stays labelled `not_wired` — that is the
+honest state, not a gap to work around.
 
 ## Sources (public, checked 2026-11-19)
 

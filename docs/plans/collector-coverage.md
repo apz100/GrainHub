@@ -1,5 +1,13 @@
 # GrainHub Collector Coverage — Snapshot as of Cycle 39 (2026-11-19)
 
+**Corrected in Cycle 40 (2026-11-19):** the `andersons` adapter was
+toggled OFF (`andersons = false` in `[sources]`) at Adam's request —
+Barchart/DTN is parked, do not probe the legacy DTN host — so the
+headline is now **101 toggle-enabled / 18 off** (was 102 / 17). The
+`collwest` row note and open item 1 are also corrected: `collwest`
+has an explicit toggle (`collwest = true`) and the `[us]` disabled
+entry is a record by design, not a mismatch. See open items 1–2.
+
 One-page snapshot of every price-source adapter in the FastAPI
 registry: what it is, whether its `[sources]` toggle is on, when it
 was last verified live, and how many rows it returned then. Row
@@ -26,15 +34,17 @@ unchanged). `closed` — verified to return nothing, toggled off.
 `pending` — never live-verified; needs a browser render check or
 a decision first.
 
-**Headline numbers (Cycle 38 audit, re-confirmed here):**
-119 adapters; 102 toggle-enabled (seedable); 17 toggled off
-(bunge, mapleview, 13 DTN, Heartland, Mulvane). Of the 102
-enabled, 88 are `live` at last check, 5 are `stale-watch`
-(they still return rows), 8 are Ontario Playwright collectors
-verified in Cycle 1 only, and 1 (`andersons`) targets a legacy
-DTN host never re-verified. The `north_gower` adapter is listed
-below as one ordinary adapter among the 119 — public prices
-only, no special treatment.
+**Headline numbers (Cycle 38 audit, re-confirmed here, corrected
+Cycle 40):**
+119 adapters; 101 toggle-enabled (seedable); 18 toggled off
+(bunge, mapleview, 13 DTN, Heartland, Mulvane, andersons). Of the
+101 enabled, 88 are `live` at last check, 5 are `stale-watch`
+(they still return rows), and 8 are Ontario Playwright collectors
+verified in Cycle 1 only. The `andersons` adapter targets a legacy
+DTN host, was never re-verified, and is now toggled OFF — parked
+2026-11-19 at Adam's request; do not probe that host. The
+`north_gower` adapter is listed below as one ordinary adapter
+among the 119 — public prices only, no special treatment.
 
 ## Coverage by family (as of Cycle 39)
 
@@ -46,7 +56,7 @@ only, no special treatment.
 | DTN (JS-only) | 13 | 0 | 0 |
 | USDA mirror | 2 | 2 | 2 |
 | agricharts_source | 1 | 1 | 0 |
-| andersons_source | 1 | 1 | 0 |
+| andersons_source | 1 | 0 | 0 |
 | bunge_source | 1 | 0 | 0 |
 | collwest_source | 1 | 1 | 1 |
 | dg_global_source | 1 | 1 | 0 |
@@ -78,7 +88,7 @@ only, no special treatment.
 | `alliance_grain` | Bushel `.cbmod` | on | Cycle 34 | 10 | live | serves Anchor/Cropsey/Colfax since Cycle 34 (was Gibson City) |
 | `allied_cooperative` | DTN (JS-only) | OFF | Cycle — |  | pending | JS-only (modern DTN widget); render check pending |
 | `almota` | Bushel `.cbmod` | on | Cycle 37 | 12 | stale-watch | header Nov 18, one day stale (since Cycle 31) |
-| `andersons` | andersons_source | on | Cycle 1 |  | pending | targets the legacy DTN API host (dtn-api.andersonscanada.com), not the current GRAINweb site; current site tables are Barchart-licensed (Cycle 16) and are NOT what this adapter reads; do not probe the DTN host without the DTN decision |
+| `andersons` | andersons_source | OFF | Cycle — |  | off | PARKED 2026-11-19 at Adam's request: toggled off in Cycle 40; targets the legacy DTN API host (dtn-api.andersonscanada.com), not the current GRAINweb site; current site tables are Barchart-licensed (Cycle 16) and are NOT what this adapter reads; do not probe the DTN host; probe-list entry removed Cycle 40 |
 | `anthony_farmers_coop` | AgriCharts writeBidRow | on | Cycle 36 | 9 | live |  |
 | `aurora_coop` | DTN (JS-only) | OFF | Cycle — |  | pending | JS-only (modern DTN widget); render check pending |
 | `brubaker_grain` | DTN (JS-only) | OFF | Cycle — |  | pending | JS-only; render check pending |
@@ -88,7 +98,7 @@ only, no special treatment.
 | `cfs` | DTN (JS-only) | OFF | Cycle — |  | pending | aghost widget + location-cookie flow; render check pending |
 | `cgs` | Bushel `.cbmod` | on | Cycle 37 | 4 | live |  |
 | `chandler_feed` | Bushel `.cbmod` | on | Cycle 37 | 17 | live |  |
-| `collwest` | collwest_source | on | Cycle 3 | 16 | live | Canadian, CAD; 16 rows cross-checked Cycle 5 — but urls-toml entry is disabled as a record while the toggle defaults to enabled (see open items) |
+| `collwest` | collwest_source | on | Cycle 3 | 16 | live | Canadian, CAD; 16 rows cross-checked Cycle 5. Toggle is explicitly on (`collwest = true`, config.toml); the urls-toml entry stays disabled as a record by design — toggle-vs-`[us]` mismatches are normal (see open item 1, resolved Cycle 40) |
 | `dg_global` | dg_global_source | on | Cycle 1 |  | pending | Ontario Playwright collector (pilot seed); not re-verified since Cycle 1 |
 | `elite_octane` | DTN (JS-only) | OFF | Cycle — |  | pending | CIHedging loader; render check pending |
 | `fac` | Bushel `.cbmod` | on | Cycle 37 | 45 | live |  |
@@ -188,21 +198,31 @@ only, no special treatment.
 
 ## Open items (from this snapshot)
 
-1. **Collwest toggle / toml mismatch (minor).** The `collwest`
-   adapter has no explicit `[sources]` toggle, so it defaults to
-   enabled — but its `us_elevators_urls.toml` entry is disabled
-   "as a record" (Cycle 17 audit). The collector itself is
-   verified (Canadian, CAD, Cycle 3). Coordinator decision
-   needed: add an explicit `collwest = false` toggle, or leave
-   it seeding. No change made in Cycle 39.
-2. **Andersons adapter targets a legacy DTN host, unverified.**
+1. **Collwest toggle / toml — RESOLVED Cycle 40, no change needed.**
+   The Cycle 39 claim was wrong: `collwest` HAS an explicit
+   `[sources]` toggle (`collwest = true`, config.toml line 32) — it
+   does not default to enabled. Its `us_elevators_urls.toml` entry
+   is disabled "as a record" (Canadian, CAD — removed from the US
+   list per the catalogue). A name-matched comparison in Cycle 40
+   showed toggle-vs-`[us]` mismatches are normal and by design:
+   Sunrise, Mulvane, Brubaker Grain, Hoffman Ag and Wilton Farmers
+   Union Elevator are `[us]`-enabled + toggle-off (the toggle
+   gates collection; the `[us]` list catalogues the source), and
+   United Coop is the reverse (`[us]`-off + toggle-on) — the same
+   shape as Collwest. The Cycle 18 sync guard deliberately compares
+   only name/url/type/enabled between the two `[us]` lists, not
+   toggles vs `[us]` enabled. No toggle change made.
+2. **Andersons adapter — PARKED Cycle 40, do not probe.**
    `fetch_andersons_all` reads `dtn-api.andersonscanada.com/
    cash-bids/<slug>` — not the current GRAINweb site, whose
    facility tables are Barchart-licensed (Cycle 16) and are NOT
    what this adapter reads. It was built in Cycle 1 and never
-   re-verified. One probe of the DTN endpoint would settle
-   whether it still serves data, but it is a DTN host — do not
-   probe it without the DTN licensed-feed decision.
+   re-verified. Adam parked Barchart/DTN on 2026-11-19: the
+   adapter is now toggled OFF (`andersons = false`), the probe-list
+   entry for the DTN host was removed, and the host must not be
+   probed. Re-enable only if the licensed-feed decision is
+   re-opened, following the plug-in checklist in
+   `docs/plans/barchart-dtn-integration-design.md` §8.
 3. **DTN family (13 adapters) — Playwright render checks
    pending.** All JS-only, all toggled off. Al-Corn and Sunrise
    first (classic `CashBidTable` shape).

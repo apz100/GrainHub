@@ -581,13 +581,21 @@ Merge order, gates, and conflicts are in `docs/plans/merge-plan.md`.
   Cycle 17); config/registry drift audit clean (121 entries,
   102 enabled, 119 adapters, 17 toggled off); merge plan
   extended to Cycle 37 (93 commits, 0 merges).
+- **Cycle 39** (`overnight/grainhub-cycle-39`, 711 tests, docs
+  only): unreachable trio re-checked, all unchanged (CVA 202/0
+  bytes, Landus 429/Vercel checkpoint, Mercer 522/0 bytes);
+  collector-coverage snapshot written for all 119 adapters
+  (102 toggle-enabled at the time, 88 live, 5 stale-watch, 8
+  Ontario Playwright Cycle 1 only, 1 andersons legacy DTN host
+  never re-verified — the snapshot's collwest toggle claim was
+  wrong and the andersons item is now parked, both corrected in
+  Cycle 40); merge plan extended to Cycle 38 (95 commits, 0
+  merges).
 
 **Remaining blockers that need Adam:** NASS API key (free) and FAS /
-data.gov key (free); LLM provider + key for Advisor `/ask`; Barchart /
-DTN licensed feed decision — Barchart docs prohibit redistribution, so
-a separate redistribution licence decides whether the Price Finder can
-use the feed at all; ERP choice (Agvance recommended first, Agris
-second, AgTrax third); eSign provider; `gh` re-authentication with
+data.gov key (free); LLM provider + key for Advisor `/ask`;
+ERP choice (Agvance recommended first, Agris second, AgTrax
+third); eSign provider; `gh` re-authentication with
 `workflow` scope so the written CI workflow (`.github/workflows/
 api-tests.yml`) can be pushed — the file is in no branch, it sits
 untracked locally, and the `.github` directory must not be assumed
@@ -596,7 +604,16 @@ mapping — normalized price rows carry no currency, so basis/best-bid
 responses report `currency: null` (a design note with four concrete
 decisions is now in `docs/plans/currency-design.md`); email-bid endpoint is public by
 default (admin-only is a one-line change if wanted); pricing/hosting
-decisions. **Newest findings:** the `cashbids.php` embed family is
+decisions. **Barchart/DTN is NOT a blocker: parked 2026-11-19 at
+Adam's request** — do not chase it, do not contact the vendors, do
+not probe the Andersons legacy DTN host, do not spend cycles on
+pricing/licensing. The `andersons` adapter is toggled off and its
+probe-list entry removed (Cycle 40); the plug-in spec stays current
+(`docs/plans/barchart-dtn-integration-design.md` §8 checklist) and
+a feed can be added later by config + one adapter with no route
+changes (proven by `tests/test_licensed_feed_plugin.py`). The CGB
+`cashbids-js.php` question and the Mae-Mart cash-price decision it
+gated are parked with it. **Newest findings:** the `cashbids.php` embed family is
 now 13 sites (PRO Coop 21302b proven in Cycle 13); the Skyland
 picker sweep is complete (all 14 IDs verified) and the Smithfield
 East Region sweep is complete (30 of 31 locations; Raeford posts no

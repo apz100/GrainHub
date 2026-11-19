@@ -36,7 +36,7 @@ name may appear in the repo.
 | 2 | `NASS_API_KEY` (USDA NASS Quick Stats, free key by email) | Needed for Research collectors; without it NASS endpoints return a clear "key required" error, they do not fail the deploy. Obtain from Adam. |
 | 3 | `FAS_DATA_GOV_API_KEY` (free data.gov key) | Needed for USDA FAS PSD collectors; same key-gated behaviour as NASS. Obtain from Adam. |
 | 4 | `GRAINHUB_LLM_API_KEY` (or `OPENAI_API_KEY`) | Needed for Advisor `/ask`; without it the assistant stays 501 by design. Obtain from Adam — and only after he has chosen the LLM provider. |
-| 5 | Barchart / DTN licensed feed decision | **Open.** Barchart docs prohibit redistribution, so a separate redistribution licence decides whether the Price Finder can use the feed at all. No feed is wired today; do not deploy assuming one exists. |
+| 5 | Barchart / DTN licensed feed decision | **Parked 2026-11-19 at Adam's request.** Do not chase it, do not contact the vendors, do not probe the Andersons legacy DTN host, do not spend cycles on pricing/licensing. The plug-in spec stays current (`docs/plans/barchart-dtn-integration-design.md` §8 checklist) and a feed can be added later by config + one adapter with no route changes (proven by `tests/test_licensed_feed_plugin.py`). No feed is wired today; do not deploy assuming one exists. |
 | 6 | ERP choice (Agvance recommended first, Agris second, AgTrax third) | Elevator Ops only; not a deploy blocker. |
 | 7 | eSign provider | Elevator Ops only; eSign is a stub today. Not a deploy blocker. |
 | 8 | Hosting / domain decision | Keep Vercel + Render + Supabase (the baseline), or change? Confirm the production domains before setting `API_CORS_ORIGINS` and `NEXT_PUBLIC_API_URL`. |
@@ -231,8 +231,9 @@ Carried from Cycles 1–5; none of these stops a deploy, because every
 one fails honestly (key-gated error, 501, `null` price, `unknown`
 status) instead of failing silently:
 
-- NASS / FAS keys, LLM provider + key, Barchart/DTN feed decision
-  (see §0).
+- NASS / FAS keys, LLM provider + key (see §0). Barchart/DTN is
+  parked at Adam's request (2026-11-19) — not a gap and not a
+  blocker; see §0 row 5.
 - Futures strip + ICE canola desk return contract structure with
   prices `null` until a licensed feed is wired.
 - Advisor `/ask` is 501; eSign is a stub; no ERP sync, no payments.

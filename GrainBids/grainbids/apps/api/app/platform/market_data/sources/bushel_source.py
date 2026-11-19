@@ -472,7 +472,8 @@ BUSHEL_SITES: dict[str, BushelSite] = {
         "/cashbidssingle-<id> targets are being verified one per "
         "cycle: 2730 in Cycle 12, 2731 / 2734 / 2740 / 2742 / 2754 / "
         "2761 in Cycle 13 (7 of the 14 picker IDs now verified); "
-        "2763, 2766, 2770, 2771, 2778, 3370, 3621 still open.",
+        "2763 / 2766 / 2770 / 2771 / 2778 / 3370 / 3621 in Cycle 14 "
+        "(all 14 picker IDs now verified).",
     ),
     "winchester": BushelSite(
         key="winchester",
@@ -535,8 +536,10 @@ BUSHEL_SITES: dict[str, BushelSite] = {
         "3 rows (Soybeans 1, Wheat 1, Corn 1), USD/bu. First "
         "Smithfield location verified; 4 more verified in Cycle 13 "
         "(Bladenboro 1725, Bladenboro Feed Mill 1667, Chadbourn 2294, "
-        "Clarkton 1668) — 26 of the 31 East Region locations still "
-        "open.",
+        "Clarkton 1668) and 6 more in Cycle 14 (Clinton 1669, "
+        "Hobbsville 1670, Kinston 1671, LaGrange 1672, Morgan's "
+        "Corner 1673, Mount Olive 1674) — 20 of the 31 East Region "
+        "locations still open.",
     ),
     # Cycle 13 (2026-11-19): the next six Skyland per-location
     # /cashbidssingle-<id> targets, one polite GET each — all 200,
@@ -619,6 +622,104 @@ BUSHEL_SITES: dict[str, BushelSite] = {
         "6 rows (Corn 2, Milo 1, Red Wheat 2, White Wheat 1), "
         "USD/bu. Location h2 'Elkhart - Hough - Rolla Area'.",
     ),
+    # Cycle 14 (2026-11-19): the last 7 Skyland per-location
+    # targets, one polite GET each — all 200, all standard wrapped
+    # 7-col .cbmod widgets, all parsed by the generic parser with
+    # no changes. Completes the 14-location picker sweep (2730 in
+    # Cycle 12, 2731 / 2734 / 2740 / 2742 / 2754 / 2761 in Cycle
+    # 13). 3370's h2 carries ", KS" and is mapped to the town name,
+    # as with Smithfield's ", NC" entries. 3370 is the first Skyland
+    # page with two Milo rows; 3370 and 3621 carry widget headers
+    # dated Nov 18, 2026 — a day older than the other Cycle 14
+    # pages (Nov 19), like Chadbourn in Cycle 13.
+    "skyland_2763": BushelSite(
+        key="skyland_2763",
+        company="Skyland Grain",
+        url="https://www.skylandgrain.com/cashbidssingle-2763",
+        currency="USD",
+        default_location="Satanta - Ryus",
+        verified=True,
+        notes="Verified live 2026-11-19 (Cycle 14): 200 at the "
+        "per-location target. Standard wrapped 7-col .cbmod widget, "
+        "6 rows (Corn 2, Milo 1, Red Wheat 2, White Wheat 1), "
+        "USD/bu. Location h2 'Satanta - Ryus'.",
+    ),
+    "skyland_2766": BushelSite(
+        key="skyland_2766",
+        company="Skyland Grain",
+        url="https://www.skylandgrain.com/cashbidssingle-2766",
+        currency="USD",
+        default_location="Spearman - Gruver - Texline",
+        verified=True,
+        notes="Verified live 2026-11-19 (Cycle 14): 200 at the "
+        "per-location target. Standard wrapped 7-col .cbmod widget, "
+        "5 rows (Corn 2, Milo 1, Red Wheat 2), USD/bu. Location h2 "
+        "'Spearman - Gruver - Texline'.",
+    ),
+    "skyland_2770": BushelSite(
+        key="skyland_2770",
+        company="Skyland Grain",
+        url="https://www.skylandgrain.com/cashbidssingle-2770",
+        currency="USD",
+        default_location="Sunray Area",
+        verified=True,
+        notes="Verified live 2026-11-19 (Cycle 14): 200 at the "
+        "per-location target. Standard wrapped 7-col .cbmod widget, "
+        "5 rows (Corn 2, Milo 1, Red Wheat 2), USD/bu. Location h2 "
+        "'Sunray Area'.",
+    ),
+    "skyland_2771": BushelSite(
+        key="skyland_2771",
+        company="Skyland Grain",
+        url="https://www.skylandgrain.com/cashbidssingle-2771",
+        currency="USD",
+        default_location="Kendall - Midway - Lydia",
+        verified=True,
+        notes="Verified live 2026-11-19 (Cycle 14): 200 at the "
+        "per-location target. Standard wrapped 7-col .cbmod widget, "
+        "6 rows (Corn 2, Milo 1, Red Wheat 2, White Wheat 1), "
+        "USD/bu. Location h2 'Kendall - Midway - Lydia'.",
+    ),
+    "skyland_2778": BushelSite(
+        key="skyland_2778",
+        company="Skyland Grain",
+        url="https://www.skylandgrain.com/cashbidssingle-2778",
+        currency="USD",
+        default_location="Buckeye - Syracuse",
+        verified=True,
+        notes="Verified live 2026-11-19 (Cycle 14): 200 at the "
+        "per-location target. Standard wrapped 7-col .cbmod widget, "
+        "6 rows (Corn 2, Milo 1, Red Wheat 2, White Wheat 1), "
+        "USD/bu. Location h2 'Buckeye - Syracuse'.",
+    ),
+    "skyland_3370": BushelSite(
+        key="skyland_3370",
+        company="Skyland Grain",
+        url="https://www.skylandgrain.com/cashbidssingle-3370",
+        currency="USD",
+        default_location="Hugoton",
+        verified=True,
+        location_labels={"Hugoton, KS": "Hugoton"},
+        notes="Verified live 2026-11-19 (Cycle 14): 200 at the "
+        "per-location target. Standard wrapped 7-col .cbmod widget, "
+        "6 rows (Corn 2, Milo 2, Red Wheat 2), USD/bu — the first "
+        "Skyland page with two Milo rows. Location h2 'Hugoton, KS' "
+        "(mapped to 'Hugoton'). Widget header dated Nov 18, 2026 — "
+        "a day older than the other Cycle 14 pages (Nov 19).",
+    ),
+    "skyland_3621": BushelSite(
+        key="skyland_3621",
+        company="Skyland Grain",
+        url="https://www.skylandgrain.com/cashbidssingle-3621",
+        currency="USD",
+        default_location="Vilas - Walsh",
+        verified=True,
+        notes="Verified live 2026-11-19 (Cycle 14): 200 at the "
+        "per-location target. Standard wrapped 7-col .cbmod widget, "
+        "5 rows (Corn 2, Milo 1, Red Wheat 2), USD/bu. Location h2 "
+        "'Vilas - Walsh'. Widget header dated Nov 18, 2026 — a day "
+        "older than the other Cycle 14 pages (Nov 19).",
+    ),
     # Cycle 13 (2026-11-19): four more Smithfield East Region
     # per-location targets, one polite GET each — all 200, all
     # standard wrapped 7-col .cbmod widgets, all parsed by the
@@ -680,6 +781,94 @@ BUSHEL_SITES: dict[str, BushelSite] = {
         "per-location target (Clarkton Elevator, from the East "
         "Region per-location list). Standard wrapped 7-col .cbmod "
         "widget, 1 row (Soybeans), USD/bu.",
+    ),
+    # Cycle 14 (2026-11-19): six more Smithfield East Region
+    # per-location targets, one polite GET each — all 200, all
+    # standard wrapped 7-col .cbmod widgets, all parsed by the
+    # generic parser with no changes. Clinton, Hobbsville,
+    # Kinston, LaGrange and Mount Olive each carry 3 rows (Corn +
+    # Soybeans + Wheat); Morgan's Corner carries 2 rows
+    # (Soybeans + Wheat). Location h2s carry ", NC" and are
+    # mapped to the town name, as with Bentonville; the live h2
+    # for 1673 is "Morgans Corner, NC" (no apostrophe).
+    "smithfield_clinton": BushelSite(
+        key="smithfield_clinton",
+        company="Smithfield Grain",
+        url="https://smithfieldgrain.com/cashbidssingle-1669",
+        currency="USD",
+        default_location="Clinton",
+        verified=True,
+        location_labels={"Clinton, NC": "Clinton"},
+        notes="Verified live 2026-11-19 (Cycle 14): 200 at the "
+        "per-location target (Clinton Elevator, from the East "
+        "Region per-location list). Standard wrapped 7-col .cbmod "
+        "widget, 3 rows (Corn 1, Soybeans 1, Wheat 1), USD/bu.",
+    ),
+    "smithfield_hobbsville": BushelSite(
+        key="smithfield_hobbsville",
+        company="Smithfield Grain",
+        url="https://smithfieldgrain.com/cashbidssingle-1670",
+        currency="USD",
+        default_location="Hobbsville",
+        verified=True,
+        location_labels={"Hobbsville, NC": "Hobbsville"},
+        notes="Verified live 2026-11-19 (Cycle 14): 200 at the "
+        "per-location target (Hobbsville Elevator, from the East "
+        "Region per-location list). Standard wrapped 7-col .cbmod "
+        "widget, 3 rows (Corn 1, Soybeans 1, Wheat 1), USD/bu.",
+    ),
+    "smithfield_kinston": BushelSite(
+        key="smithfield_kinston",
+        company="Smithfield Grain",
+        url="https://smithfieldgrain.com/cashbidssingle-1671",
+        currency="USD",
+        default_location="Kinston",
+        verified=True,
+        location_labels={"Kinston, NC": "Kinston"},
+        notes="Verified live 2026-11-19 (Cycle 14): 200 at the "
+        "per-location target (Kinston Elevator, from the East "
+        "Region per-location list). Standard wrapped 7-col .cbmod "
+        "widget, 3 rows (Corn 1, Soybeans 1, Wheat 1), USD/bu.",
+    ),
+    "smithfield_lagrange": BushelSite(
+        key="smithfield_lagrange",
+        company="Smithfield Grain",
+        url="https://smithfieldgrain.com/cashbidssingle-1672",
+        currency="USD",
+        default_location="LaGrange",
+        verified=True,
+        location_labels={"LaGrange, NC": "LaGrange"},
+        notes="Verified live 2026-11-19 (Cycle 14): 200 at the "
+        "per-location target (LaGrange Elevator, from the East "
+        "Region per-location list). Standard wrapped 7-col .cbmod "
+        "widget, 3 rows (Corn 1, Soybeans 1, Wheat 1), USD/bu.",
+    ),
+    "smithfield_morgans_corner": BushelSite(
+        key="smithfield_morgans_corner",
+        company="Smithfield Grain",
+        url="https://smithfieldgrain.com/cashbidssingle-1673",
+        currency="USD",
+        default_location="Morgans Corner",
+        verified=True,
+        location_labels={"Morgans Corner, NC": "Morgans Corner"},
+        notes="Verified live 2026-11-19 (Cycle 14): 200 at the "
+        "per-location target (Morgan's Corner Elevator, from the "
+        "East Region per-location list). Standard wrapped 7-col "
+        ".cbmod widget, 2 rows (Soybeans 1, Wheat 1), USD/bu. "
+        "Live location h2 is 'Morgans Corner, NC' (no apostrophe).",
+    ),
+    "smithfield_mount_olive": BushelSite(
+        key="smithfield_mount_olive",
+        company="Smithfield Grain",
+        url="https://smithfieldgrain.com/cashbidssingle-1674",
+        currency="USD",
+        default_location="Mount Olive",
+        verified=True,
+        location_labels={"Mount Olive, NC": "Mount Olive"},
+        notes="Verified live 2026-11-19 (Cycle 14): 200 at the "
+        "per-location target (Mount Olive Elevator, from the East "
+        "Region per-location list). Standard wrapped 7-col .cbmod "
+        "widget, 3 rows (Corn 1, Soybeans 1, Wheat 1), USD/bu.",
     ),
 }
 
@@ -1425,6 +1614,69 @@ def fetch_skyland_2761() -> dict[str, Any]:
     return fetch_bushel_site("skyland_2761")
 
 
+def fetch_skyland_2763() -> dict[str, Any]:
+    """Fetch Skyland Grain's per-location target 2763 (Satanta -
+    Ryus). Verified live 2026-11-19 (Cycle 14): 200, standard
+    wrapped 7-col .cbmod widget, 6 rows (Corn 2, Milo 1, Red
+    Wheat 2, White Wheat 1), USD/bu.
+    """
+    return fetch_bushel_site("skyland_2763")
+
+
+def fetch_skyland_2766() -> dict[str, Any]:
+    """Fetch Skyland Grain's per-location target 2766 (Spearman -
+    Gruver - Texline). Verified live 2026-11-19 (Cycle 14): 200,
+    standard wrapped 7-col .cbmod widget, 5 rows (Corn 2, Milo 1,
+    Red Wheat 2), USD/bu.
+    """
+    return fetch_bushel_site("skyland_2766")
+
+
+def fetch_skyland_2770() -> dict[str, Any]:
+    """Fetch Skyland Grain's per-location target 2770 (Sunray
+    Area). Verified live 2026-11-19 (Cycle 14): 200, standard
+    wrapped 7-col .cbmod widget, 5 rows (Corn 2, Milo 1, Red
+    Wheat 2), USD/bu.
+    """
+    return fetch_bushel_site("skyland_2770")
+
+
+def fetch_skyland_2771() -> dict[str, Any]:
+    """Fetch Skyland Grain's per-location target 2771 (Kendall -
+    Midway - Lydia). Verified live 2026-11-19 (Cycle 14): 200,
+    standard wrapped 7-col .cbmod widget, 6 rows (Corn 2, Milo 1,
+    Red Wheat 2, White Wheat 1), USD/bu.
+    """
+    return fetch_bushel_site("skyland_2771")
+
+
+def fetch_skyland_2778() -> dict[str, Any]:
+    """Fetch Skyland Grain's per-location target 2778 (Buckeye -
+    Syracuse). Verified live 2026-11-19 (Cycle 14): 200, standard
+    wrapped 7-col .cbmod widget, 6 rows (Corn 2, Milo 1, Red
+    Wheat 2, White Wheat 1), USD/bu.
+    """
+    return fetch_bushel_site("skyland_2778")
+
+
+def fetch_skyland_3370() -> dict[str, Any]:
+    """Fetch Skyland Grain's per-location target 3370 (Hugoton).
+    Verified live 2026-11-19 (Cycle 14): 200, standard wrapped
+    7-col .cbmod widget, 6 rows (Corn 2, Milo 2, Red Wheat 2),
+    USD/bu. Location h2 'Hugoton, KS' is mapped to 'Hugoton'.
+    """
+    return fetch_bushel_site("skyland_3370")
+
+
+def fetch_skyland_3621() -> dict[str, Any]:
+    """Fetch Skyland Grain's per-location target 3621 (Vilas -
+    Walsh). Verified live 2026-11-19 (Cycle 14): 200, standard
+    wrapped 7-col .cbmod widget, 5 rows (Corn 2, Milo 1, Red
+    Wheat 2), USD/bu.
+    """
+    return fetch_bushel_site("skyland_3621")
+
+
 def fetch_smithfield_bladenboro() -> dict[str, Any]:
     """Fetch Smithfield Grain (Bladenboro, NC) via the per-location
     target 1725. Verified live 2026-11-19 (Cycle 13): 200, standard
@@ -1458,3 +1710,58 @@ def fetch_smithfield_clarkton() -> dict[str, Any]:
     wrapped 7-col .cbmod widget, 1 row (Soybeans), USD/bu.
     """
     return fetch_bushel_site("smithfield_clarkton")
+
+
+def fetch_smithfield_clinton() -> dict[str, Any]:
+    """Fetch Smithfield Grain (Clinton, NC) via the per-location
+    target 1669. Verified live 2026-11-19 (Cycle 14): 200, standard
+    wrapped 7-col .cbmod widget, 3 rows (Corn 1, Soybeans 1,
+    Wheat 1), USD/bu.
+    """
+    return fetch_bushel_site("smithfield_clinton")
+
+
+def fetch_smithfield_hobbsville() -> dict[str, Any]:
+    """Fetch Smithfield Grain (Hobbsville, NC) via the per-location
+    target 1670. Verified live 2026-11-19 (Cycle 14): 200, standard
+    wrapped 7-col .cbmod widget, 3 rows (Corn 1, Soybeans 1,
+    Wheat 1), USD/bu.
+    """
+    return fetch_bushel_site("smithfield_hobbsville")
+
+
+def fetch_smithfield_kinston() -> dict[str, Any]:
+    """Fetch Smithfield Grain (Kinston, NC) via the per-location
+    target 1671. Verified live 2026-11-19 (Cycle 14): 200, standard
+    wrapped 7-col .cbmod widget, 3 rows (Corn 1, Soybeans 1,
+    Wheat 1), USD/bu.
+    """
+    return fetch_bushel_site("smithfield_kinston")
+
+
+def fetch_smithfield_lagrange() -> dict[str, Any]:
+    """Fetch Smithfield Grain (LaGrange, NC) via the per-location
+    target 1672. Verified live 2026-11-19 (Cycle 14): 200, standard
+    wrapped 7-col .cbmod widget, 3 rows (Corn 1, Soybeans 1,
+    Wheat 1), USD/bu.
+    """
+    return fetch_bushel_site("smithfield_lagrange")
+
+
+def fetch_smithfield_morgans_corner() -> dict[str, Any]:
+    """Fetch Smithfield Grain (Morgan's Corner, NC) via the
+    per-location target 1673. Verified live 2026-11-19 (Cycle 14):
+    200, standard wrapped 7-col .cbmod widget, 2 rows (Soybeans 1,
+    Wheat 1), USD/bu. Live location h2 is 'Morgans Corner, NC'
+    (no apostrophe).
+    """
+    return fetch_bushel_site("smithfield_morgans_corner")
+
+
+def fetch_smithfield_mount_olive() -> dict[str, Any]:
+    """Fetch Smithfield Grain (Mount Olive, NC) via the per-location
+    target 1674. Verified live 2026-11-19 (Cycle 14): 200, standard
+    wrapped 7-col .cbmod widget, 3 rows (Corn 1, Soybeans 1,
+    Wheat 1), USD/bu.
+    """
+    return fetch_bushel_site("smithfield_mount_olive")

@@ -52,6 +52,12 @@ parsed by this module after three small shape fixes:
     cell is blank; the parser maps "cash price" and treats a blank
     first header cell as the delivery column.
 
+Cycle 7 (2026-11-19) verified the AGP iframe target
+(``agp.o.bushelsites.com/cash-bids``, behind ``agp.com/grain/bids``)
+live — one polite GET, 200, standard 7-column ``.cbmod`` widget,
+parsed by the generic parser with no changes. The page carries a
+single location/row (Chester, NE, Soybeans, Nov 2026, USD/bu).
+
 Units — published numbers, NOT normalized: futures and change keep
 the units each site publishes, and those vary. Decimal sites publish
 futures in dollars (FAC 4.3325) and change in cents (FAC -2.25) or
@@ -88,6 +94,7 @@ CONTACT_USER_AGENT = "GrainHub-Research/1.0 +https://github.com/apz100/GrainHub"
 
 FAC_URL = "https://www.faccooperative.com/cash-bids"
 COLLWEST_URL = "https://www.collwestgrain.com/"
+AGP_URL = "https://agp.o.bushelsites.com/cash-bids"
 
 # Raw widget commodity label -> canonical commodity name.
 COMMODITY_MAP = {
@@ -351,6 +358,21 @@ BUSHEL_SITES: dict[str, BushelSite] = {
         notes="Verified live 2026-11-19 (Cycle 6 DTN sweep): 200, "
         "Bushel .cbmod widget in static HTML, 10 rows (Corn 5 + "
         "Soybeans 5), 7-col; location h2 'Gibson City - West'.",
+    ),
+    "agp": BushelSite(
+        key="agp",
+        company="AGP",
+        url=AGP_URL,
+        currency="USD",
+        default_location="Chester",
+        verified=True,
+        notes="Verified live 2026-11-19 (Cycle 7): 200, Bushel .cbmod "
+        "widget in static HTML at the iframe target behind "
+        "agp.com/grain/bids, parsed by the generic parser with no "
+        "changes (status ok). Only 1 row on the page: Chester, NE, "
+        "Soybeans, Nov 2026, 7-col layout, USD/bu; widget header "
+        "dated Nov 18, 2026 11:40 PM. The iframe page shows a single "
+        "location — other AGP locations are not on this page.",
     ),
 }
 
@@ -858,3 +880,12 @@ def fetch_ace_ethanol() -> dict[str, Any]:
 def fetch_alliance_grain() -> dict[str, Any]:
     """Fetch Alliance Grain (Gibson City). Verified live 2026-11-19 (Cycle 6 DTN sweep)."""
     return fetch_bushel_site("alliance_grain")
+
+
+def fetch_agp() -> dict[str, Any]:
+    """Fetch AGP (Chester, NE) via the iframe target behind agp.com.
+
+    Verified live 2026-11-19 (Cycle 7): 200, Bushel .cbmod widget in
+    static HTML, 1 row (Soybeans, Nov 2026), USD/bu.
+    """
+    return fetch_bushel_site("agp")

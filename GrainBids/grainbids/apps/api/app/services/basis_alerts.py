@@ -193,6 +193,38 @@ def find_basis_crossings(
     )
 
 
+def evaluate_rule_basis_threshold(
+    rule: object,
+    response_or_rows: dict[str, object] | list[dict[str, object]] | None,
+) -> BasisAlertEvaluation | None:
+    """Check one alert rule's optional basis threshold against rows.
+
+    This is the seam the alert evaluator calls
+    (:mod:`app.services.alert_evaluator`): a rule carries an optional
+    ``basis_threshold`` (and ``basis_threshold_operator``, default
+    ``">"``). Returns ``None`` when the rule has no basis threshold —
+    the evaluator then skips the basis path entirely and the rule
+    behaves exactly as a price-only rule. Raises ``ValueError`` when
+    the threshold is present but not a finite number, or the operator
+    is unsupported — callers that must never fail an ingestion run
+    (the evaluator) catch that and skip the rule's basis check.
+
+    ``rule`` is any object with ``basis_threshold`` /
+    ``basis_threshold_operator`` attributes (a real ``AlertRule`` or a
+    test stand-in); the attributes are read with ``getattr`` so rules
+    created before the Cycle 7 columns existed still work.
+    """
+    threshold = getattr(rule, "basis_threshold", None)
+    if threshold is None:
+        return None
+    operator = getattr(rule, "basis_threshold_operator", None) or ">"
+    return find_basis_crossings(
+        response_or_rows,
+        threshold=threshold,
+        operator=operator,
+    )
+
+
 def _split_response(
     response_or_rows: dict[str, object] | list[dict[str, object]] | None,
 ) -> tuple[list[dict[str, object]], list[dict[str, object]]]:

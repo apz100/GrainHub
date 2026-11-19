@@ -48,6 +48,10 @@ def list_alert_rules(
                 "rule_type": rule.rule_type,
                 "threshold_value": float(rule.threshold_value),
                 "comparison_operator": rule.comparison_operator,
+                "basis_threshold": float(rule.basis_threshold)
+                if rule.basis_threshold is not None
+                else None,
+                "basis_threshold_operator": rule.basis_threshold_operator,
                 "location": rule.location,
                 "saved_search_id": str(rule.saved_search_id) if rule.saved_search_id else None,
                 "delivery_months": rule.delivery_months_json or [],
@@ -85,6 +89,10 @@ def list_recent_alerts(
                 "rule_type": rule.rule_type,
                 "comparison_operator": rule.comparison_operator,
                 "threshold_value": float(rule.threshold_value),
+                "basis_threshold": float(rule.basis_threshold)
+                if rule.basis_threshold is not None
+                else None,
+                "basis_threshold_operator": rule.basis_threshold_operator,
                 "location": rule.location,
                 "saved_search_id": str(rule.saved_search_id) if rule.saved_search_id else None,
                 "delivery_months": rule.delivery_months_json or [],
@@ -127,6 +135,10 @@ def update_alert_status(
         "rule_type": rule.rule_type,
         "comparison_operator": rule.comparison_operator,
         "threshold_value": float(rule.threshold_value),
+        "basis_threshold": float(rule.basis_threshold)
+        if rule.basis_threshold is not None
+        else None,
+        "basis_threshold_operator": rule.basis_threshold_operator,
         "location": rule.location,
         "saved_search_id": str(rule.saved_search_id) if rule.saved_search_id else None,
         "delivery_months": rule.delivery_months_json or [],
@@ -152,6 +164,8 @@ def create_alert_rule(
     rule_type: str = Query(..., min_length=2, max_length=50),
     threshold_value: float = Query(...),
     comparison_operator: str = Query(">", pattern="^(>|<|>=|<=|=)$"),
+    basis_threshold: float | None = Query(None, description="Optional second trigger: alert when basis crosses this value"),
+    basis_threshold_operator: str | None = Query(None, pattern="^(>|<|>=|<=)$"),
     location: str | None = Query(None),
     commodity_id: uuid.UUID | None = Query(None),
     saved_search_id: uuid.UUID | None = Query(None),
@@ -175,6 +189,8 @@ def create_alert_rule(
         rule_type=rule_type.strip(),
         threshold_value=threshold_value,
         comparison_operator=comparison_operator,
+        basis_threshold=basis_threshold,
+        basis_threshold_operator=basis_threshold_operator,
         location=location.strip() if location else None,
         delivery_months_json=month_scope,
         is_active=True,
@@ -190,6 +206,8 @@ def update_alert_rule(
     rule_id: uuid.UUID,
     threshold_value: float | None = Query(None),
     comparison_operator: str | None = Query(None, pattern="^(>|<|>=|<=|=)$"),
+    basis_threshold: float | None = Query(None),
+    basis_threshold_operator: str | None = Query(None, pattern="^(>|<|>=|<=)$"),
     is_active: bool | None = Query(None),
     location: str | None = Query(None),
     saved_search_id: uuid.UUID | None = Query(None),
@@ -206,6 +224,10 @@ def update_alert_rule(
         row.threshold_value = threshold_value
     if comparison_operator is not None:
         row.comparison_operator = comparison_operator
+    if basis_threshold is not None:
+        row.basis_threshold = basis_threshold
+    if basis_threshold_operator is not None:
+        row.basis_threshold_operator = basis_threshold_operator
     if is_active is not None:
         row.is_active = is_active
     if location is not None:

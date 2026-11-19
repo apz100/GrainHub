@@ -20,6 +20,12 @@ class AlertRule(Base):
     rule_type: Mapped[str] = mapped_column(String(50), nullable=False)  # basis, basis_change, delivered_value
     threshold_value: Mapped[float] = mapped_column(Numeric(18, 6), nullable=False)
     comparison_operator: Mapped[str] = mapped_column(String(10), nullable=False, default=">")
+    # Optional second trigger: fire a basis alert when a row's basis
+    # crosses this threshold (operator defaults to ">" when unset).
+    # Nullable — rules without it never take the basis path in the
+    # evaluator, so price-only rules behave exactly as before.
+    basis_threshold: Mapped[float | None] = mapped_column(Numeric(18, 6), nullable=True)
+    basis_threshold_operator: Mapped[str | None] = mapped_column(String(10), nullable=True)
     delivery_months_json: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
 
     location: Mapped[str | None] = mapped_column(String(200), nullable=True)

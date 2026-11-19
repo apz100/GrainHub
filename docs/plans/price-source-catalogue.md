@@ -325,7 +325,7 @@ No prices are recorded here — row counts and widget patterns only.
 | Linn Coop | https://www.linncoop.com/grain/cash-bids | 200 | No | AgriCharts `cashbids.php` embed (`linncoop.agricharts.com`, filter=all) + ATLAS DTN shell | NEW: cashbids.php embed |
 | Midway Coop | https://www.midwaycoop.com/grain/cash-bids | 200 | No | AgriCharts `cashbids.php` embed (`midwaycoop.agricharts.com`, location 82270) + ATLAS DTN shell | NEW: cashbids.php embed |
 | Ace Ethanol | https://www.aceethanol.com/cash-bids | 200 | **Yes — 11 rows, Corn, 7-col widget** | Bushel `.cbmod` widget in static HTML, dated header | Existing generic Bushel collector (`bushel_source.py`) — verified against saved HTML, status ok |
-| AGP | https://www.agp.com/grain/bids | 200 (→ `/bids/`) | No | **Bushel via iframe**: `<iframe src="https://agp.o.bushelsites.com/cash-bids">` inside a `dtn-page` shell | Reclassify dtn → bushel (iframe); iframe URL NOT fetched — one GET in a later cycle, then generic Bushel collector if the widget is there |
+| AGP | https://www.agp.com/grain/bids | 200 (→ `/bids/`) | No | **Bushel via iframe**: `<iframe src="https://agp.o.bushelsites.com/cash-bids">` inside a `dtn-page` shell | Reclassified dtn → bushel (iframe). **Verified 2026-11-19 (Cycle 7):** one polite GET of the iframe target — 200, standard 7-col Bushel `.cbmod` widget in static HTML, parsed by the generic `bushel_source.py` collector with no changes (status ok). Only 1 row on the page: Chester, NE, Soybeans, Nov 2026, USD/bu; widget header dated Nov 18, 2026 11:40 PM. Registry entry `agp` added (`fetch_agp()`); not yet wired into `source_registry.py` (coordinator decision). |
 | Ag State | https://www.agstate.org/grain | 200 (→ `agstate.org/grain/`) | No | AgriCharts `cashbids.php` embed (`agstate.agricharts.com`, location 84205); **zero `dtn` strings** — Cycle 1's DTN label was wrong | NEW: cashbids.php embed |
 | ALCIVIA | https://www.alcivia.com/cash-bids | read timeout (30 s) | — | — (unreachable this sweep) | Re-check later, no retry |
 | Alliance Grain | https://www.alliance-grain.com/cash-bids | 200 | **Yes — 10 rows, Corn 5 + Soybeans 5, 7-col widget** | Bushel `.cbmod` widget in static HTML; location h2 "Gibson City - West"; compact delivery labels (`Nov26`) | Existing generic Bushel collector — verified against saved HTML, status ok |
@@ -408,12 +408,14 @@ only, per the Cycle 6 brief.
 - **Re-checks for a later cycle:** Ag Partners (503 "Site is offline"
   — may be transient maintenance, not necessarily dead); ALCIVIA,
   CRC, Five Star Coop, Bunge (all read timeouts — one GET each,
-  no aggressive retry); AGP's Bushel iframe target
-  (`agp.o.bushelsites.com/cash-bids`); Gateway FS sub-page
-  (`/gatewayfs/agriculture/cash-bids`); TGM `/Cash-Bids`.
+  no aggressive retry); Gateway FS sub-page
+  (`/gatewayfs/agriculture/cash-bids`); TGM `/Cash-Bids`. (AGP's
+  Bushel iframe target was fetched and verified in Cycle 7 — see the
+  AGP row above.)
 - **Wiring needed (not done here — new files only, no shared-file
   edits in this cycle):** `BUSHEL_SITES` entries for Ace Ethanol +
-  Alliance Grain; `us_elevators_urls.toml` reclassifications
+  Alliance Grain (AGP's entry was added in Cycle 7);
+  `us_elevators_urls.toml` reclassifications
   (Ace/Alliance `unknown → bushel`, AGP `dtn → bushel`, Agtegra /
   Heritage / Linn / Midway / Superior / Ag State `dtn → agricharts-
   embed` once a collector or Playwright route is chosen, Gateway FS

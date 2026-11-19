@@ -365,7 +365,7 @@ name    = "ALCIVIA"
 url     = "https://www.alcivia.com/cash-bids"
 
 [[us.elevators]]
-enabled = true  # enabled 2026-11-19 (Cycle 17 audit): verified live Cycle 6 — Bushel .cbmod widget, 10 rows (Corn 5 + Soybeans 5, Gibson City - West), parsed by generic bushel_source.py; registry + toggle already on; toml still said unknown/disabled on the stale Cycle 1 note
+enabled = true  # enabled 2026-11-19 (Cycle 17 audit): verified live Cycle 6 — Bushel .cbmod widget, 10 rows (Corn 5 + Soybeans 5, Gibson City - West), parsed by generic bushel_source.py; registry + toggle already on; toml still said unknown/disabled on the stale Cycle 1 note; re-verified Cycle 34: same URL now serves Anchor/Cropsey/Colfax, still 10 rows
 type    = "bushel"  # reclassified 2026-11-19 (Cycle 17 audit): unknown → bushel
 name    = "Alliance Grain"
 url     = "https://www.alliance-grain.com/cash-bids"

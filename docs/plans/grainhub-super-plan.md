@@ -551,6 +551,11 @@ Merge order, gates, and conflicts are in `docs/plans/merge-plan.md`.
   Bushel samples #4 + Cycle 11/5 sites re-verified 12/12 exact
   matches (all headers fresh; Wheaton Grain has no capturable
   header date); merge plan extended to Cycle 31 (81 commits, 0 merges).
+- **Cycle 33** (`overnight/grainhub-cycle-33`, 710 tests): Bushel
+  samples #5 + Skyland/AGP re-verified 11/12 exact matches (AGP
+  changed site-side Chester → Aberdeen, registry updated);
+  Bentonville gap from Cycle 32 closed; merge plan extended to
+  Cycle 32 (83 commits, 0 merges).
 
 **Remaining blockers that need Adam:** NASS API key (free) and FAS /
 data.gov key (free); LLM provider + key for Advisor `/ask`; Barchart /

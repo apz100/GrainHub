@@ -84,3 +84,17 @@ def test_bushel_alliance_shape_parses_two_commodities_compact_labels() -> None:
     assert soy["change"] == 0.03
     assert soy["currency"] == "USD"
     assert soy["unit"] == "$/bu"
+
+
+def test_alliance_grain_registry_entry_updated_cycle34() -> None:
+    """Cycle 34: the live page no longer serves Gibson City — it now
+    serves Anchor/Cropsey/Colfax (same URL, still 10 rows). The
+    registry default_location was updated to match; the fixture test
+    above still parses the saved Cycle 6 Gibson City HTML."""
+    site = bushel_source.get_bushel_site("alliance_grain")
+    assert site.company == "Alliance Grain"
+    assert site.url == "https://www.alliance-grain.com/cash-bids"
+    assert site.currency == "USD"
+    assert site.default_location == "Anchor/Cropsey/Colfax"
+    assert "Anchor/Cropsey/Colfax" in site.notes
+    assert site.verified is True

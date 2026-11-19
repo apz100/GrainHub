@@ -413,11 +413,14 @@ BUSHEL_SITES: dict[str, BushelSite] = {
         company="Alliance Grain",
         url="https://www.alliance-grain.com/cash-bids",
         currency="USD",
-        default_location="Gibson City",
+        default_location="Anchor/Cropsey/Colfax",
         verified=True,
         notes="Verified live 2026-11-19 (Cycle 6 DTN sweep): 200, "
         "Bushel .cbmod widget in static HTML, 10 rows (Corn 5 + "
-        "Soybeans 5), 7-col; location h2 'Gibson City - West'.",
+        "Soybeans 5), 7-col; location h2 'Gibson City - West'. "
+        "Re-verified 2026-11-19 (Cycle 34): the same URL now serves "
+        "Anchor/Cropsey/Colfax — still 10 rows (Corn 5 + Soybeans 5), "
+        "header dated Nov 19, 2026. Site-side change.",
     ),
     "agp": BushelSite(
         key="agp",
@@ -1818,7 +1821,10 @@ def fetch_ace_ethanol() -> dict[str, Any]:
 
 
 def fetch_alliance_grain() -> dict[str, Any]:
-    """Fetch Alliance Grain (Gibson City). Verified live 2026-11-19 (Cycle 6 DTN sweep)."""
+    """Fetch Alliance Grain (Anchor/Cropsey/Colfax). Verified live
+    2026-11-19 (Cycle 6 DTN sweep; Gibson City then). Re-verified
+    Cycle 34: same URL now serves Anchor/Cropsey/Colfax, 10 rows.
+    """
     return fetch_bushel_site("alliance_grain")
 
 

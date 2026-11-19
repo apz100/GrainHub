@@ -172,8 +172,8 @@ Peterborough-Norwood), Homeland Grain (Norwich), GFO SellSmart
 |---|---|---|---|---|---|---|
 | Ag Plus | — | https://www.agplusinc.com/markets/cash.php | AgriCharts | corn, wheat | intraday | Verified 2026-11-19. Keep. **Cycle 21 (2026-11-19):** wrapper `fetch_ag_plus` verified live — 36 rows (Corn 12, Beans 12, Wheat 12), 6 locations (Churubusco, Edgerton, Garrett, Monroeville, Raber, South Whitley). |
 | Farmers Win Coop | — | https://www.farmerswin.com/markets/cash.php | AgriCharts | corn, soybean | intraday | Verified. Keep. **Cycle 21 (2026-11-19):** wrapper `fetch_farmers_win_coop` verified live — 171 rows (Corn 90, Soybeans 81), 18 locations. |
-| Heartland Coop | — | https://www.heartlandcoop.com/markets/cash.php | AgriCharts | corn | intraday | Verified. **Config fixed**: `config.toml` used `myaccount.heartlandcoop.com/bids.htm` (no bid marker); switched to cash.php. **Cycle 21 (2026-11-19):** wrapper `fetch_heartland_coop` returned 0 rows — page fetched (2xx) but no `jsquote.php` script tag in the HTML, so `fetch_us_agricharts` bailed before parsing. Site-side change (page restructured or tag removed); wrapper URL/name verified correct against config + Cycle 1 discovery, no wrapper change. Re-probe in a later cycle. **Cycle 22 (2026-11-19): re-probed through the wrapper — still 0 rows, `jsquote.php` tag still missing; wrapper unchanged.** |
-| Heritage Grain Cooperative | — | https://www.heritagegrain.com/markets/cash.php | AgriCharts | corn, wheat | intraday | Verified. Keep. (Page title says "Legacy Grain" — possible rebrand.) **Cycle 21 (2026-11-19):** wrapper `fetch_heritage_grain_cooperative` returned 3 rows only (CORN / BEANS / WHEAT - CASH, 1 each) and the `Location` labels are the commodity names — the page's `<h4>` tags hold commodity headings, not location names, so the generic parser's h4-as-location assumption mislabels them. Wrapper URL/name correct; site-structure quirk, not a wrapper bug. Follow-up: check whether the page genuinely lists only 3 cash bids or more rows in a format the regex skips. **Cycle 22 (2026-11-19): answered — the page lists 14 bids, not 3; 11 forward-month rows were skipped because their notes argument holds an escaped quote (`'DEC \'26'`), and all 14 `<h4>` tags are commodity headings. Generic parser fixed (escaped-quote support + commodity-heading fallback); see "Cycle 22 — Heartland/Mulvane re-probes + Heritage parser fix".** |
+| Heartland Coop | — | https://www.heartlandcoop.com/markets/cash.php | AgriCharts | corn | intraday | Verified. **Config fixed**: `config.toml` used `myaccount.heartlandcoop.com/bids.htm` (no bid marker); switched to cash.php. **Cycle 21 (2026-11-19):** wrapper `fetch_heartland_coop` returned 0 rows — page fetched (2xx) but no `jsquote.php` script tag in the HTML, so `fetch_us_agricharts` bailed before parsing. Site-side change (page restructured or tag removed); wrapper URL/name verified correct against config + Cycle 1 discovery, no wrapper change. Re-probe in a later cycle. **Cycle 22 (2026-11-19): re-probed through the wrapper — still 0 rows, `jsquote.php` tag still missing; wrapper unchanged.** **Cycle 23 (2026-11-19): toggled OFF in `config.toml` `[sources]` (`heartland_coop = false`) — two consecutive 0-row probes (Cycles 21, 22), `jsquote.php` tag missing; the poller would fetch it daily for nothing. Reversible. `us_elevators_urls.toml` entry stays enabled; the toggle is the gate. Not re-probed this cycle, per the Cycle 23 decision.** |
+| Heritage Grain Cooperative | — | https://www.heritagegrain.com/markets/cash.php | AgriCharts | corn, wheat | intraday | Verified. Keep. (Page title says "Legacy Grain" — possible rebrand.) **Cycle 21 (2026-11-19):** wrapper `fetch_heritage_grain_cooperative` returned 3 rows only (CORN / BEANS / WHEAT - CASH, 1 each) and the `Location` labels are the commodity names — the page's `<h4>` tags hold commodity headings, not location names, so the generic parser's h4-as-location assumption mislabels them. Wrapper URL/name correct; site-structure quirk, not a wrapper bug. Follow-up: check whether the page genuinely lists only 3 cash bids or more rows in a format the regex skips. **Cycle 22 (2026-11-19): answered — the page lists 14 bids, not 3; 11 forward-month rows were skipped because their notes argument holds an escaped quote (`'DEC \'26'`), and all 14 `<h4>` tags are commodity headings. Generic parser fixed (escaped-quote support + commodity-heading fallback); see "Cycle 22 — Heartland/Mulvane re-probes + Heritage parser fix".** **Cycle 23 (2026-11-19): confirmed LIVE — `fetch_heritage_grain_cooperative()` returned 14 rows (CORN 6, BEANS 6, WHEAT 2), all with the company fallback location `Heritage Grain Cooperative - Heritage Grain Cooperative`, deliveries Oct 2026–Nov 2027. The Cycle 22 parser fix is confirmed live; follow-up closed.** |
 | Keller | — | https://www.kellergrain.com/markets/cash.php | AgriCharts | corn, soybean, wheat | intraday | Verified. Keep. **Cycle 21 (2026-11-19):** wrapper `fetch_keller` verified live — 14 rows (Corn 7, Soybeans 7), 1 location (Keller). |
 | Kokomo Grain | Kokomo, IN | https://www.kokomograin.com/markets/cash.php?location_filter= | AgriCharts | corn, soybean, wheat | intraday | Verified. Keep. **Cycle 21 (2026-11-19):** wrapper `fetch_kokomo_grain` verified live — 63 rows (Corn 29, Soybeans 24, Wheat 5, NGMO Waxy 5), 8 locations. |
 | Legacy Farmers | — | https://www.legacyfarmers.com/markets/cash.php | AgriCharts | corn, wheat | intraday | Verified. Keep. **Cycle 21 (2026-11-19):** wrapper `fetch_legacy_farmers` verified live — 66 rows (Beans 25, Corn 24, Wheat 17), 10 locations. |
@@ -201,7 +201,7 @@ Bunge `bungeag.com/cash-bids` (redirects to a locations archive — no bid table
 |---|---|---|---|---|---|---|
 | Central Farmers Coop | Salem, SD | https://www.cenfarmcoop.com/markets/cash.php | AgriCharts | corn, soybean, wheat, oats | intraday | **Verified** `writeBidRow`. Added to active config. **Cycle 21 batch B (2026-11-19):** verified through the wrapper `fetch_central_farmers_coop()` — 75 rows (Corn 44, Soybeans 30, Winter Wheat 1; 11 locations). |
 | Anthony Farmers Co-op | Harper, KS | https://www.anthonycoop.com/markets/cash.php | AgriCharts | corn, soybean, wheat, milo, canola | intraday | **Verified** `writeBidRow`. Added to active config. **Cycle 21 batch B (2026-11-19):** verified through the wrapper `fetch_anthony_farmers_coop()` — 9 rows (Corn 3, Milo 3, Soybeans 3; ANTHONY, HARPER, SHARON). |
-| Mulvane Cooperative Union | Mulvane, KS | https://www.mulvanecoop.com/markets/cash.php | AgriCharts | corn, soybean, wheat, milo | intraday | **Verified** `writeBidRow`. Added to active config. **Cycle 21 batch B (2026-11-19):** wrapper `fetch_mulvane_coop()` returns **0 rows** — HTTP 200 but no `jsquote.php` script tag on the page (site-side; not a wrapper bug). Re-probe in a later cycle. **Cycle 22 (2026-11-19): re-probed through the wrapper — still 0 rows, `jsquote.php` tag still missing; wrapper unchanged.** |
+| Mulvane Cooperative Union | Mulvane, KS | https://www.mulvanecoop.com/markets/cash.php | AgriCharts | corn, soybean, wheat, milo | intraday | **Verified** `writeBidRow`. Added to active config. **Cycle 21 batch B (2026-11-19):** wrapper `fetch_mulvane_coop()` returns **0 rows** — HTTP 200 but no `jsquote.php` script tag on the page (site-side; not a wrapper bug). Re-probe in a later cycle. **Cycle 22 (2026-11-19): re-probed through the wrapper — still 0 rows, `jsquote.php` tag still missing; wrapper unchanged.** **Cycle 23 (2026-11-19): toggled OFF in `config.toml` `[sources]` (`mulvane_coop = false`) — two consecutive 0-row probes (Cycles 21, 22), `jsquote.php` tag missing; the poller would fetch it daily for nothing. Reversible. `us_elevators_urls.toml` entry stays enabled; the toggle is the gate. Not re-probed this cycle, per the Cycle 23 decision.** |
 | Brubaker Grain | West Alexandria, OH | https://dtn.brubakergrain.com/ | DTN | corn, soybean, wheat | intraday | Widget ref + live bid rows in search index. Added to active config; confirm rows in Playwright. |
 | Hoffman Ag Service | Marshall, MI | https://dtn.hoffmanag.com/ | DTN | corn, soybean, wheat | intraday | Same as above. Added to active config. |
 | Wilton Farmers Union Elevator | Wilton, ND | https://www.wiltonfarmerselevator.com/index.cfm?show=11&mid=5&theLocation=1&cmid=all&layout=19 | DTN | spring/durum wheat, soybean, corn, flax, canola, sunflower, barley, oats, peas, pinto beans | intraday | Broadest crop list in the survey. Added to active config; confirm rows in Playwright. |
@@ -2868,14 +2868,14 @@ or bid was invented.
 "wilton_farmers_union_elevator": SourceAdapter("wilton_farmers_union_elevator", "us_dtn_source", "fetch_wilton_farmers_union_elevator", "direct", "scraper", 15, 90),
 ```
 
-### Per-entry table — enabled AgriCharts (13, all static-capable)
+### Per-entry table — AgriCharts (13 entries; 11 toggled on, 2 toggled off in Cycle 23 — all static-capable)
 
 | Entry | URL | Status | Adapter key | Toggle |
 | --- | --- | --- | --- | --- |
 | Ag Plus | https://www.agplusinc.com/markets/cash.php | static-capable — writeBidRow confirmed, Cycle 1 discovery. **Cycle 21: verified live through wrapper `fetch_ag_plus` — 36 rows (Corn 12, Beans 12, Wheat 12), 6 locations** | `ag_plus` | true |
 | Farmers Win Coop | https://www.farmerswin.com/markets/cash.php | static-capable — writeBidRow confirmed, Cycle 1 discovery. **Cycle 21: verified live through wrapper `fetch_farmers_win_coop` — 171 rows (Corn 90, Soybeans 81), 18 locations** | `farmers_win_coop` | true |
-| Heartland Coop | https://www.heartlandcoop.com/markets/cash.php | static-capable — writeBidRow confirmed, Cycle 1 discovery. **Cycle 21: wrapper `fetch_heartland_coop` returned 0 rows — page fetched (2xx) but no `jsquote.php` script tag in HTML; site-side change, wrapper URL/name correct, no fix made. Re-probe in a later cycle. **Cycle 22 (2026-11-19): re-probed through the wrapper — still 0 rows, `jsquote.php` tag still missing; wrapper unchanged** | `heartland_coop` | true |
-| Heritage Grain Cooperative | https://www.heritagegrain.com/markets/cash.php | static-capable — writeBidRow confirmed, Cycle 1 discovery; distinct from `heritage_coop` (Heritage Cooperative, agricharts-embed). **Cycle 21: wrapper `fetch_heritage_grain_cooperative` returned 3 rows only (CORN/BEANS/WHEAT - CASH, 1 each); page `<h4>` tags are commodity headings, so `Location` labels are commodity names — site-structure quirk, not a wrapper bug. **Cycle 22 (2026-11-19): the page lists 14 bids, not 3 — 11 forward-month rows were skipped because their notes argument holds an escaped quote (`'DEC \'26'`), and all 14 `<h4>` tags are commodity headings. Generic parser fixed in `us_agricharts_source.py` (escaped-quote support in group/notes + commodity-heading location fallback); verified against the saved Cycle 22 capture to 14 correctly-labelled rows; see "Cycle 22 — Heartland/Mulvane re-probes + Heritage parser fix"** | `heritage_grain_cooperative` | true |
+| Heartland Coop | https://www.heartlandcoop.com/markets/cash.php | static-capable — writeBidRow confirmed, Cycle 1 discovery. **Cycle 21: wrapper `fetch_heartland_coop` returned 0 rows — page fetched (2xx) but no `jsquote.php` script tag in HTML; site-side change, wrapper URL/name correct, no fix made. Re-probe in a later cycle. **Cycle 22 (2026-11-19): re-probed through the wrapper — still 0 rows, `jsquote.php` tag still missing; wrapper unchanged** **Cycle 23 (2026-11-19): toggle flipped to `false` in `config.toml` `[sources]` — two consecutive 0-row probes (Cycles 21, 22), `jsquote.php` tag missing. Reversible; `us_elevators_urls.toml` entry stays enabled, the toggle is the gate.** | `heartland_coop` | false |
+| Heritage Grain Cooperative | https://www.heritagegrain.com/markets/cash.php | static-capable — writeBidRow confirmed, Cycle 1 discovery; distinct from `heritage_coop` (Heritage Cooperative, agricharts-embed). **Cycle 21: wrapper `fetch_heritage_grain_cooperative` returned 3 rows only (CORN/BEANS/WHEAT - CASH, 1 each); page `<h4>` tags are commodity headings, so `Location` labels are commodity names — site-structure quirk, not a wrapper bug. **Cycle 22 (2026-11-19): the page lists 14 bids, not 3 — 11 forward-month rows were skipped because their notes argument holds an escaped quote (`'DEC \'26'`), and all 14 `<h4>` tags are commodity headings. Generic parser fixed in `us_agricharts_source.py` (escaped-quote support in group/notes + commodity-heading location fallback); verified against the saved Cycle 22 capture to 14 correctly-labelled rows; see "Cycle 22 — Heartland/Mulvane re-probes + Heritage parser fix"** | `heritage_grain_cooperative` | true **Cycle 23 (2026-11-19): confirmed LIVE through the wrapper — 14 rows (CORN 6, BEANS 6, WHEAT 2), all with the company fallback location `Heritage Grain Cooperative - Heritage Grain Cooperative`; the Cycle 22 parser fix is confirmed live.** |
 | Keller | https://www.kellergrain.com/markets/cash.php | static-capable — writeBidRow confirmed, Cycle 1 discovery. **Cycle 21: verified live through wrapper `fetch_keller` — 14 rows (Corn 7, Soybeans 7), 1 location** | `keller` | true |
 | Kokomo Grain | https://www.kokomograin.com/markets/cash.php?location_filter= | static-capable — writeBidRow confirmed, Cycle 1 discovery. **Cycle 21: verified live through wrapper `fetch_kokomo_grain` — 63 rows (Corn 29, Soybeans 24, Wheat 5, NGMO Waxy 5), 8 locations** | `kokomo_grain` | true |
 | Legacy Farmers | https://www.legacyfarmers.com/markets/cash.php | static-capable — writeBidRow confirmed, Cycle 1 discovery. **Cycle 21: verified live through wrapper `fetch_legacy_farmers` — 66 rows (Beans 25, Corn 24, Wheat 17), 10 locations** | `legacy_farmers` | true |
@@ -2884,7 +2884,7 @@ or bid was invented.
 | Wheaton Dumont | https://www.wdcoop.com/markets/cash.php | static-capable — verified live Cycle 12: 43 static writeBidRow rows; short month labels ('Nov 26', 'Jan 27'), kept verbatim. **Cycle 21 batch B (2026-11-19): verified THROUGH the wrapper** `fetch_wheaton_dumont()` — 43 rows, identical count to Cycle 12 (Corn 18, Soybeans 16, Spring Wheat 9; 8 locations; deliveries 'Nov 26'–'Oct 27'). No wrapper bug. | `wheaton_dumont` | true |
 | Central Farmers Coop | https://www.cenfarmcoop.com/markets/cash.php | static-capable — writeBidRow confirmed in fetched HTML, Cycle 1 ("enable immediately"). **Cycle 21 batch B (2026-11-19): verified THROUGH the wrapper** `fetch_central_farmers_coop()` — 75 rows (Corn 44, Soybeans 30, Winter Wheat 1; 11 locations: Canova, Dimock, Freeman, Lyons, Marion, Montrose, Mt Vernon, Salem, Springfield, Tyndall, Viborg). No wrapper bug. | `central_farmers_coop` | true |
 | Anthony Farmers Co-op | https://www.anthonycoop.com/markets/cash.php | static-capable — writeBidRow confirmed in fetched HTML, Cycle 1 ("enable immediately"). **Cycle 21 batch B (2026-11-19): verified THROUGH the wrapper** `fetch_anthony_farmers_coop()` — 9 rows (Corn 3, Milo 3, Soybeans 3; 3 locations: ANTHONY, HARPER, SHARON; single delivery 09/01/2026). Thin page but structurally sound — 3 locations × 3 commodities, one delivery month each. No wrapper bug. | `anthony_farmers_coop` | true |
-| Mulvane Coop | https://www.mulvanecoop.com/markets/cash.php | static-capable — writeBidRow confirmed in fetched HTML, Cycle 1 ("enable immediately"). **Cycle 21 batch B (2026-11-19): FAILED through the wrapper** `fetch_mulvane_coop()` — HTTP 200 but **0 rows**: `[US-AG WARN] Mulvane Coop: jsquote script tag not found in page`. The page no longer carries the `jsquote.php` script tag the generic parser requires, so `fetch_us_agricharts` returns empty before parsing any rows. **Not a wrapper bug** — the wrapper passes the exact toml URL/name (`https://www.mulvanecoop.com/markets/cash.php`, "Mulvane Coop"); the failure is site-side (page template changed since Cycle 1, or the cash page is now JS-rendered / served differently). Wrapper left unchanged; toggle stays `true` for now but the adapter yields nothing until the site is re-probed. **Follow-up (later cycle, 1 GET):** re-probe the cash page and inspect what it serves now — if the jsquote tag is gone for good, the entry needs either a new static route or a toggle flip to `false`. **Cycle 22 (2026-11-19): re-probed through the wrapper — still 0 rows, `jsquote.php` tag still missing; wrapper unchanged.** | `mulvane_coop` | true |
+| Mulvane Coop | https://www.mulvanecoop.com/markets/cash.php | static-capable — writeBidRow confirmed in fetched HTML, Cycle 1 ("enable immediately"). **Cycle 21 batch B (2026-11-19): FAILED through the wrapper** `fetch_mulvane_coop()` — HTTP 200 but **0 rows**: `[US-AG WARN] Mulvane Coop: jsquote script tag not found in page`. The page no longer carries the `jsquote.php` script tag the generic parser requires, so `fetch_us_agricharts` returns empty before parsing any rows. **Not a wrapper bug** — the wrapper passes the exact toml URL/name (`https://www.mulvanecoop.com/markets/cash.php`, "Mulvane Coop"); the failure is site-side (page template changed since Cycle 1, or the cash page is now JS-rendered / served differently). Wrapper left unchanged; toggle flipped to `false` in Cycle 23 (see below). **Follow-up (later cycle, 1 GET):** re-probe the cash page and inspect what it serves now — if the jsquote tag is gone for good, the entry needs either a new static route or a toggle flip to `false`. **Cycle 23: resolved — toggle flipped to `false`; re-probe only if the site is believed to have restored the tag.** **Cycle 22 (2026-11-19): re-probed through the wrapper — still 0 rows, `jsquote.php` tag still missing; wrapper unchanged.** **Cycle 23 (2026-11-19): toggle flipped to `false` in `config.toml` `[sources]` — two consecutive 0-row probes (Cycles 21, 22), `jsquote.php` tag missing. Reversible; `us_elevators_urls.toml` entry stays enabled, the toggle is the gate.** | `mulvane_coop` | false |
 
 ### Per-entry table — enabled DTN (13, all JS-only)
 
@@ -3274,7 +3274,84 @@ Full API suite: **696 passed, 0 failed** (692 baseline + 4 new).
 1. **Heartland Coop / Mulvane Coop — decide in a later cycle:**
    alternate futures source in the generic collector, or flip
    both toggles to `false`. Two consecutive 0-row probes each;
-   do not keep re-probing them every cycle without a fix plan.
+   do not keep re-probing them every cycle without a fix plan. **Cycle 23 (2026-11-19): decided — both toggles flipped to `false` in `config.toml` `[sources]` (see "Cycle 23 — Heritage live confirmation + Heartland/Mulvane toggle-off").**
 2. **Heritage Grain Cooperative — confirm live (1 GET):** call
    `fetch_heritage_grain_cooperative()` once in a later cycle;
-   expect 14 rows with the company fallback location.
+   expect 14 rows with the company fallback location. **Cycle 23 (2026-11-19): confirmed live — 14 rows, company fallback location (see Cycle 23 section).**
+
+## Cycle 23 — Heritage live confirmation + Heartland/Mulvane toggle-off (2026-11-19)
+
+### Heritage Grain Cooperative — parser fix confirmed live (1 GET)
+
+One live wrapper call, `fetch_heritage_grain_cooperative()`, run from
+the API venv (the wrapper's existing Chrome User-Agent, unchanged).
+Result: **14 rows**, exactly as the Cycle 22 parser fix predicted —
+so the fix is confirmed live, and the Cycle 22 follow-up is closed.
+
+- Commodities: CORN 6, BEANS 6, WHEAT 2 (from the `Name` field:
+  `CORN - CASH`, `BEANS - CASH`, `WHEAT - CASH` plus the DEC 2026 /
+  JAN / FEB / MAR / FALL 2027 forward rows and `WHEAT - JUL 2027`).
+- Location: all 14 rows carry the company fallback location
+  `Heritage Grain Cooperative - Heritage Grain Cooperative` — the
+  page's `<h4>` tags are commodity headings, so the Cycle 22
+  commodity-heading fallback applies, as designed.
+- Deliveries: Oct 2026–Nov 2027 (cash plus forward months).
+- Standard 10 columns (`Location`, `Name`, `Delivery`,
+  `Delivery End`, `Futures Month`, `Futures Price`, `Change`,
+  `Basis`, `Bushel Cash Price`, `MT Cash Price`).
+- No live price, basis, or bid is recorded here — counts and
+  structure only.
+
+### Heartland Coop / Mulvane Coop — toggles flipped to `false`
+
+Per the coordinator's decision, both `[sources]` toggles in
+`config.toml` were set to `false` (`heartland_coop`,
+`mulvane_coop`). They were **not re-probed this cycle** — two
+consecutive 0-row wrapper probes each (Cycles 21 and 22) already
+established the failure, and the pages no longer carry the
+`jsquote.php` script tag the generic parser requires. The poller
+would fetch them daily for nothing; toggling off is reversible
+(flip back to `true` and re-probe if a site restores the tag).
+
+Split to note for future readers: the `us_elevators_urls.toml`
+entries for both sites stay `enabled = true` (Heartland Coop,
+`https://www.heartlandcoop.com/markets/cash.php`; Mulvane Coop,
+`https://www.mulvanecoop.com/markets/cash.php`). The `[sources]`
+toggle is the gate that seeding and polling honour — the toml
+`enabled` flag alone does not re-enable a source. The wrappers
+(`fetch_heartland_coop`, `fetch_mulvane_coop`) and registry rows
+are unchanged, so re-enabling is a one-line toggle flip.
+
+Effect on seeding: the seeded set drops from 104 to 102 adapters
+(the toggle-gating tests derive the disabled set from the real
+toggles, so they stay correct without hardcoded counts).
+
+### Tests
+
+1 new test in
+`GrainBids/grainbids/apps/api/tests/test_source_toggle_gating.py`
+(`test_cycle23_zero_row_agricharts_adapters_toggled_off`): both
+toggles are `false`, both keys are in the derived disabled set,
+sibling adapters (`heritage_grain_cooperative`, `keller`) stay on,
+an explicit-key seed of both plus `keller` creates only `keller`
+and records both in `skipped_disabled`, and pre-existing rows for
+both stay out of the due list. `test_config_toggles_exist_for_all_new_adapters`
+in `tests/test_us_agricharts_dtn_adapters.py` was updated to expect
+`false` for exactly these two AgriCharts keys (all other AgriCharts
+toggles still `true`).
+
+Full API suite: **697 passed, 0 failed** (696 baseline + 1 new).
+
+### AgriCharts futures-fallback design note (design only, 0 GETs)
+
+With both toggles off, the open question is what the generic collector should do when a page no longer carries the `jsquote.php` tag. A design note ([agricharts-futures-fallback-design.md](agricharts-futures-fallback-design.md)) read `fetch_us_agricharts` and `fmn_source.py` and found the key fact: **basis is in the `writeBidRow` row itself** (arg 1), not in the feed — only Futures Price and the two cash prices derived from it (futures + basis) depend on jsquote, while Name, Basis, Delivery, Location and futures symbol are page-native, Futures Month is decodable from the symbol, and Change is never filled anyway. It weighs four options — (a) parse rows with futures/cash `None` (the FMN Cycles 10–11 precedent), (b) derive the feed URL from the row symbols and probe it (exact 2-GET-per-site probe given), (c) leave as-is with periodic re-probes, (d) futures from another feed — and recommends (a), with the (b) probe run first on Heartland only. No code was changed; the decision needed from Adam/coordinator is whether basis-only rows may flow into the pipeline (i.e. downstream handles `None` futures/cash) and whether Futures Month may be decoded from the symbol, with toggles staying off until the chosen option is implemented and probe-confirmed.
+
+### Follow-ups
+
+1. **Heartland / Mulvane — re-enable path:** if either site is
+   believed to have restored the `jsquote.php` tag (or the generic
+   collector gains an alternate futures source), flip its toggle
+   back to `true` and re-probe once through the wrapper. Do not
+   re-probe them routinely while the toggles are off.
+2. **Heritage — no follow-up.** Live-confirmed at 14 rows; nothing
+   open.

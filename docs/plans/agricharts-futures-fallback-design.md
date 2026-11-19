@@ -1,0 +1,170 @@
+# AgriCharts collector: what to do when jsquote.php is missing
+
+Status: design only (Cycle 23, 2026-11-19). No code changed, 0 GETs.
+Applies to `us_agricharts_source.py` (`fetch_us_agricharts`).
+Related precedent: `fmn_source.py` (Cycles 10–11).
+
+## 1. The problem
+
+2 of the 13 generic-AgriCharts sites — Heartland Coop and
+Mulvane Coop (`heartlandcoop.com` / `mulvanecoop.com`, both
+`/markets/cash.php`) — stopped carrying the `jsquote.php`
+`<script>` tag. Two consecutive 0-row probes each (Cycles 21,
+22); the pages still return HTTP 200. Same cause at both, so
+plausibly an AgriCharts template change rather than two
+independent breakages — unconfirmed, and the other 11 sites
+still carry the tag. Cycle 23 flips both toggles off; the open
+question is what the collector should do when the tag is
+missing, so the sites can come back instead of staying dark.
+
+## 2. Current behaviour
+
+`fetch_us_agricharts` searches the page for the jsquote tag
+(`_JSQUOTE_SCRIPT_RX`: `jsquote.php?varname=…&symbols=…`). If
+the tag is absent it prints a warning and returns an empty
+DataFrame **before parsing any rows** — even though the
+`writeBidRow()` rows may still be in the HTML. Same early
+return if the jsquote feed itself returns no data.
+
+## 3. Field analysis: what actually depends on the feed
+
+Verified against `_WRITEBIDROW_RX` and the row-building code
+(`writeBidRow(name, basis, manual, eod, incwt, rounding, start,
+end, location, group, notes, weight, rowclass, chartsym,
+quotes['SYMBOL'])`):
+
+| Row field | Source | Needs jsquote? |
+|---|---|---|
+| Name | arg 0 | No |
+| Basis (¢/bu) | arg 1, signed | **No — in the row itself** |
+| Delivery / Delivery End | args 6–7, verbatim | No |
+| Location | surrounding `<h4>` (company fallback) | No |
+| Futures symbol | arg 14 (`quotes['SYMBOL']`) | No |
+| Futures Month | feed `month` today | No — decodable from symbol (FMN does this) |
+| Futures Price | feed `last` | **Yes** |
+| Bushel / MT Cash Price | futures + basis | **Yes (via futures)** |
+| Change | — | No — hardcoded `""`; never filled, feed or no feed |
+
+A missing tag costs exactly the futures price and the two cash
+prices derived from it; basis, delivery, location, name and
+symbol are all page-native. Basis is the elevator-specific
+signal (futures are common across sites), so a basis-only row
+is still real, published data.
+
+## 4. FMN precedent
+
+`fmn_source.py` already degrades this way (Cycles 10–11):
+on a feed failure or an empty feed it still parses the page.
+Futures-linked rows get `futures_price` / `change` /
+`cash_price` = `None`, basis as published, `futures_month`
+decoded from the contract symbol, and a note saying the values
+come from the external feed and are not in the static HTML.
+Nothing is invented. The same pattern applies directly here —
+the only difference is that the US collector currently bails
+before parsing instead of degrading.
+
+## 5. Options
+
+### (a) Parse rows with futures / cash None (FMN precedent)
+
+Drop the early return; parse the `writeBidRow` rows, set
+Futures Price / Bushel Cash / MT Cash to `None` (or empty, per
+the column's convention), keep Basis / Delivery / Location /
+Name / Symbol, decode Futures Month from the symbol (reuse the
+FMN month-code decoder), and attach a note that futures and
+cash come from the missing jsquote feed. A feed fetch failure
+(tag present, feed down) degrades the same way.
+- Pros: recovers both sites, no new network dependency; basis
+  (the per-elevator signal) survives; FMN-consistent; honest
+  (None + note, never invented); other 11 sites unaffected.
+- Cons: partial rows flow downstream — every consumer must
+  treat a missing cash price as missing, not zero.
+- Returns for Heartland/Mulvane: one row per bid, Basis /
+  Delivery / Location filled, Futures Price and cash `None`,
+  Futures Month decoded from the symbol.
+
+### (b) Derive the jsquote feed URL without the tag
+
+The tag supplies `varname` and `symbols`. Symbols are
+recoverable from the page itself — the row regex already
+captures each row's futures symbol (group 7) — and `varname`
+is conventionally `quotes` (FMN's verbatim feed URL uses it).
+- Pros: if the feed still answers, full rows (futures + cash)
+  with no behaviour change downstream.
+- Cons: unproven — needs a probe; if AgriCharts removed the
+  tag because the feed is gone for these sites, this fails
+  exactly like today; adds a code path that guesses a URL
+  parameter.
+- Probe (exact, 2 GETs per site): (1) GET the cash page,
+  confirm `writeBidRow` rows are still present; collect the
+  distinct symbols from the rows' quote tokens. (2) GET
+  `https://www.agricharts.com/marketdata/jsquote.php?varname=quotes&symbols=<comma-joined
+  symbols>&fields=name,month,last&settle=0&displayType=bids`
+  and check for HTTP 200 plus a populated `quotes` object
+  covering those symbols. Heartland first (2 GETs); Mulvane
+  (2 more) only if Heartland's feed answers.
+
+### (c) Leave as-is (0 rows, toggles off), re-probe periodically
+
+No code change. Both sites stay dark until a later cycle
+re-probes and finds the tag back (or a new static route).
+- Pros: zero code, zero risk of partial rows downstream.
+- Cons: loses both sites' basis data indefinitely; the
+  re-probe has no trigger and drifts unless scheduled; if the
+  template change is permanent, this is a permanent loss of
+  2 of 13 sites. Returns for Heartland/Mulvane: nothing.
+
+### (d) Futures from another feed (noted, not recommended)
+
+Fill futures from a different source (e.g. the platform's own
+futures feed) and compute cash as futures + basis — the Cycle 22
+follow-up's "alternate futures source". But it couples a cash-bid
+collector to a futures feed it does not own, and the futures must
+match the row's contract month exactly or the cash price is wrong.
+Park it; (a) gets the basis back without it, and (b) is cheaper.
+
+## 6. Recommendation: (a), with (b) as a one-off probe
+
+Implement (a). The deciding fact is in §3: **basis is in the
+row, not the feed**, so the surviving data is complete for the
+thing that actually differs by elevator. Basis-only rows are
+useful and honest, the FMN collector already proved the
+pattern, and it needs no new network call or guessed URL.
+Decode Futures Month from the symbol so that column survives
+too. Run the (b) probe first anyway (2 GETs, Heartland only):
+if the feed still answers, (b) is strictly better for that
+site and (a) is the fallback. Either way, (a) is what ships —
+(b) alone leaves the collector brittle the next time a tag
+disappears.
+
+## 7. Tests needed for (a)
+
+In `tests/test_us_agricharts_source.py`, mocked HTTP,
+synthetic fixtures (invented values, neutral naming):
+1. Fixture with `writeBidRow` rows and **no** jsquote tag →
+   rows returned; Basis / Delivery / Location / Name / Symbol
+   filled; Futures Price and both cash prices `None` (or
+   empty, per convention); note present.
+2. Same fixture **with** the tag → unchanged behaviour
+   (futures + cash filled) — regression guard for the
+   other 11 sites.
+3. Futures Month decoded from the symbol matches the feed
+   month on the tagged fixture.
+4. Row whose symbol is absent from the quotes map → `None`
+   futures/cash, no crash (already true via `quotes.get`).
+5. Downstream: normalized ingest treats `None` cash as
+   missing, not `0` — test at the adapter/normalization
+   layer before re-enabling either site.
+6. Full API suite stays green (696 passed baseline).
+
+## 8. Decision needed
+
+Coordinator/Adam: approve (a) for implementation in a later
+cycle. Two sub-decisions: (i) confirm partial (basis-only)
+rows may flow into the pipeline — i.e. downstream handles
+`None` futures/cash — or whether they should be flagged /
+quarantined until that is proven (test 5 above); (ii)
+confirm Futures Month may be decoded from the symbol rather
+than left `None`. Toggles stay off until (a) is implemented
+and at least one site is probe-confirmed returning rows;
+re-enabling is a separate step, not part of this design.

@@ -116,7 +116,7 @@ usda_mirror_fsg = true  # same report, second host (FS Grain)
 # static pages, no browser needed; registry wiring is the coordinator's step.
 ag_plus = true  # US AgriCharts writeBidRow, Cycle 20 adapter
 farmers_win_coop = true  # US AgriCharts writeBidRow, Cycle 20 adapter
-heartland_coop = true  # US AgriCharts writeBidRow, Cycle 20 adapter
+heartland_coop = false  # US AgriCharts writeBidRow, Cycle 20 adapter — toggled OFF Cycle 23 (2026-11-19): 0 rows on two consecutive wrapper probes (Cycles 21, 22), page no longer carries the jsquote.php script tag the generic parser requires; the poller would fetch it daily for nothing. Reversible — flip back to true and re-probe if the site restores the tag. us_elevators_urls.toml entry stays enabled=true; the [sources] toggle is the gate.
 heritage_grain_cooperative = true  # US AgriCharts writeBidRow, Cycle 20 adapter (distinct from heritage_coop, an agricharts-embed site)
 keller = true  # US AgriCharts writeBidRow, Cycle 20 adapter
 kokomo_grain = true  # US AgriCharts writeBidRow, Cycle 20 adapter
@@ -126,7 +126,7 @@ west_con = true  # US AgriCharts writeBidRow, verified live 2026-11-19 (Cycles 1
 wheaton_dumont = true  # US AgriCharts writeBidRow, verified live 2026-11-19 (Cycle 12; 43 rows, short month labels)
 central_farmers_coop = true  # US AgriCharts writeBidRow, Cycle 20 adapter
 anthony_farmers_coop = true  # US AgriCharts writeBidRow, Cycle 20 adapter
-mulvane_coop = true  # US AgriCharts writeBidRow, Cycle 20 adapter
+mulvane_coop = false  # US AgriCharts writeBidRow, Cycle 20 adapter — toggled OFF Cycle 23 (2026-11-19): 0 rows on two consecutive wrapper probes (Cycles 21, 22), page no longer carries the jsquote.php script tag the generic parser requires; the poller would fetch it daily for nothing. Reversible — flip back to true and re-probe if the site restores the tag. us_elevators_urls.toml entry stays enabled=true; the [sources] toggle is the gate.
 # Cycle 20 — US DTN adapters (us_dtn_source.py): all JS-only, no static bid
 # rows — the adapter returns empty until a Playwright render check in a
 # later cycle proves a page collectable, so all stay OFF here.

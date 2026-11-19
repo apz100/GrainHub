@@ -329,12 +329,12 @@ branch to GitHub frequently.
 - Elevator Ops: which ERP first (Agris / Agvance / AgTrax)?
 - US scope: Corn Belt first, or Corn Belt + Gulf / PNW from day one?
 
-## 9. Progress — Cycles 1–21 (2026-11-18/19)
+## 9. Progress — Cycles 1–22 (2026-11-18/19)
 
-Twenty-one overnight autonomous cycles on branches `overnight/grainhub-cycle-1`
-through `overnight/grainhub-cycle-21`, none merged to master. Full API test
-suite grew **179 → 291 → 320 → 359 → 364 → 380 → 407 → 407 → 454 → 488 → 536 → 558 → 590 → 617 → 629 → 638 → 643 → 646 → 656 → 692 → 692 passed, 0 failed**
-across the twenty-one cycles. Full detail in `docs/plans/overnight-cycle-N-report.md`.
+Twenty-two overnight autonomous cycles on branches `overnight/grainhub-cycle-1`
+through `overnight/grainhub-cycle-22`, none merged to master. Full API test
+suite grew **179 → 291 → 320 → 359 → 364 → 380 → 407 → 407 → 454 → 488 → 536 → 558 → 590 → 617 → 629 → 638 → 643 → 646 → 656 → 692 → 692 → 696 passed, 0 failed**
+across the twenty-two cycles. Full detail in `docs/plans/overnight-cycle-N-report.md`.
 Merge order, gates, and conflicts are in `docs/plans/merge-plan.md`.
 
 - **Cycle 1** (`overnight/grainhub-cycle-1`, 179 tests): Phase 0 hardening,
@@ -484,6 +484,12 @@ Merge order, gates, and conflicts are in `docs/plans/merge-plan.md`.
   commodities (h4-as-commodity pages); agricharts collector sends
   a Chrome UA, not GrainHub-Research/1.0 (pre-existing, kept);
   merge plan extended to Cycle 20 (59 commits, 0 merges).
+- **Cycle 22** (`overnight/grainhub-cycle-22`, 696 tests): Heritage
+  parser fix — escaped quotes in writeBidRow notes now handled
+  (14/14 rows vs 3/14) plus h4-as-commodity fallback; Heartland +
+  Mulvane still 0 rows on re-probe (2nd consecutive failure each);
+  staleness watch unchanged (all four still exactly one day
+  behind); merge plan extended to Cycle 21 (61 commits, 0 merges).
 
 **Remaining blockers that need Adam:** NASS API key (free) and FAS /
 data.gov key (free); LLM provider + key for Advisor `/ask`; Barchart /
@@ -509,15 +515,15 @@ page is an AgriCharts embed (licensed, not fetched); Mae-Mart's
 futures proxy is live and the collector now fills `futures_price`
 (cash NOT computed — open decision); the registry holds 119 adapters
 (13 agricharts wrappers verified live in Cycle 21 — 11 return rows,
-642 total; Heartland + Mulvane return 0 rows site-side, possibly an
-AgriCharts template change; Heritage mislabels locations as
-commodities); seeding + poller now honour `[sources]` toggles; the
-FMN collector is complete for the default view (453 rows, all 449
-futures-linked rows filled via the `jsquote.php` feed); Five Star's
-wpDataTables collector is built (299 rows); the DTN sweep found only
-2 of 28 sites static-HTML, 20 JS-only, 6 unreachable, with Al-Corn
-the only classic inline `CashBidTable` fit for the DTN collector
-(Sunrise is a second classic-DTN fit, enabled in Cycle 10). A
-Playwright render check of the DTN-family JS-only sites, the FMN
-filtered view, and Mapleview's Grain Discovery shell still needs a
-live browser session.
+642 total; Heartland + Mulvane return 0 rows site-side on two
+consecutive probes, possibly an AgriCharts template change; Heritage
+parser fixed in Cycle 22 to 14/14 rows); seeding + poller now honour
+`[sources]` toggles; the FMN collector is complete for the default
+view (453 rows, all 449 futures-linked rows filled via the
+`jsquote.php` feed); Five Star's wpDataTables collector is built
+(299 rows); the DTN sweep found only 2 of 28 sites static-HTML, 20
+JS-only, 6 unreachable, with Al-Corn the only classic inline
+`CashBidTable` fit for the DTN collector (Sunrise is a second
+classic-DTN fit, enabled in Cycle 10). A Playwright render check of
+the DTN-family JS-only sites, the FMN filtered view, and Mapleview's
+Grain Discovery shell still needs a live browser session.

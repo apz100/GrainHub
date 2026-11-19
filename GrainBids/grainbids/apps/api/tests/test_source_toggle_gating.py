@@ -5,7 +5,10 @@ Seeding and scheduled polling must honour the ``config.toml``
 
 - ``seed_sources_from_registry`` skips toggled-off adapters (today
   ``bunge`` and ``mapleview`` plus the 13 DTN adapters, whose
-  toggles are off until a Playwright render check verifies them)
+  toggles are off until a Playwright render check verifies them,
+  plus ``heartland_coop`` and ``mulvane_coop``, toggled off in
+  Cycle 23 after two consecutive 0-row probes — their pages no
+  longer carry the ``jsquote.php`` script tag)
   and records them in ``SeedSourcesResult.skipped_disabled``.
 - ``list_due_sources`` excludes a toggled-off adapter's ``Source`` row
   even if the row already exists (defence in depth — a row seeded
@@ -41,8 +44,12 @@ from app.services.source_toggles import disabled_adapter_keys, is_adapter_enable
 ORG_ID = uuid.uuid4()
 # Derived from the real config.toml toggles (not hardcoded): today
 # bunge + mapleview + the 13 DTN adapters (toggles off until a
-# Playwright render check verifies them). disabled_adapter_keys
-# returns them sorted, matching seed_sources_from_registry.
+# Playwright render check verifies them) + heartland_coop and
+# mulvane_coop (toggled off in Cycle 23 — two consecutive 0-row
+# wrapper probes, Cycles 21–22; the pages no longer carry the
+# jsquote.php script tag the generic parser requires).
+# disabled_adapter_keys returns them sorted, matching
+# seed_sources_from_registry.
 DISABLED_TODAY = disabled_adapter_keys(sorted(ADAPTERS))
 
 
@@ -163,5 +170,51 @@ def test_due_sources_exclude_adapter_disabled_after_seeding(monkeypatch: pytest.
         due_keys = {row.adapter_key for row in due}
         assert "agricharts" not in due_keys
         assert "glg" in due_keys
+    finally:
+        session.close()
+
+
+def test_cycle23_zero_row_agricharts_adapters_toggled_off() -> None:
+    """Heartland Coop / Mulvane Coop toggles are off (Cycle 23) and seeding skips them.
+
+    Both pages returned 0 rows on two consecutive wrapper probes
+    (Cycles 21 and 22) because they no longer carry the ``jsquote.php``
+    script tag the generic parser requires; the poller would fetch
+    them daily for nothing. The toggle-off is reversible and the
+    ``us_elevators_urls.toml`` entries stay enabled — the ``[sources]``
+    toggle is the gate, so asserting the toggle state (not the toml
+    entry) is what matters here. Seeding is asserted two ways: the
+    derived disabled set contains both keys, and an explicit-key seed
+    of both plus a live adapter creates only the live one.
+    """
+    assert is_adapter_enabled("heartland_coop") is False
+    assert is_adapter_enabled("mulvane_coop") is False
+    assert "heartland_coop" in DISABLED_TODAY
+    assert "mulvane_coop" in DISABLED_TODAY
+    # Sibling adapters on the same static pages stay on.
+    assert is_adapter_enabled("heritage_grain_cooperative") is True
+    assert is_adapter_enabled("keller") is True
+
+    session = _session()
+    try:
+        result = seed_sources_from_registry(
+            session,
+            org_id=ORG_ID,
+            adapter_keys=["heartland_coop", "mulvane_coop", "keller"],
+        )
+        assert result.created == 1
+        assert result.skipped_disabled == ["heartland_coop", "mulvane_coop"]
+        keys = {row.adapter_key for row in session.query(Source).all()}
+        assert keys == {"keller"}
+
+        # Defence in depth: a pre-existing row for a toggled-off
+        # adapter must not come back as due.
+        _insert_source_row(session, adapter_key="heartland_coop")
+        _insert_source_row(session, adapter_key="mulvane_coop")
+        due = list_due_sources(session, now=datetime.now(timezone.utc))
+        due_keys = {row.adapter_key for row in due}
+        assert "heartland_coop" not in due_keys
+        assert "mulvane_coop" not in due_keys
+        assert "keller" in due_keys
     finally:
         session.close()

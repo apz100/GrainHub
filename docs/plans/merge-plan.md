@@ -1395,3 +1395,229 @@ Heartland + Mulvane re-probes; Heritage parser question;
 agricharts User-Agent decision; Chadbourn + Hamer + Skyland
 3370/3621 staleness watch; Mae-Mart cash-price decision;
 poller scheduling decision; currency decision.
+
+## Cycle 22 (added Cycle 23)
+
+### 0h. Branch chain — Cycle 22, verified from git
+
+The chain is **still linear**: `git log --oneline
+master..overnight/grainhub-cycle-22` gives **63 commits** (61
+through Cycle 21 + 2 in Cycle 22), **0 merge commits**, no
+branch points. Cycle 22's first commit `f250e8c` has parent
+`726f865` (the Cycle 21 tip), and merge-base(21, 22) is the
+Cycle 21 tip `726f865`. Per-branch commit count for Cycle 22: 2
+(`f250e8c`, `7704d02`).
+
+That means the §2 procedure continues unchanged: merge Cycle 22
+after 21, one branch at a time with `--no-ff`, running the §3
+gates at each step. A single fast-forward of `master` to the
+`cycle-22` tip (`7704d02`) would give the same tree as twenty-two
+sequential merges; prefer the sequential merges for the same
+reason as §0 (a review checkpoint and stop point per cycle).
+
+(The Cycle 21 section's "61 commits master..cycle-21" figure
+was re-verified in Cycle 23 and is correct — no correction
+needed.)
+
+### 1h. What the branch contains (Cycle 22)
+
+| Branch | Tip | Tests at tip | Web build at tip |
+|---|---|---|---|
+| Cycle 22 | `7704d02` | 696 passed, 0 failed | Not re-run (no web files changed; last full pass Cycle 17) |
+
+Tip commit hash (full): `7704d0294a623168f869589e40e0d9708c660f55`.
+No web files changed in Cycle 22, so there is no fresh
+web-build evidence in this range. 7 files changed in Cycle 22
+(799 insertions, 33 deletions): the collector fix, its tests
+and fixture, the price-source catalogue, the merge plan, the
+super-plan §9, and the Cycle 22 report itself.
+
+- **Cycle 22** (`overnight/grainhub-cycle-22`; commits `f250e8c`,
+  `7704d02`): Heritage Grain Cooperative parser fix — the page
+  lists **14 `writeBidRow` bids, not 3**. The 11 forward-month
+  rows (CORN/BEANS DEC 2026, JAN/FEB/MAR 2027, FALL 2027; WHEAT
+  JUL 2027) were skipped because their delivery label sits in
+  the notes argument with an escaped quote (`'DEC \'26'` etc.)
+  and the regex's group/notes fields were `'[^']*'`, which
+  stops at the escaped quote and fails the whole row. Fix is in
+  the generic collector (`us_agricharts_source.py`, 49
+  insertions, 3 deletions): group (arg 9) and notes (arg 10)
+  changed from `'[^']*'` to `'(?:[^'\\]|\\.)*'`. Verified
+  offline against the saved capture: 14/14 rows match (was
+  3/14), and end-to-end with mocked futures: 14 rows, single
+  location `Heritage Grain Cooperative - Heritage Grain
+  Cooperative`. New `_is_commodity_heading(h4_text, row_name)`:
+  true when the `<h4>` exactly equals the row's commodity name
+  (case-insensitive) or starts with a commodity word; such rows
+  fall back to the company name as location (same `Company -
+  Company` shape West-Con already produces), with a
+  word-boundary check keeping real place names out
+  (`Wheatland`, `Cornwall` tested). **4 new tests** (escaped-
+  quote regex parsing, `_is_commodity_heading` unit cases,
+  mocked-HTTP end-to-end fallback with a genuine `Riverside`
+  heading still used, and a structure-only saved-HTML test
+  that skips if the capture is absent) plus a synthetic
+  fixture (all values invented, neutral `Test Elevator`
+  naming). The coordinator independently verified the fix
+  against the saved capture: 14 matches (was 3),
+  `jsquote.php` tag present. No live re-call of the Heritage
+  wrapper after the fix — the 3-GET budget was spent; the next
+  live wrapper call should return 14 rows (1 GET, later cycle).
+- **Heartland + Mulvane re-probes — still failing (2 GETs):**
+  both return 0 rows, HTTP 200, `[US-AG WARN] ... jsquote
+  script tag not found in page` — same failure as Cycle 21,
+  second consecutive failure each, so not transient. Wrappers
+  unchanged. Worker recommendation (recorded, not acted on):
+  either a generic-collector alternate futures source (covers
+  both at once, as Cycle 21 anticipated) or flip both toggles
+  to `false`. Do not re-probe them every cycle without a fix
+  plan.
+- **Staleness re-checks — watch UNCHANGED (4 GETs):** Smithfield
+  Chadbourn 2294 (1 row, Soybeans), Smithfield Hamer 2179 (1
+  row, Soybeans), Skyland Hugoton 3370 (6 rows), Skyland
+  Vilas-Walsh 3621 (5 rows) — all HTTP 200 with header **Wed,
+  Nov 18, 2026**, all still exactly one day behind. Chadbourn
+  is on its 3rd consecutive stale probe (Cycles 13, 14, 22);
+  Hamer, Hugoton, and Vilas-Walsh on their 2nd each. The lag
+  is persistent, not worsening. The standing collector note
+  stands: a same-day freshness gate would fail these four
+  daily, so they need an exemption/lag tolerance if such a
+  gate is ever added. A daytime re-check in a later cycle
+  could test whether the widgets refresh later in the day
+  rather than overnight. The coordinator independently
+  confirmed the Nov 18 headers in the saved Chadbourn +
+  Hugoton files. (URL note: the task brief listed the
+  Smithfield URLs with a `www.` prefix, but the registry
+  records them without it — the worker used the registry
+  URLs, correctly.)
+- **Price-source catalogue edited** (213 insertions, 14
+  deletions — 227 lines changed): the Heritage 14-row
+  finding and parser fix, the Heartland/Mulvane second
+  consecutive failures, and the unchanged staleness watch.
+- **Merge plan extended to Cycle 21** (200 lines added, 0
+  removed). The Cycle 20 section's "59 commits" figure
+  re-verified correct in Cycle 22.
+- **Super-plan §9 extended to Cycle 21** (26 insertions, 16
+  deletions — heading/intro now cover Cycles 1–21, test chain
+  179 → 692; Cycle 21 bullet added; blockers updated —
+  agricharts wrappers verified, Heartland/Mulvane site-side
+  failures, Heritage mislabelling).
+- **Boundary applied:** zero references to the excluded
+  elevator in any new Cycle 22 code, tests, fixtures, or docs
+  (verified by grep on the added lines; the single match in
+  the range diff is the report's own boundary-attestation
+  heading).
+  Full detail: `docs/plans/overnight-cycle-22-report.md`.
+
+### 3h. Gates — updated expectations for Cycle 22
+
+§3 applies unchanged, with these per-cycle numbers:
+
+1. **Full API test suite** — expect Cycle 22: 696 — **0 failed**.
+   (Cycle 21 ended at 692; Cycle 22 adds 4 Heritage parser
+   tests.)
+2. **Web build** — re-run once at the Cycle 22 step so the final
+   tree is verified as a whole. No web files changed in Cycle 22,
+   so a build failure at this step would point at an earlier
+   cycle, not the branch being merged. Last full pass was
+   Cycle 17.
+3. **Alembic chain** — head is **still `0019`**. Verified from
+   git: no migration file was added in Cycle 22 (`git log` on
+   the Alembic versions dir in `cycle-21..cycle-22` is empty, and
+   the file list at the Cycle 22 tip is `0001`–`0019`). The only
+   two commits ever touching that directory in
+   `master..cycle-22` are from Cycle 1 and Cycle 7 (which added
+   `0019`). Expect exactly one head, `0019`, at the Cycle 22 step.
+4. **Boundary spot-check** — the Cycle 22 report has its own
+   boundary section (zero new references, verified by grep on the
+   added lines). Re-check once at the Cycle 22 step as in §3.4.
+5. **No-secrets spot-check** — as §3.5; the report states none.
+
+### 4h. Known conflicts and overlaps — Cycle 22
+
+The chain is still linear, so a sequential merge still produces
+no conflicts. The §4 watch-list extends as follows:
+
+- **Price-source catalogue** (`docs/plans/price-source-catalogue.md`)
+  — edited in **Cycle 22** as well (227 lines changed; the
+  Heritage 14-row finding and parser fix, the Heartland/Mulvane
+  second failures, the unchanged staleness watch). Same rule as
+  §4: later wins.
+- **Merge plan** (`docs/plans/merge-plan.md`) — extended in
+  Cycle 22 (200 lines added, 0 removed: the Cycle 21 section).
+  Additive; no earlier text touched.
+- **Super-plan §9** (`docs/plans/grainhub-super-plan.md`) —
+  updated in **Cycle 22** (progress to Cycle 21, test chain
+  179 → 692). Linear, no conflict expected.
+- **`us_agricharts_source.py`** — touched in **Cycle 22** (49
+  insertions, 3 deletions: the escaped-quote regex fix and the
+  `_is_commodity_heading` fallback). Last touched before that in
+  Cycle 20 (the 26 adapter wirings) and Cycle 12 (the West-Con
+  regex fix), so no other cycle in the chain edits the same
+  lines in this range; the Cycle 22 change applies cleanly on
+  top of the Cycle 20 version. Its test file
+  (`tests/test_us_agricharts_source.py`, +123 lines, 4 new
+  tests) and the new synthetic fixture
+  (`tests/fixtures/us_agricharts_heritage_sample.html`, +26
+  lines) are likewise Cycle 22-only in this range.
+- **No registry changes in Cycle 22** — `app/services/
+  source_registry.py` was not touched this cycle (`git log` on
+  it in `cycle-21..cycle-22` is empty); no adapter, toggle, or
+  registration change to carry. Neither `us_dtn_source.py` nor
+  any other collector file was touched.
+- **Migration chain** — unchanged: `0015 → … → 0018` (Cycle 1)
+  then `0019` (Cycle 7), single head throughout Cycle 22.
+
+### 5h. What must NOT be merged as-is — update
+
+- **The CI workflow file is STILL not in any branch.** Verified
+  2026-11-19 (Cycle 23): `?? .github/` in `git status` on the
+  Cycle 23 checkout (`.github/workflows/api-tests.yml`).
+  Merging Cycle 22 as well as 1–21 will **not** bring it into
+  `master`. Same remedy as §5: Adam re-authenticates `gh` with
+  `workflow` scope, or adds the file via the GitHub web UI. Do
+  not hand-copy it into a merge commit.
+- **Nothing else new is held back in Cycle 22.** No new unpushed
+  files, secrets, or held-back work is reported in the Cycle 22
+  report. The §5 review-not-blocker list is unchanged and carried
+  forward: email-bid endpoint public by default, futures
+  endpoints still return prices `null` until a licensed feed is
+  wired (the Mae-Mart proxy now fills `futures_price` on
+  collector rows only — it does not feed the futures endpoints),
+  Advisor `/ask` is a 501 scaffold, eSign is a stub, normalized
+  price rows carry no currency (`currency: null`).
+- **Open decisions carried forward from Cycle 22 (not
+  blockers):** Heritage live confirmation (1 GET, expect 14
+  rows); Heartland + Mulvane decision (generic-collector
+  alternate futures source vs toggles off — do not re-probe
+  without a fix plan); staleness watch (Chadbourn 3rd
+  consecutive stale probe, Hamer + Skyland 3370/3621 2nd each,
+  all exactly one day behind; daytime re-check could test
+  whether widgets refresh later in the day); agricharts
+  User-Agent decision (Chrome UA vs `GrainHub-Research/1.0`);
+  Playwright render checks still pending (DTN family — Al-Corn
+  + Sunrise first — FMN filtered view, Mapleview, StoneX
+  including Frontier, The Andersons — closed for static
+  collection, browser-only — and Landus, Vercel checkpoint);
+  DTN toggles stay `false` until verified; scheduling the
+  poller as a second cron job (deployment decision, checklist
+  §4 step 6); Mae-Mart `cash_price` from futures + static basis
+  (still open, gated on the licensed-feed decision); at least
+  one `Commodity` row must exist before the first poller run.
+
+### 7h. After the merges — updated
+
+§7 applies with the Cycle 22 tip as the end state: Alembic head
+`0019` (unchanged since Cycle 7), test suite 696 passed / 0
+failed, web build last fully passed in Cycle 17 (re-run at the
+Cycle 22 merge step). The still-open decisions list in §7.4 is
+unchanged by Cycle 22 except for the additions in §5h above.
+Open work carried forward: Playwright render checks (DTN family
+— Al-Corn + Sunrise first — FMN filtered view, Mapleview,
+StoneX including Frontier, The Andersons — closed for static
+collection, browser-only — and Landus, Vercel checkpoint);
+Heritage live confirmation (expect 14 rows); Heartland +
+Mulvane decision; Chadbourn + Hamer + Skyland 3370/3621
+staleness watch; agricharts User-Agent decision; Mae-Mart
+cash-price decision; poller scheduling decision; currency
+decision.

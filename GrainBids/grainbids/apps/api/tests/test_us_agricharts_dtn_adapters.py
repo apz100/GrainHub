@@ -6,10 +6,14 @@ generic functions take a URL, while the registry calls ``fetch_fn()``
 with no arguments. Cycle 20 adds one zero-argument ``fetch_<slug>()``
 wrapper per entry in ``us_agricharts_source.py`` / ``us_dtn_source.py``
 (bound to the entry's URL and name) plus ``[sources]`` toggles in
-``config.toml``. Registry wiring (``SourceAdapter`` rows) is the
-coordinator's step and is NOT asserted here — these tests assert the
-wrappers exist, are zero-argument, and pass the correct URL/name to
-the generic fetch.
+``config.toml``. Cycle 23 toggled ``heartland_coop`` and
+``mulvane_coop`` off (two consecutive 0-row probes; the pages no
+longer carry the ``jsquote.php`` tag) — the wrappers and
+``us_elevators_urls.toml`` entries stay, the toggle is the gate.
+Registry wiring (``SourceAdapter`` rows) is the coordinator's step
+and is NOT asserted here — these tests assert the wrappers exist,
+are zero-argument, and pass the correct URL/name to the generic
+fetch.
 
 All fixtures are synthetic (invented values, neutral names only —
 Testville / Test Elevator Co.). No live fetching inside pytest: the
@@ -199,14 +203,22 @@ def test_dtn_generic_without_browser_is_empty() -> None:
 def test_config_toggles_exist_for_all_new_adapters() -> None:
     """config.toml [sources] has one toggle per new adapter key.
 
-    AgriCharts adapters are static-capable, so they are on; DTN
-    adapters are JS-only with no render on the adapter path, so they
-    stay off until a later cycle's Playwright render check.
+    AgriCharts adapters are static-capable, so they are on — except
+    ``heartland_coop`` and ``mulvane_coop``, toggled off in Cycle 23
+    (two consecutive 0-row wrapper probes, Cycles 21–22; the pages no
+    longer carry the ``jsquote.php`` script tag the generic parser
+    requires). DTN adapters are JS-only with no render on the adapter
+    path, so they stay off until a later cycle's Playwright render
+    check.
     """
     with CONFIG_PATH.open("rb") as fh:
         sources = tomllib.load(fh)["sources"]
+    off_agricharts = {"heartland_coop", "mulvane_coop"}  # Cycle 23 toggle-off
     for key, _name, _url in EXPECTED_AGRICHARTS:
-        assert sources.get(key) is True, f"[sources] toggle {key} should be true"
+        if key in off_agricharts:
+            assert sources.get(key) is False, f"[sources] toggle {key} should be false (Cycle 23)"
+        else:
+            assert sources.get(key) is True, f"[sources] toggle {key} should be true"
     for key, _name, _url in EXPECTED_DTN:
         assert sources.get(key) is False, f"[sources] toggle {key} should be false"
 

@@ -194,6 +194,125 @@ def test_bushel_market_table_fallback_parses_five_columns() -> None:
 
 
 # ---------------------------------------------------------------------------
+# Cycle 5 shapes: 6-column widget, fractional quotes, classless h2,
+# "Cash Price" header, grade-prefixed labels, HRW without "(protein in)"
+# ---------------------------------------------------------------------------
+
+
+def test_bushel_money_parses_fractional_eighths() -> None:
+    # CBOT-style fractional quotes (Chandler, Forest River): whole
+    # cents + eighths, converted to decimal in the published unit.
+    assert bushel_source._money("433-2") == 433.25
+    assert bushel_source._money("-2-2") == -2.25
+    assert bushel_source._money("+0-6") == 0.75
+    assert bushel_source._money("630-0") == 630.0
+    # Decimal quotes are untouched.
+    assert bushel_source._money("4.3325") == 4.3325
+    assert bushel_source._money("-0.35") == -0.35
+    assert bushel_source._money("-2.25") == -2.25
+    assert bushel_source._money("") is None
+    assert bushel_source._money("—") is None
+
+
+def test_bushel_chandler_six_columns_fractional_and_classless_h2() -> None:
+    result = bushel_source.parse_bushel_html(
+        _read("bushel_chandler_sample.html"),
+        site=bushel_source.get_bushel_site("chandler_feed"),
+    )
+    assert result["status"] == "ok"
+    assert result["company"] == "Chandler Feed"
+    # The location h2 carries no class on this site; it still counts.
+    assert result["location"] == "Chandler"
+    rows = result["rows"]
+    assert len(rows) == 3
+    corn = next(
+        r for r in rows if r["commodity"] == "Corn" and r["delivery_month"] == "Nov"
+    )
+    assert corn["cash_price"] == 4.11
+    assert corn["basis"] == -0.42
+    assert corn["futures_price"] == 452.5  # "452-4" in fractional cents
+    assert corn["change"] == -1.5  # "-1-4"
+    assert corn["futures_month"] == "Dec 26 Corn"
+    assert corn["last_trade"] is None  # 6-col layout has no Last Trade
+    assert corn["currency"] == "USD"
+    assert corn["unit"] == "$/bu"
+    oats = next(r for r in rows if r["commodity"] == "Oats")
+    assert oats["delivery_month"] == "Cash"
+    assert oats["futures_price"] == 399.25  # "399-2"
+    assert oats["change"] == -0.25  # "-0-2"
+
+
+def test_bushel_forest_river_cash_price_header_and_grade_labels() -> None:
+    result = bushel_source.parse_bushel_html(
+        _read("bushel_forest_river_sample.html"),
+        site=bushel_source.get_bushel_site("forest_river"),
+    )
+    assert result["status"] == "ok"
+    assert result["location"] == "Forest River"
+    rows = result["rows"]
+    assert len(rows) == 2
+    wheat = next(r for r in rows if r["commodity"] == "Wheat — HRS")
+    # First section heads Bid as "Cash Price" with a blank Delivery
+    # header; the delivery/grade label and the bid must still parse.
+    assert wheat["delivery_month"] == "#1 HRS"
+    assert wheat["cash_price"] == 6.05
+    assert wheat["basis"] == -0.45
+    assert wheat["futures_price"] == 650.5  # "650-4"
+    assert wheat["change"] == 1.25  # "+1-2"
+    assert wheat["futures_month"] == "Dec 26 MIAX Spring Wheat"
+    corn = next(r for r in rows if r["commodity"] == "Corn")
+    assert corn["delivery_month"] == "#2 yellow"
+    assert corn["cash_price"] == 3.71
+
+
+def test_bushel_rugby_five_columns_classless_h2_and_hrs_label() -> None:
+    result = bushel_source.parse_bushel_html(
+        _read("bushel_rugby_sample.html"),
+        site=bushel_source.get_bushel_site("rugby"),
+    )
+    assert result["status"] == "ok"
+    assert result["company"] == "Rugby Farmers Elevator"
+    # Classless h2 "Rugby & York Bids" maps to the home town; the page
+    # covers Rugby & York (see the registry note).
+    assert result["location"] == "Rugby"
+    rows = result["rows"]
+    assert len(rows) == 3
+    wheat = next(r for r in rows if r["commodity"] == "Wheat — HRS")
+    assert wheat["delivery_month"] == "Nov"
+    assert wheat["cash_price"] == 5.88
+    assert wheat["futures_price"] == 6.5
+    assert wheat["futures_month"] is None  # 5-col layout
+    corn = next(r for r in rows if r["commodity"] == "Corn")
+    assert corn["cash_price"] == 3.66
+    assert corn["currency"] == "USD"
+
+
+def test_bushel_almota_hrw_label_and_thin_barley_per_tonne() -> None:
+    result = bushel_source.parse_bushel_html(
+        _read("bushel_almota_sample.html"),
+        site=bushel_source.get_bushel_site("almota"),
+    )
+    assert result["status"] == "ok"
+    assert result["company"] == "Almota Elevator"
+    assert result["location"] == "Colfax"
+    rows = result["rows"]
+    assert len(rows) == 3
+    hrw = next(r for r in rows if r["commodity"] == "Wheat — HRW")
+    assert hrw["delivery_month"] == "November"
+    assert hrw["cash_price"] == 6.71
+    assert hrw["futures_month"] == "Dec 26 KCBT Red Wheat"
+    sww = next(r for r in rows if r["commodity"] == "Wheat — SWW")
+    assert sww["cash_price"] == 6.32
+    # Barley is Bid-only at per-tonne scale on this site.
+    barley = next(r for r in rows if r["commodity"] == "Barley")
+    assert barley["cash_price"] == 172.00
+    assert barley["unit"] == "$/t"
+    assert barley["cash_price_mt"] == 172.00
+    assert barley["basis"] is None
+    assert "Bid only" in barley["note"]
+
+
+# ---------------------------------------------------------------------------
 # Empty / unsupported / fetch behaviour
 # ---------------------------------------------------------------------------
 
@@ -234,14 +353,25 @@ def test_bushel_fetch_uses_contact_user_agent() -> None:
 
 
 def test_bushel_unverified_site_refuses_to_fetch() -> None:
-    # Unverified catalogue entries must not be scraped blind.
-    result = bushel_source.fetch_bushel_site("cameron_coop")
-    assert result["status"] == "unsupported"
-    assert result["rows"] == []
-    assert any("not verified" in n for n in result["notes"])
-    with patch("app.platform.market_data.sources.bushel_source.requests.get") as fake_get:
-        bushel_source.fetch_bushel_site("rugby")
-    fake_get.assert_not_called()
+    # Unverified catalogue entries must not be scraped blind. All
+    # registry sites are verified as of Cycle 5, so the guard is
+    # exercised with a synthetic unverified entry.
+    draft = bushel_source.BushelSite(
+        key="draft_site",
+        company="Draft Co",
+        url="https://example.invalid/",
+        currency="USD",
+    )
+    with patch.dict(bushel_source.BUSHEL_SITES, {"draft_site": draft}):
+        result = bushel_source.fetch_bushel_site("draft_site")
+        assert result["status"] == "unsupported"
+        assert result["rows"] == []
+        assert any("not verified" in n for n in result["notes"])
+        with patch(
+            "app.platform.market_data.sources.bushel_source.requests.get"
+        ) as fake_get:
+            bushel_source.fetch_bushel_site("draft_site")
+        fake_get.assert_not_called()
 
 
 def test_bushel_unknown_site_key_raises() -> None:

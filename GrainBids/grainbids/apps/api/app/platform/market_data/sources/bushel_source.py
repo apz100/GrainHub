@@ -33,6 +33,34 @@ parsed only when its header row contains both "Delivery" and "Bid"
 (class ``standardTable`` / ``market_table`` or any other). That guard
 keeps Collwest's futures market table from ever being read as bids.
 
+Cycle 5 (2026-11-19) verified the remaining 9 registry sites live
+(one polite GET each) — all 200, all with a ``.cbmod`` widget, all
+parsed by this module after three small shape fixes:
+
+  * 6-column widget (Chandler Feed, CGS): Delivery | Bid | Basis |
+    Futures | Change | Futures Month (no Last Trade). Header-driven,
+    so no new code was needed for the column count itself.
+  * Fractional futures/change notation (Chandler, Forest River):
+    CBOT-style eighths, e.g. "433-2" / "-2-2" / "+0-6". ``_money``
+    converts these to decimal in the same unit as published
+    (433-2 -> 433.25, -2-2 -> -2.25). See the units note below.
+  * Classless location h2 (Chandler, Rugby): the widget's location
+    heading sometimes carries no ``fcControls`` class; any classless
+    h2 inside the widget is now read as the location label.
+  * "Cash Price" header (Forest River's #1 Spring Wheat section):
+    the Bid column is headed "Cash Price" and the Delivery header
+    cell is blank; the parser maps "cash price" and treats a blank
+    first header cell as the delivery column.
+
+Units — published numbers, NOT normalized: futures and change keep
+the units each site publishes, and those vary. Decimal sites publish
+futures in dollars (FAC 4.3325) and change in cents (FAC -2.25) or
+in dollars (Cameron, Lake Norden: -0.0225). Fractional sites publish
+both in cents (433-2 -> 433.25 futures, -2-2 -> -2.25 change).
+Consumers must not assume one unit for these two fields. Bid and
+basis are dollars per bushel (or per tonne for $/t commodities) on
+every site checked.
+
 Rows never contain invented values: unparseable or absent cells become
 None, with a ``note`` explaining what is missing (thin rows, missing
 basis/futures). ``cash_price_mt`` is the published per-tonne bid for
@@ -68,8 +96,19 @@ COMMODITY_MAP = {
     "soybean": "Soybeans",
     "soft red wheat": "Wheat — SRW",
     "hard red winter wheat (protein in)": "Wheat — HRW",
+    "hard red winter wheat": "Wheat — HRW",
     "hard red spring wheat (protein in)": "Wheat — HRS",
+    "hard red spring wheat": "Wheat — HRS",
     "soft white wheat": "Wheat — SWW",
+    # "Wheat - HRS" style labels (Rugby) and grade-prefixed labels
+    # ("#1 Spring Wheat", "#2 Yellow Corn" — Forest River).
+    "wheat - hrs": "Wheat — HRS",
+    "wheat - hrw": "Wheat — HRW",
+    "wheat - srw": "Wheat — SRW",
+    "wheat - sww": "Wheat — SWW",
+    "#1 spring wheat": "Wheat — HRS",
+    "#2 yellow corn": "Corn",
+    "#2 yellow soybeans": "Soybeans",
     "wheat": "Wheat",
     "canola": "Canola",
     "barley": "Barley",
@@ -87,10 +126,12 @@ COMMODITY_MAP = {
 }
 
 # Header label (lowercased) -> row field. Covers both the 7-column and
-# 5-column widget layouts and the real-<table> fallback.
+# 5-column widget layouts and the real-<table> fallback. "cash price"
+# is the Bid heading on Forest River's #1 Spring Wheat section.
 HEADER_FIELDS = {
     "delivery": "delivery_month",
     "bid": "cash_price",
+    "cash price": "cash_price",
     "basis": "basis",
     "futures": "futures_price",
     "change": "change",
@@ -99,6 +140,10 @@ HEADER_FIELDS = {
 }
 
 _NUM_RE = re.compile(r"[-+]?\d+(?:\.\d+)?")
+# CBOT-style fractional quote: whole cents + eighths, e.g. "433-2"
+# (= 433 2/8), "-2-2", "+0-6". Used for futures/change on Chandler
+# Feed and Forest River; decimal sites publish "4.3325" / "-2.25".
+_FRAC_RE = re.compile(r"^([+-]?)(\d+)-([0-7])$")
 _MONEY_FIELDS = {"cash_price", "basis", "futures_price", "change"}
 
 
@@ -151,85 +196,162 @@ BUSHEL_SITES: dict[str, BushelSite] = {
         "Canadian — Ontario panel, not US. (Also covered by the "
         "older collwest_source.py widget parser.)",
     ),
-    # Catalogue entries whose live page has NOT been fetched yet. The
-    # generic parser should cover them (same Bushel Sites platform),
-    # but each needs one polite GET to confirm widget vs table shape,
-    # locations, and currency before it is marked verified.
+    # Cycle 5 (2026-11-19): all remaining registry sites verified live,
+    # one polite GET each — every one 200 with a .cbmod widget, parsed
+    # by the generic parser (see the module docstring for the three
+    # shape fixes this sweep required). All USD/bu unless noted.
     "chandler_feed": BushelSite(
         key="chandler_feed",
         company="Chandler Feed",
         url="https://chandlerfeed.o.bushelsites.com",
         currency="USD",
-        notes="Unverified — homepage-only URL, table location unknown.",
+        default_location="Chandler",
+        verified=True,
+        notes="Verified live 2026-11-19: 200, homepage .cbmod widget, "
+        "17 rows, 6-col layout (no Last Trade), corn/oats/soy, "
+        "USD/bu. Futures/change in fractional cents notation "
+        "('433-2' -> 433.25). Classless location h2 ('Chandler'). "
+        "Footer lists Chandler, Edgerton and Woodstock, MN locations; "
+        "the widget shows Chandler only. The 'dtn' string in the page "
+        "is inside a base64 blob, not a DTN widget; the footer reads "
+        "'Data provided by Bushel'.",
     ),
     "cameron_coop": BushelSite(
         key="cameron_coop",
         company="Cameron Coop",
         url="https://www.cameroncoop.com/",
         currency="USD",
-        notes="Unverified — homepage-only URL, table location unknown.",
+        default_location="Cameron",
+        verified=True,
+        location_labels={"Cameron Coop": "Cameron"},
+        notes="Verified live 2026-11-19: 200, homepage .cbmod widget, "
+        "4 rows, 7-col layout, corn/soy, USD/bu. Change published in "
+        "dollars (-0.0225), unlike FAC's cents. Footer address: "
+        "Cameron, MO 64429.",
     ),
     "cgs": BushelSite(
         key="cgs",
         company="CGS",
         url="https://www.cgscoop.net/",
         currency="USD",
-        notes="Unverified — homepage-only URL, table location unknown.",
+        default_location="Bazine",
+        verified=True,
+        location_labels={"CGS": "Bazine"},
+        notes="Verified live 2026-11-19: 200, homepage .cbmod widget, "
+        "4 rows, 6-col layout (no Last Trade), wheat/milo/corn, "
+        "USD/bu. Footer address: Bazine, KS 67516.",
     ),
     "almota": BushelSite(
         key="almota",
         company="Almota Elevator",
         url="https://www.almotagrain.com/cash-bids",
         currency="USD",
-        notes="Unverified — HTML also carries a DTN reference; confirm "
-        "which widget actually renders the bids.",
+        per_tonne_commodities=frozenset({"Barley"}),
+        default_location="Colfax",
+        verified=True,
+        location_labels={"Almota Elevator Co.": "Colfax"},
+        notes="Verified live 2026-11-19: 200, 7-col .cbmod widget, "
+        "12 rows, soft white wheat / hard red winter wheat / barley, "
+        "USD. DTN ambiguity resolved: the page's only 'dtn' string "
+        "is inside a base64 blob; the bids render in the Bushel "
+        "widget (footer: 'Data provided by Bushel'). Barley rows are "
+        "Bid-only at per-tonne scale (165 vs ~6/bu wheat), so Barley "
+        "is $/t by scale inference. Footer address: Colfax, WA 99111.",
     ),
     "williams_gin": BushelSite(
         key="williams_gin",
         company="Williams Gin & Grain",
         url="https://williamsginandgrain.com/cashbidssingle-",
         currency="USD",
-        notes="Unverified — URL path looks truncated; confirm the "
-        "canonical cash-bids URL before enabling.",
+        verified=True,
+        notes="Verified live 2026-11-19: 200 at the URL as given — the "
+        "trailing '-' is the real path, not truncation: the page "
+        "loads, no redirect, and the site's own nav links to "
+        "'/cashbidssingle-'. 7-col .cbmod widget, 2 rows, corn "
+        "('As Harvested') + grain sorghum ('Harvest'), USD/bu. "
+        "Location label is the company name; town unconfirmed from "
+        "the page (catalogue says North Dakota).",
     ),
     "rugby": BushelSite(
         key="rugby",
         company="Rugby Farmers Elevator",
         url="https://www.rugbyfarmers.com/",
         currency="USD",
-        notes="Unverified — homepage-only URL, table location unknown.",
+        default_location="Rugby",
+        verified=True,
+        location_labels={"Rugby & York Bids": "Rugby"},
+        notes="Verified live 2026-11-19: 200, homepage .cbmod widget, "
+        "12 rows, 5-col layout (no Futures Month / Last Trade), "
+        "HRS wheat/soy/corn, USD/bu. Classless location h2 "
+        "('Rugby & York Bids') — the page covers Rugby & York; rows "
+        "are labelled Rugby (footer: 201 Dewey St SE, Rugby, ND "
+        "58368). Willow City receiving hours are also on the page.",
     ),
     "lake_norden": BushelSite(
         key="lake_norden",
         company="Lake Norden Farmers Elevator",
         url="https://www.lakenordenfarmerselevator.net/cash-bids",
         currency="USD",
+        default_location="Lake Norden",
+        verified=True,
+        notes="Verified live 2026-11-19: 200, 7-col .cbmod widget, "
+        "2 rows, corn ('Nc 2026') + soy ('Cash'), USD/bu. Change "
+        "published in dollars (-0.0225), unlike FAC's cents. Footer "
+        "address: Lake Norden, SD 57248.",
     ),
     "united_coop": BushelSite(
         key="united_coop",
         company="United Cooperative",
         url="https://www.unitedcoop.com/cash-bids",
         currency="USD",
-        notes="Unverified — confirm same org as Batch 4 "
-        "unitedcooperative.com.",
+        default_location="Webster City",
+        verified=True,
+        location_labels={"United Coop Cash Bids": "Webster City"},
+        notes="Verified live 2026-11-19: 200, 7-col .cbmod widget, "
+        "12 rows, corn/soy, USD/bu. Footer contact is 1932 W 2nd St, "
+        "Webster City, IA 50595 — NOT Beaver Dam, WI as the catalogue "
+        "said; the catalogue town is contradicted by the live page. "
+        "Same-org question vs Batch 4 unitedcooperative.com is "
+        "UNRESOLVED: the Bushel portal slug is 'unitedcooperative' "
+        "but the page never links that domain, and the IA address "
+        "does not match the WI org — possibly two orgs sharing a "
+        "name. Needs one check of unitedcooperative.com.",
     ),
     "forest_river": BushelSite(
         key="forest_river",
         company="Forest River Coop",
         url="https://www.forestrivercoop.com/",
         currency="USD",
-        notes="Unverified — homepage-only URL, table location unknown.",
+        default_location="Forest River",
+        verified=True,
+        notes="Verified live 2026-11-19: 200, homepage .cbmod widget, "
+        "3 rows, 7-col layout, USD/bu. Grade-prefixed commodity "
+        "labels ('#1 Spring Wheat', '#2 Yellow Corn', '#2 Yellow "
+        "Soybeans'). First section heads Bid as 'Cash Price' with a "
+        "blank Delivery header; futures/change in fractional cents "
+        "notation ('630-0' -> 630.25). Footer address: Forest River, "
+        "ND 58233.",
     ),
 }
 
 
 def _money(text: str | None) -> float | None:
-    """Parse a plain number like '5.58' / '-0.35' / '4.3325' to float."""
+    """Parse a plain number like '5.58' / '-0.35' / '4.3325' to float.
+
+    Also handles CBOT-style fractional quotes '433-2' (433 2/8) and
+    '-2-2' / '+0-6', converting to decimal in the same unit as
+    published (cents for those sites — see the module docstring).
+    """
     if not text:
         return None
     cleaned = text.replace("$", "").replace(",", "").strip()
     if cleaned in ("", "-", "—", "--"):
         return None
+    frac = _FRAC_RE.match(cleaned)
+    if frac:
+        sign, whole, eighths = frac.groups()
+        value = float(whole) + int(eighths) / 8
+        return -value if sign == "-" else value
     match = _NUM_RE.search(cleaned)
     if not match:
         return None
@@ -311,14 +433,16 @@ def _parse_widget(
 
     # Walk the widget in document order so each commodity section picks
     # up the .cashBidLocation h2 that precedes it (FAC has 3 locations
-    # on one page; Collwest has 1).
+    # on one page; Collwest has 1). The location h2 usually carries
+    # class fcControls, but Chandler Feed and Rugby render it classless,
+    # so a classless h2 counts too (a "Cash Bids" title h2 never does).
     for element in widget.descendants:
         if not getattr(element, "name", None):
             continue
         classes = element.get("class") or []
-        if element.name == "h2" and "fcControls" in classes:
+        if element.name == "h2" and ("fcControls" in classes or not classes):
             text = element.get_text(" ", strip=True)
-            if text:
+            if text and "cash bid" not in text.lower():
                 location = (
                     site.location_labels.get(text, text) if site else text
                 )
@@ -361,9 +485,13 @@ def _parse_commodity_section(
         if "fcControlsSubHdr" in classes:
             # Header row: map column positions from the labels, so 5-col
             # and 7-col layouts (and any reordering) are handled.
+            # A blank first header cell is still the delivery column
+            # (Forest River's #1 Spring Wheat section leaves it blank
+            # and heads the Bid column "Cash Price").
             column_map = [
                 HEADER_FIELDS.get(cell.get_text(" ", strip=True).lower())
-                for cell in cells
+                or ("delivery_month" if idx == 0 else None)
+                for idx, cell in enumerate(cells)
             ]
             continue
         if "fcControls1" not in classes and "fcControls2" not in classes:
@@ -655,3 +783,48 @@ def fetch_collwest_bushel() -> dict[str, Any]:
     canola/barley/oats).
     """
     return fetch_bushel_site("collwest")
+
+
+def fetch_chandler_feed() -> dict[str, Any]:
+    """Fetch Chandler Feed (Chandler, MN). Verified live 2026-11-19."""
+    return fetch_bushel_site("chandler_feed")
+
+
+def fetch_cameron_coop() -> dict[str, Any]:
+    """Fetch Cameron Coop (Cameron, MO). Verified live 2026-11-19."""
+    return fetch_bushel_site("cameron_coop")
+
+
+def fetch_cgs() -> dict[str, Any]:
+    """Fetch CGS (Bazine, KS). Verified live 2026-11-19."""
+    return fetch_bushel_site("cgs")
+
+
+def fetch_almota() -> dict[str, Any]:
+    """Fetch Almota Elevator (Colfax, WA). Verified live 2026-11-19."""
+    return fetch_bushel_site("almota")
+
+
+def fetch_williams_gin() -> dict[str, Any]:
+    """Fetch Williams Gin & Grain. Verified live 2026-11-19."""
+    return fetch_bushel_site("williams_gin")
+
+
+def fetch_rugby() -> dict[str, Any]:
+    """Fetch Rugby Farmers Elevator (Rugby, ND). Verified live 2026-11-19."""
+    return fetch_bushel_site("rugby")
+
+
+def fetch_lake_norden() -> dict[str, Any]:
+    """Fetch Lake Norden Farmers Elevator (Lake Norden, SD). Verified live 2026-11-19."""
+    return fetch_bushel_site("lake_norden")
+
+
+def fetch_united_coop() -> dict[str, Any]:
+    """Fetch United Cooperative (Webster City, IA). Verified live 2026-11-19."""
+    return fetch_bushel_site("united_coop")
+
+
+def fetch_forest_river() -> dict[str, Any]:
+    """Fetch Forest River Coop (Forest River, ND). Verified live 2026-11-19."""
+    return fetch_bushel_site("forest_river")

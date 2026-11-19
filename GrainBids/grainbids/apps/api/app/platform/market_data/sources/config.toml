@@ -34,6 +34,15 @@ mae_mart   = true
 north_gower = true
 mapleview  = false  # stub only — bids are JS-rendered; needs Playwright in a later cycle
 fac        = true   # Bushel .cbmod widget, verified live 2026-11-19 (Cycle 4)
+chandler_feed = true  # Bushel, verified live 2026-11-19 (Cycle 5)
+cameron_coop = true
+cgs        = true
+almota     = true   # PNW wheat coverage
+williams_gin = true
+rugby      = true
+lake_norden = true
+united_coop = true  # Webster City, IA per live footer (Cycle 5)
+forest_river = true
 usda_mirror_jvg = true  # USDA AMS cash-bid report mirror, verified live 2026-11-19 (Cycle 4)
 usda_mirror_fsg = true  # same report, second host (FS Grain)
 

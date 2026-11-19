@@ -43,6 +43,11 @@ Change / Bushel and MT Cash Price None with a Note saying the
 values come from the missing feed, never invented. A page WITH
 the tag behaves exactly as before.
 
+Cycle 25 follow-up (design §9 scope note): when the tag IS
+present but the jsquote feed returns no data (empty quotes,
+e.g. `var quotes = null;`), the collector degrades the same
+way as the no-tag path instead of returning an empty DataFrame.
+
 Usage (called by GrainBidder.py via the [[us.elevators]] config):
     fetch_us_agricharts(url, company_name) -> pd.DataFrame
 
@@ -285,10 +290,17 @@ def fetch_us_agricharts(url: str, company_name: str, playwright=None) -> pd.Data
             symbols = jm.group(2).split(",")
 
             # 2. Fetch futures prices from jsquote API
+            # Cycle 25: an empty feed degrades exactly like the
+            # no-tag path (basis-only rows, §9 scope note) instead
+            # of returning an empty DataFrame. A feed WITH data
+            # behaves exactly as before.
             quotes = _fetch_jsquote(varname, symbols)
             if not quotes:
-                print(f"[US-AG ERR] {company_name}: jsquote returned no data")
-                return pd.DataFrame()
+                print(
+                    f"[US-AG WARN] {company_name}: jsquote returned no "
+                    "data — parsing basis-only rows"
+                )
+                degraded = True
 
         # 3. Walk HTML in document order, tracking current <h4> location name
         events: list = []

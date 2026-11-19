@@ -329,12 +329,12 @@ branch to GitHub frequently.
 - Elevator Ops: which ERP first (Agris / Agvance / AgTrax)?
 - US scope: Corn Belt first, or Corn Belt + Gulf / PNW from day one?
 
-## 9. Progress — Cycles 1–23 (2026-11-18/19)
+## 9. Progress — Cycles 1–24 (2026-11-18/19)
 
-Twenty-three overnight autonomous cycles on branches `overnight/grainhub-cycle-1`
-through `overnight/grainhub-cycle-23`, none merged to master. Full API test
-suite grew **179 → 291 → 320 → 359 → 364 → 380 → 407 → 407 → 454 → 488 → 536 → 558 → 590 → 617 → 629 → 638 → 643 → 646 → 656 → 692 → 692 → 696 → 697 passed, 0 failed**
-across the twenty-three cycles. Full detail in `docs/plans/overnight-cycle-N-report.md`.
+Twenty-four overnight autonomous cycles on branches `overnight/grainhub-cycle-1`
+through `overnight/grainhub-cycle-24`, none merged to master. Full API test
+suite grew **179 → 291 → 320 → 359 → 364 → 380 → 407 → 407 → 454 → 488 → 536 → 558 → 590 → 617 → 629 → 638 → 643 → 646 → 656 → 692 → 692 → 696 → 697 → 702 passed, 0 failed**
+across the twenty-four cycles. Full detail in `docs/plans/overnight-cycle-N-report.md`.
 Merge order, gates, and conflicts are in `docs/plans/merge-plan.md`.
 
 - **Cycle 1** (`overnight/grainhub-cycle-1`, 179 tests): Phase 0 hardening,
@@ -499,6 +499,16 @@ Merge order, gates, and conflicts are in `docs/plans/merge-plan.md`.
   recommends parsing rows with futures/cash `None`, FMN precedent);
   agricharts Chrome UA kept (coordinator decision); merge plan
   extended to Cycle 22 (63 commits, 0 merges).
+- **Cycle 24** (`overnight/grainhub-cycle-24`, 702 tests): AgriCharts
+  fallback (a) implemented — no-tag pages now parse basis-only
+  rows (futures/cash `None` with note, month decoded from symbol),
+  5 new tests; live check Heartland/Mulvane still 0 rows (rows no
+  longer in static HTML, so (a) recovers neither site); option (b)
+  probe fails on Heartland (feed returns `var quotes = null;`) and
+  corrects Cycles 21–23 (tag present with empty symbols, not
+  missing); staleness daytime re-check — none of the four refreshed
+  (Chadbourn 4th consecutive stale probe); merge plan extended to
+  Cycle 23 (65 commits, 0 merges).
 
 **Remaining blockers that need Adam:** NASS API key (free) and FAS /
 data.gov key (free); LLM provider + key for Advisor `/ask`; Barchart /
@@ -542,4 +552,10 @@ closed); Heartland + Mulvane toggled off in `config.toml`
 104 → 102); AgriCharts futures-fallback design note written
 (`docs/plans/agricharts-futures-fallback-design.md`) — basis is in
 the row, not the feed; coordinator decision recorded to keep the
-collector's Chrome UA.
+collector's Chrome UA. **Cycle 24 additions:** fallback (a)
+implemented and tested (basis-only parsing; live Heartland/Mulvane
+still 0 rows — rows no longer in static HTML); (b) probe fails
+(feed returns `var quotes = null;`) and corrects the "tag missing"
+phrasing (tag present, empty symbols); staleness daytime re-check
+— none of the four refreshed, refresh-later hypothesis answered
+(no).

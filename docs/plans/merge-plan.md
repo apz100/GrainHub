@@ -1851,3 +1851,288 @@ Heartland filtered-view probe; Chadbourn + Hamer + Skyland
 3370/3621 staleness watch (exemption list); Mae-Mart
 cash-price decision; poller scheduling decision; currency
 decision.
+
+---
+
+## Cycle 24 (added Cycle 25)
+
+### 0j. Branch chain — Cycle 24, verified from git
+
+The chain is **still linear**: `git log --oneline
+master..overnight/grainhub-cycle-24` gives **67 commits** (65
+through Cycle 23 + 2 in Cycle 24), **0 merge commits**, no
+branch points. Cycle 24's first commit `2120e29` has parent
+`9f534e6` (the Cycle 23 tip), and merge-base(23, 24) is the
+Cycle 23 tip `9f534e6`. Per-branch commit count for Cycle 24: 2
+(`2120e29`, `f90cb8b`).
+
+That means the §2 procedure continues unchanged: merge Cycle 24
+after 23, one branch at a time with `--no-ff`, running the §3
+gates at each step. A single fast-forward of `master` to the
+`cycle-24` tip (`f90cb8b`) would give the same tree as
+twenty-four sequential merges; prefer the sequential merges for
+the same reason as §0 (a review checkpoint and stop point per
+cycle).
+
+(The Cycle 23 section's "65 commits master..cycle-23" figure
+was re-verified in Cycle 25 and is correct — 65, 0 merge
+commits. `master` is still at `f2c3206` — no cycle work is on
+`master` yet.)
+
+### 1j. What the branch contains (Cycle 24)
+
+| Branch | Tip | Tests at tip | Web build at tip |
+|---|---|---|---|
+| Cycle 24 | `f90cb8b` | 702 passed, 0 failed | Not re-run (no web files changed; last full pass Cycle 17) |
+
+Tip commit hash (full): `f90cb8ba4c9bb20f7d4ea88c616d8e4b408c21a4`.
+No web files changed in Cycle 24, so there is no fresh
+web-build evidence in this range. 7 files changed in Cycle 24
+(788 insertions, 33 deletions): the fallback (a) implementation
+and its tests, the design-doc §9 correction, the price-source
+catalogue, the merge plan, the super-plan §9, and the Cycle 24
+report itself.
+
+- **Cycle 24** (`overnight/grainhub-cycle-24`; commits `2120e29`,
+  `f90cb8b`): AgriCharts fallback, option (a) — **implemented +
+  tested**. Coordinator decision (Cycle 24, recorded in the
+  design doc §9): option (a) from the Cycle 23 design note is
+  **APPROVED** — (i) basis-only rows MAY flow into the pipeline
+  (futures/cash explicitly `None` with a note, never invented;
+  no quarantine, same as FMN today); (ii) YES, decode Futures
+  Month from the symbol. `fetch_us_agricharts`
+  (`us_agricharts_source.py`, 107 insertions, 26 deletions) no
+  longer returns an empty DataFrame when the jsquote tag is
+  absent or unmatched: it parses the `writeBidRow` rows as
+  basis-only (Basis / Delivery / Delivery End / Location / Name
+  / futures symbol as published); **Futures Month decoded from
+  the contract symbol** via a new `futures_month_from_symbol()`
+  (same month-code map and regex as `fmn_source.
+  futures_month_from_symbol`, copied locally to avoid an import
+  coupling, since this module is also imported standalone by
+  GrainBidder); **Futures Price / Change / Bushel Cash Price /
+  MT Cash Price = `None`**, never invented. New `Note` column
+  (FMN pattern): basis-only rows carry the note that the values
+  come from the page's external quotes feed and are left as
+  `None`, never invented, with the month decoded from the
+  contract symbol; feed-backed rows carry `""`, so the schema is
+  stable across both paths. Tag-present behaviour is **exactly
+  unchanged**, including the existing early return when the tag
+  is present but the feed returns no data. Chrome UA unchanged.
+  No config, registry, or `app/main.py` changes. **Toggles stay
+  `false`.** **5 new tests** (142 insertions, 1 deletion in
+  `tests/test_us_agricharts_source.py`; 16 tests in that file at
+  the tip): (a) no-tag page → 4 rows, basis filled, futures/cash
+  all `None` (asserted not `""` and not `0`), note present,
+  exactly one GET (no feed fetch attempted); (b) Futures Month
+  decoded (`ZCZ26 → Dec 2026`, `ZSF27 → Jan 2027`, `ZSN27 →
+  Jul 2027`) plus a decoder unit test (`None`/`""`/unrecognised
+  → `None`) — the worker's first expectation for `ZSN27` was
+  wrong (`N` is July, not November); the test docstring records
+  this; (c) tagged page with mocked feed → behaviour exactly as
+  before (futures filled, feed months verbatim, cash filled,
+  Note `""`); (d) no-tag page with no rows → empty DataFrame, no
+  crash. **Live verification (2 GETs): Heartland 0 rows,
+  Mulvane 0 rows.** Both pages' `writeBidRow` rows are no longer
+  matched in the static HTML at all — the design doc's §3
+  assumption (rows still in the HTML) does **not** hold live as
+  of this probe. So (a) is implemented and proven by mocked
+  tests but recovers neither site today. No live price/basis/bid
+  values recorded.
+- **Option (b) probe — Heartland: fails (2 GETs). Correction
+  to Cycles 21–23:** Heartland's jsquote tag is **not missing**
+  — it is present but with an **empty symbols list**
+  (`symbols=&fields=name,month,last...`). The collector's regex
+  requires `[A-Z0-9,]+` after `symbols=`, so it does not match
+  and the collector reports "tag not found". The design doc §1
+  wording ("stopped carrying the jsquote.php script tag") is
+  inaccurate for the current page and is corrected in design-doc
+  §9. (Mulvane's tag state was not re-checked this cycle.) The
+  derived feed URL (exact design-doc pattern) returned HTTP 200,
+  20 bytes, body exactly `var quotes = null;` — the endpoint is
+  alive and the URL shape is confirmed correct, but with an
+  empty symbol list there is nothing to query: 0 symbols,
+  nothing usable. **(b) fails because there is nothing to
+  query**, not because of a 404 or wrong shape. **Deeper
+  finding:** Heartland's default "All Locations" view carries
+  **zero `writeBidRow` data rows** in the static HTML (the single
+  occurrence is the function definition; no `<h4>` headings, no
+  quoteboard tables). The bid area is empty. The page does have
+  a Location filter (107 options: "All Locations" + 106 named
+  delivery points) and a commodity filter, plus "Export to
+  Spreadsheet" / print links. No bid-data AJAX/fetch was found
+  in the static HTML. **Open hypothesis (untested, needs 1
+  GET):** rows may appear only when a `location_filter` value is
+  selected. Follow-up probe (1 GET, later cycle):
+  `cash.php?location_filter=<one id>`. Mulvane was not probed
+  for (b) (gated on Heartland's feed answering — it did not).
+- **Staleness daytime re-check — none refreshed (4 GETs):**
+  daytime re-check (Thu, Nov 19) of the four one-day-stale
+  Bushel widgets: **none refreshed to Nov 19**. All four still
+  carry the header "Cash bids for Wednesday, November 18,
+  2026"; zero Nov 19 date strings anywhere in any page. The
+  widgets do not refresh later in the day, at least not by the
+  morning check. Smithfield Chadbourn 2294 (1 Soybeans row, 4th
+  consecutive stale probe — Cycles 13, 14, 22, 24); Smithfield
+  Hamer, SC 2179 (1 Soybeans row, 3rd — Cycles 16, 22, 24);
+  Skyland Hugoton, KS 3370 (6 rows Corn/Milo/Red Wheat, 3rd —
+  Cycles 14, 22, 24); Skyland Vilas-Walsh 3621 (5 rows
+  Corn/Milo/Red Wheat, 3rd — Cycles 14, 22, 24). All still
+  exactly one day stale — no worse. The refresh-later-in-the-day
+  hypothesis is now answered (no), so no further daytime
+  re-checks are needed. Standing note stands: a same-day
+  freshness gate would fail these four daily, so they need an
+  exemption/lag tolerance if such a gate is ever added.
+- **Price-source catalogue edited** (33 insertions): the
+  fallback (a) implementation, the (b) probe failure and tag
+  correction, and the daytime staleness re-check.
+- **Merge plan extended to Cycle 23** (230 lines added, 0
+  removed — verified from the `cycle-23..cycle-24` diff). The
+  Cycle 22 section's "63 commits" figure re-verified correct in
+  Cycle 24.
+- **Super-plan §9 extended to Cycle 23** (22 insertions, 6
+  deletions — heading/intro now cover Cycles 1–23, test chain
+  179 → 697; Cycle 23 bullet added; blockers updated —
+  Heritage confirmed, Heartland/Mulvane toggles off, fallback
+  design note, UA decision).
+- **Boundary applied:** zero references to the excluded
+  elevator in any new Cycle 24 code, tests, fixtures, or docs
+  (verified by grep on the added lines of the commit). No
+  contact made.
+  Full detail: `docs/plans/overnight-cycle-24-report.md`.
+
+### 3j. Gates — updated expectations for Cycle 24
+
+§3 applies unchanged, with these per-cycle numbers:
+
+1. **Full API test suite** — expect Cycle 24: 702 — **0 failed**.
+   (Cycle 23 ended at 697; Cycle 24 adds 5 tests, all in
+   `tests/test_us_agricharts_source.py`.)
+2. **Web build** — re-run once at the Cycle 24 step so the final
+   tree is verified as a whole. No web files changed in Cycle 24,
+   so a re-run is a no-op confirmation; last full pass remains
+   Cycle 17.
+3. **Alembic heads** — expect exactly one head, `0019`
+   (unchanged since Cycle 7). Verified from git: no migration
+   file was added in Cycle 24 (`git log` on the Alembic versions
+   dir in `cycle-23..cycle-24` is empty, and the file list at
+   the Cycle 24 tip is `0001`–`0019`, 19 files).
+4. **Boundary spot-check** — grep the Cycle 24 range diff for
+   the excluded elevator name; expect zero new references in
+   code, tests, fixtures, or docs.
+5. **No-secrets spot-check** — no new credentials, keys, or
+   tokens in the Cycle 24 diff (none are reported).
+
+### 4j. Known conflicts and overlaps — Cycle 24
+
+- **Files also touched by earlier cycles:** the price-source
+  catalogue (edited in every cycle — Cycle 24's additions are
+  the fallback (a) implementation, the (b) probe failure and tag
+  correction, and the daytime staleness re-check; no earlier
+  text was rewritten), the merge plan (pure append of the
+  Cycle 23 section, 230 lines added, 0 removed), the super-plan
+  §9 (Cycle 23 bullet + blockers update; no earlier bullet was
+  rewritten). The design doc
+  (`docs/plans/agricharts-futures-fallback-design.md`, created
+  in Cycle 23) was corrected in §9 this cycle (61 insertions, 0
+  deletions: the §1 wording corrected — the tag is present with
+  an empty symbols list, not missing — and the coordinator's
+  approval of option (a) recorded, including both
+  sub-decisions).
+- **`config.toml`** (`app/platform/market_data/sources/
+  config.toml`) — **not touched in Cycle 24** (`git log` on it
+  in `cycle-23..cycle-24` is empty; last touched in Cycle 23
+  with the two toggle flips). No toggle value changed this
+  cycle; Heartland/Mulvane stay `false`, all other AgriCharts
+  toggles stay `true`.
+- **`us_agricharts_source.py`** — touched in **Cycle 24** (107
+  insertions, 26 deletions: the fallback (a) basis-only path
+  and `futures_month_from_symbol()`). Last touched before that
+  in Cycle 22 (the escaped-quote regex fix and the
+  `_is_commodity_heading` fallback), so no other cycle in the
+  chain edits the same lines in this range; the Cycle 24 change
+  applies cleanly on top of the Cycle 22 version. Its test file
+  (`tests/test_us_agricharts_source.py`, 142 insertions, 1
+  deletion, 5 new tests) is likewise Cycle 24-only in this
+  range.
+- **No registry changes in Cycle 24** — `app/services/
+  source_registry.py` was not touched this cycle; no adapter,
+  toggle, or registration change to carry. Neither
+  `us_dtn_source.py` nor `app/main.py` was touched.
+- **Migration chain** — unchanged: `0015 → … → 0018` (Cycle 1)
+  then `0019` (Cycle 7), single head throughout Cycle 24.
+
+### 5j. What must NOT be merged as-is — update
+
+- **The CI workflow file is STILL not in any branch.** Verified
+  2026-11-19 (Cycle 25): `?? .github/` in `git status` on the
+  Cycle 25 checkout (`.github/workflows/api-tests.yml`).
+  Merging Cycle 24 as well as 1–23 will **not** bring it into
+  `master`. Same remedy as §5: Adam re-authenticates `gh` with
+  `workflow` scope, or adds the file via the GitHub web UI. Do
+  not hand-copy it into a merge commit.
+- **Nothing else new is held back in Cycle 24.** No new unpushed
+  files, secrets, or held-back work is reported in the Cycle 24
+  report. The §5 review-not-blocker list is unchanged and carried
+  forward: email-bid endpoint public by default, futures
+  endpoints still return prices `null` until a licensed feed is
+  wired (the Mae-Mart proxy now fills `futures_price` on
+  collector rows only — it does not feed the futures endpoints),
+  Advisor `/ask` is a 501 scaffold, eSign is a stub, normalized
+  price rows carry no currency (`currency: null`).
+- **Open decisions carried forward from Cycle 24 (not
+  blockers):** AgriCharts fallback (a) is **DONE** in Cycle 24
+  (basis-only rows may flow with explicit `None`, no quarantine;
+  Futures Month decoded from the symbol — coordinator approval
+  recorded in design-doc §9). Heartland/Mulvane toggles stay
+  `false` until a site is probe-confirmed returning rows;
+  **Heartland filtered-view probe open** (`cash.php?
+  location_filter=<one id>`, 1 GET, later cycle — rows may
+  appear only under a selected location; Mulvane's page
+  structure not yet inspected). **Feed-down degradation — NOT
+  implemented in Cycle 24** (the task kept tag-present behaviour
+  exactly unchanged; commit `2120e29` retains the early `return
+  pd.DataFrame()` when the tag is present but the feed returns
+  no data — confirmed from the committed code, not just the
+  report). It is a one-line follow-up: treat empty quotes like
+  the no-tag path. **Working-tree note (Cycle 25, uncommitted):**
+  at the time this section was written, the Cycle 25 checkout
+  carries an uncommitted change to `us_agricharts_source.py`
+  (plus its test file) implementing exactly that follow-up —
+  an empty feed now degrades like the no-tag path instead of
+  returning an empty DataFrame. That is another worker's
+  in-progress Cycle 25 work, not committed and not part of
+  Cycle 24; verify against the Cycle 25 report whether it
+  landed — do not assume it from this note. **Staleness watch:**
+  the four widgets stay on the exemption list for any future
+  freshness gate; no further daytime re-checks are needed (the
+  refresh-later-in-the-day hypothesis is answered — no).
+  Playwright render checks still pending (DTN family — Al-Corn
+  + Sunrise first — FMN filtered view, Mapleview, StoneX
+  including Frontier, The Andersons — closed for static
+  collection, browser-only — and Landus, Vercel checkpoint);
+  DTN toggles stay `false` until verified; scheduling the
+  poller as a second cron job (deployment decision, checklist
+  §4 step 6); Mae-Mart `cash_price` from futures + static basis
+  (still open, gated on the licensed-feed decision); at least
+  one `Commodity` row must exist before the first poller run;
+  agricharts User-Agent decision resolved in Cycle 23 (Chrome
+  UA kept).
+
+### 7j. After the merges — updated
+
+§7 applies with the Cycle 24 tip as the end state: Alembic head
+`0019` (unchanged since Cycle 7), test suite 702 passed / 0
+failed, web build last fully passed in Cycle 17 (re-run at the
+Cycle 24 merge step). The still-open decisions list in §7.4 is
+unchanged by Cycle 24 except for the additions in §5j above.
+Open work carried forward: Playwright render checks (DTN family
+— Al-Corn + Sunrise first — FMN filtered view, Mapleview,
+StoneX including Frontier, The Andersons — closed for static
+collection, browser-only — and Landus, Vercel checkpoint);
+Heartland filtered-view probe (plus Mulvane structure
+inspection); feed-down degradation follow-up (see the §5j
+working-tree note — it may already be in Cycle 25, verify
+there); Chadbourn + Hamer + Skyland 3370/3621 staleness watch
+(exemption list); Mae-Mart cash-price decision; poller
+scheduling decision; currency decision.

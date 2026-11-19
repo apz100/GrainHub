@@ -278,6 +278,10 @@ def test_tagged_page_behaves_exactly_as_before() -> None:
     Futures + cash come from the mocked feed, Futures Month is the
     feed's month verbatim, and the Note column is empty (no
     degradation note). Same values as the Cycle 12 tagged test.
+    Cycle 25: also asserts both GETs happen (page + jsquote feed),
+    distinguishing the with-data path from the degraded paths, which
+    fetch the feed and get nothing (Cycle 25) or never fetch it
+    (Cycle 24 no-tag).
     """
     page = (FIXTURES / "us_agricharts_mixed_sample.html").read_text(encoding="utf-8")
     jsquote = (
@@ -286,7 +290,10 @@ def test_tagged_page_behaves_exactly_as_before() -> None:
         "'ZSN27':{name:'Soybeans',month:'Nov 26',last:'1050'}};"
     )
 
+    called_urls: list[str] = []
+
     def _fake_get(url, params=None, headers=None, timeout=None):
+        called_urls.append(url)
         if "jsquote" in url:
             return _Resp24(jsquote)
         return _Resp24(page)
@@ -297,6 +304,10 @@ def test_tagged_page_behaves_exactly_as_before() -> None:
         )
 
     assert len(df) == 4
+    assert called_urls == [
+        "https://example.invalid/markets/cash.php",
+        "https://www.agricharts.com/marketdata/jsquote.php",
+    ]
     assert df["Futures Price"].tolist() == ["450", "450", "1100", "1050"]
     assert df["Futures Month"].tolist() == ["Dec 26", "Dec 26", "Jan 27", "Nov 26"]
     assert df["Bushel Cash Price"].tolist()[0] == "$4.25"
@@ -315,6 +326,72 @@ def test_no_tag_page_with_no_rows_still_empty() -> None:
         )
 
     assert df.empty
+
+
+# ─── Cycle 25 — feed-down degradation (design §9 scope note) ───
+# Tag IS present but the jsquote feed returns no data (empty quotes)
+# degrades the same way as the Cycle 24 no-tag path: rows parse as
+# basis-only, Futures Month decoded from the symbol, Futures Price /
+# Change / cash None with a Note, never invented. Tag-present-with-
+# data behaviour is unchanged (see the extended regression guard
+# in test_tagged_page_behaves_exactly_as_before below).
+
+
+@pytest.mark.parametrize(
+    "empty_feed",
+    [
+        "var quotes = null;",  # the empty-feed body observed live (Cycle 24 §9)
+        "var quotes={};",
+    ],
+)
+def test_tag_present_feed_empty_returns_basis_only_rows(empty_feed: str) -> None:
+    """Cycle 25 (a): tag present + feed returns no data → basis-only rows.
+
+    Same values as the no-tag test, except the feed IS fetched (two
+    GETs: page + jsquote) — the tag is present, it just yields
+    nothing. Basis / Delivery / Location / Name filled, Futures
+    Month decoded from the symbol, feed-dependent values None
+    with a Note, never invented.
+    """
+    page = (FIXTURES / "us_agricharts_mixed_sample.html").read_text(encoding="utf-8")
+    assert "jsquote.php" in page
+    assert page.count("writeBidRow('") == 4
+
+    called_urls: list[str] = []
+
+    def _fake_get(url, params=None, headers=None, timeout=None):
+        called_urls.append(url)
+        if "jsquote" in url:
+            return _Resp24(empty_feed)
+        return _Resp24(page)
+
+    with patch.object(ag.requests, "get", side_effect=_fake_get):
+        df = ag.fetch_us_agricharts(
+            "https://example.invalid/markets/cash.php", "Test Elevator"
+        )
+
+    assert len(df) == 4
+    assert called_urls == [
+        "https://example.invalid/markets/cash.php",
+        "https://www.agricharts.com/marketdata/jsquote.php",
+    ]
+    assert df["Basis"].tolist() == ["-25", "-20", "+10", "+12"]
+    assert df["Name"].tolist() == ["CORN", "CORN", "SOYBEANS", "SOYBEANS"]
+    assert df["Delivery"].tolist() == [
+        "12/01/2026", "Dec 2026", "January 2027", "Nov 26",
+    ]
+    assert set(df["Location"].tolist()) == {"Test Elevator - Riverside"}
+    # Futures Month decoded from the symbol, as on the no-tag path.
+    assert df["Futures Month"].tolist() == [
+        "Dec 2026", "Dec 2026", "Jan 2027", "Jul 2027",
+    ]
+    # Feed-dependent values are missing, not zero and not invented.
+    for col in ("Futures Price", "Change", "Bushel Cash Price", "MT Cash Price"):
+        assert df[col].map(lambda v: v is None).all(), col
+        assert not (df[col] == "").any()
+        assert not (df[col] == 0).any()
+    assert all(_NO_TAG_NOTE_FRAGMENT in (n or "") for n in df["Note"].tolist())
+    assert all("never invented" in (n or "") for n in df["Note"].tolist())
 
 HERITAGE_FIXTURE = FIXTURES / "us_agricharts_heritage_sample.html"
 HERITAGE_SAVED = Path("/tmp/cycle22/heritage_cash.html")

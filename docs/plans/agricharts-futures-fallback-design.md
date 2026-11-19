@@ -229,3 +229,26 @@ not inspected this cycle — same probe applies if pursued.
 but the feed fetch fails; that was NOT implemented in Cycle 24 (the
 task kept tag-present behaviour exactly unchanged). It is a one-line
 follow-up: treat empty quotes like the no-tag path.
+
+### Cycle 25 update
+
+- **Filtered-view hypothesis tested — does not hold (1 GET).**
+  `cash.php?location_filter=22143` (ADM – DSM, first named option)
+  returned HTTP 200, 36,246 bytes; the server honoured the filter
+  (option marked selected) but the page still carries **0
+  `writeBidRow` data rows** and the jsquote tag still has empty
+  symbols. There is no usable filtered-URL pattern for the
+  collector. (Only one location id tested; default + one filtered
+  view both empty makes a per-location difference unlikely.)
+- **Mulvane correction:** Mulvane's tag is likewise **present with
+  empty symbols**, not missing — the Cycle 21–23 "tag missing"
+  phrasing is corrected for Mulvane too. Its default view carries
+  0 rows; it has a 4-location filter (Clearwater, Clearwater-253,
+  Mulvane, Mulvane-251) and a commodity filter (Wheat HRW, Corn,
+  Milo, Soybeans). **Both sites stay dark; toggles stay off.**
+- **Feed-down degradation implemented (Cycle 25).** Tag present +
+  empty feed (`var quotes = null;` or `{}`) now degrades like the
+  no-tag path (basis-only rows). Only the empty-quotes case
+  degrades; a feed fetch that *raises* (HTTP error/timeout) still
+  returns empty via the outer `except` — a further one-line
+  follow-up if wanted.

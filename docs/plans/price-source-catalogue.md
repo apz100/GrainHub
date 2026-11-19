@@ -3388,3 +3388,22 @@ All still exactly one day stale — no worse. Standing note stands: a same-day f
 1. **Heartland filtered-view probe (1 GET):** `cash.php?location_filter=<one id>` — tests whether rows appear only under a selected location. Same probe could be run for Mulvane.
 2. **Feed-down degradation (one-line follow-up):** treat empty quotes from a present tag like the no-tag path.
 3. **Staleness watch:** no further daytime re-checks needed — the refresh-later-in-the-day hypothesis is now answered (no). Keep the four on the exemption list for any future freshness gate.
+
+## Cycle 25 — Heartland filtered view empty; Mulvane re-checked empty; feed-down degradation (2026-11-19)
+
+### Heartland filtered-view probe (1 GET)
+
+`https://www.heartlandcoop.com/markets/cash.php?location_filter=22143` (ADM – DSM, first named option in the page's 106-location filter): HTTP 200, 36,246 bytes. The server honoured the filter (option marked selected), but the page still carries **0 `writeBidRow` data rows** and the jsquote tag still has empty symbols. The Cycle 24 open hypothesis — rows appear only under a selected location — does **not** hold for the tested location. No usable filtered-URL pattern for the collector; the feed question is moot. Only one location id was tested; default + one filtered view both empty makes a per-location difference unlikely.
+
+### Mulvane default view re-checked (1 GET)
+
+`https://www.mulvanecoop.com/markets/cash.php`: HTTP 200, 33,214 bytes, **0 `writeBidRow` rows**. **Correction:** Mulvane's jsquote tag is **present with empty symbols**, not missing — the Cycle 21–23 "tag missing" phrasing is corrected for Mulvane too. The page has a Location filter (4 named: Clearwater 3866, Clearwater-253 80891, Mulvane 3864, Mulvane-251 80889) and a Commodity filter (Wheat HRW 2461, Corn 2462, Milo 2463, Soybeans 2464). **Both sites stay dark; toggles stay off.** Option (a) still recovers neither site live because the rows are not in the static HTML at all.
+
+### Feed-down degradation implemented (mocked tests only, 0 GETs)
+
+Tag present + jsquote feed returns empty (`var quotes = null;` or `{}`) now degrades like the no-tag path: rows return basis-only (futures/cash `None` with note, month decoded from symbol). 2 new parametrized tests; full suite 704 passed. Tag-absent and tag-present-with-data paths unchanged. Scope note: only the *empty-quotes* case degrades — a feed fetch that raises (HTTP error/timeout) still returns empty via the outer `except`; further one-line follow-up if wanted.
+
+### Follow-ups
+
+1. **Heartland / Mulvane — closed for now.** Default view, one filtered view (Heartland), and the feed derivation all return nothing. No further probes without a new hypothesis (e.g. a JS-rendered route, or a different AgriCharts host). Toggles stay `false`.
+2. **Feed-error degradation** (outer `except` path) — one-line follow-up, if wanted.

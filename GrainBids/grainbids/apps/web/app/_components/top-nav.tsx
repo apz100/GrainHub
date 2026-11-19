@@ -17,6 +17,7 @@ const USER_NAV: NavItem[] = [
   { href: "/alerts", label: "Alerts" },
   { href: "/quotes", label: "Quotes" },
   { href: "/watchlists", label: "Watchlists" },
+  { href: "/prototypes", label: "Prototypes" },
 ];
 
 const ADMIN_NAV: NavItem[] = [

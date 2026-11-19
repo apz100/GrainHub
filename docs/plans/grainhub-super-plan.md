@@ -329,12 +329,12 @@ branch to GitHub frequently.
 - Elevator Ops: which ERP first (Agris / Agvance / AgTrax)?
 - US scope: Corn Belt first, or Corn Belt + Gulf / PNW from day one?
 
-## 9. Progress — Cycles 1–12 (2026-11-18/19)
+## 9. Progress — Cycles 1–14 (2026-11-18/19)
 
-Twelve overnight autonomous cycles on branches `overnight/grainhub-cycle-1`
-through `overnight/grainhub-cycle-12`, none merged to master. Full API test
-suite grew **179 → 291 → 320 → 359 → 364 → 380 → 407 → 407 → 454 → 488 → 536 → 558 passed, 0 failed**
-across the twelve cycles. Full detail in `docs/plans/overnight-cycle-N-report.md`.
+Fourteen overnight autonomous cycles on branches `overnight/grainhub-cycle-1`
+through `overnight/grainhub-cycle-14`, none merged to master. Full API test
+suite grew **179 → 291 → 320 → 359 → 364 → 380 → 407 → 407 → 454 → 488 → 536 → 558 → 590 → 617 passed, 0 failed**
+across the fourteen cycles. Full detail in `docs/plans/overnight-cycle-N-report.md`.
 Merge order, gates, and conflicts are in `docs/plans/merge-plan.md`.
 
 - **Cycle 1** (`overnight/grainhub-cycle-1`, 179 tests): Phase 0 hardening,
@@ -417,6 +417,20 @@ Merge order, gates, and conflicts are in `docs/plans/merge-plan.md`.
   embed family now 12 sites; per-location Bushel probes
   (Winchester 3440 is Georgetown, 5 Soybeans rows; Skyland 2730
   duplicates the default page; Smithfield Bentonville, 3 rows).
+- **Cycle 13** (`overnight/grainhub-cycle-13`, 590 tests): PRO Coop
+  second 21302 embed proven as a duplicate Manson view (12 rows,
+  embed family now 13); 10 per-location Bushel probes (6 Skyland,
+  4 Smithfield); Andersons GRAINweb research — browser-only
+  verdict from the saved HTML (no static rows, no API strings);
+  merge plan extended to Cycles 8–12 (43 commits, 0 merges);
+  deployment-checklist sign-off line corrected 0018 → 0019.
+- **Cycle 14** (`overnight/grainhub-cycle-14`, 617 tests): Skyland
+  picker sweep finished — all 14 IDs verified (39 rows in the last
+  7, first double-Milo page at Hugoton 3370); Smithfield batch
+  1669–1674 (17 rows; the 1-row pages are the exception, most carry
+  a full 3 rows); Andersons `my-cash-bids` bundle read (1,079
+  bytes, zero network calls — browser-only confirmed); Chadbourn
+  re-check still stale (Nov 18 header).
 
 **Remaining blockers that need Adam:** NASS API key (free) and FAS /
 data.gov key (free); LLM provider + key for Advisor `/ask`; Barchart /
@@ -433,13 +447,16 @@ responses report `currency: null` (a design note with four concrete
 decisions is now in `docs/plans/currency-design.md`); email-bid endpoint is public by
 default (admin-only is a one-line change if wanted); pricing/hosting
 decisions. **Newest findings:** the `cashbids.php` embed family is
-now 12 sites (Hull, StateLine, PRO Coop 21302 proven in Cycle 12);
-the FMN collector is complete for the default view (453 rows, all
-449 futures-linked rows filled via the `jsquote.php` feed); Five
-Star's wpDataTables collector is built (299 rows); the DTN sweep
-found only 2 of 28 sites static-HTML, 20 JS-only, 6 unreachable,
-with Al-Corn the only classic inline `CashBidTable` fit for the DTN
-collector (Sunrise is a second classic-DTN fit, enabled in Cycle
-10). A Playwright render check of the DTN-family JS-only sites, the
-FMN filtered view, and Mapleview's Grain Discovery shell still needs
-a live browser session.
+now 13 sites (PRO Coop 21302b proven in Cycle 13); the Skyland
+picker sweep is complete (all 14 IDs verified); Smithfield East
+Region is 11 of 31 locations verified; the Andersons is confirmed
+browser-only (bundle read, zero network calls — the locations-list
+probe is the last static chance); the FMN collector is complete for
+the default view (453 rows, all 449 futures-linked rows filled via
+the `jsquote.php` feed); Five Star's wpDataTables collector is built
+(299 rows); the DTN sweep found only 2 of 28 sites static-HTML, 20
+JS-only, 6 unreachable, with Al-Corn the only classic inline
+`CashBidTable` fit for the DTN collector (Sunrise is a second
+classic-DTN fit, enabled in Cycle 10). A Playwright render check of
+the DTN-family JS-only sites, the FMN filtered view, and Mapleview's
+Grain Discovery shell still needs a live browser session.

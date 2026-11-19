@@ -870,6 +870,178 @@ BUSHEL_SITES: dict[str, BushelSite] = {
         "Region per-location list). Standard wrapped 7-col .cbmod "
         "widget, 3 rows (Corn 1, Soybeans 1, Wheat 1), USD/bu.",
     ),
+    # Cycle 15 (2026-11-19): six more Smithfield East Region
+    # per-location targets, one polite GET each — all 200, all
+    # standard wrapped 7-col .cbmod widgets, all parsed by the
+    # generic parser with no changes. Creswell carries 2 Corn rows;
+    # Warsaw carries Corn + Wheat; Harpster, Morral, Darlington and
+    # Lake City are thin 1-row pages (Corn for Harpster, Soybeans
+    # for the other three). Location h2s carry the state (", NC",
+    # ", OH", ", SC") and are mapped to the town name, as with
+    # Bentonville — except Harpster, whose live h2 is bare
+    # "Harpster" with no state. All six widget headers are dated
+    # Thursday, November 19, 2026 (fresh — no Chadbourn-style lag).
+    "smithfield_creswell": BushelSite(
+        key="smithfield_creswell",
+        company="Smithfield Grain",
+        url="https://smithfieldgrain.com/cashbidssingle-1683",
+        currency="USD",
+        default_location="Creswell",
+        verified=True,
+        location_labels={"Creswell, NC": "Creswell"},
+        notes="Verified live 2026-11-19 (Cycle 15): 200 at the "
+        "per-location target (Creswell Feed Mill, from the East "
+        "Region per-location list). Standard wrapped 7-col .cbmod "
+        "widget, 2 rows (Corn 2), USD/bu. Live location h2 is "
+        "'Creswell, NC' (the list page calls it Creswell Feed Mill).",
+    ),
+    "smithfield_warsaw": BushelSite(
+        key="smithfield_warsaw",
+        company="Smithfield Grain",
+        url="https://smithfieldgrain.com/cashbidssingle-1684",
+        currency="USD",
+        default_location="Warsaw",
+        verified=True,
+        location_labels={"Warsaw, NC": "Warsaw"},
+        notes="Verified live 2026-11-19 (Cycle 15): 200 at the "
+        "per-location target (Warsaw Feed Mill, from the East "
+        "Region per-location list). Standard wrapped 7-col .cbmod "
+        "widget, 2 rows (Corn 1, Wheat 1), USD/bu.",
+    ),
+    "smithfield_harpster": BushelSite(
+        key="smithfield_harpster",
+        company="Smithfield Grain",
+        url="https://smithfieldgrain.com/cashbidssingle-1685",
+        currency="USD",
+        default_location="Harpster",
+        verified=True,
+        location_labels={"Harpster": "Harpster"},
+        notes="Verified live 2026-11-19 (Cycle 15): 200 at the "
+        "per-location target (Harpster Elevator, OH, from the East "
+        "Region per-location list). Standard wrapped 7-col .cbmod "
+        "widget, 1 row (Corn), USD/bu. Live location h2 is bare "
+        "'Harpster' (no state suffix).",
+    ),
+    "smithfield_morral": BushelSite(
+        key="smithfield_morral",
+        company="Smithfield Grain",
+        url="https://smithfieldgrain.com/cashbidssingle-1686",
+        currency="USD",
+        default_location="Morral",
+        verified=True,
+        location_labels={"Morral, OH": "Morral"},
+        notes="Verified live 2026-11-19 (Cycle 15): 200 at the "
+        "per-location target (Morral Elevator, OH, from the East "
+        "Region per-location list). Standard wrapped 7-col .cbmod "
+        "widget, 1 row (Soybeans), USD/bu.",
+    ),
+    "smithfield_darlington": BushelSite(
+        key="smithfield_darlington",
+        company="Smithfield Grain",
+        url="https://smithfieldgrain.com/cashbidssingle-1687",
+        currency="USD",
+        default_location="Darlington",
+        verified=True,
+        location_labels={"Darlington, SC": "Darlington"},
+        notes="Verified live 2026-11-19 (Cycle 15): 200 at the "
+        "per-location target (Darlington Elevator, SC, from the "
+        "East Region per-location list). Standard wrapped 7-col "
+        ".cbmod widget, 1 row (Soybeans), USD/bu.",
+    ),
+    "smithfield_lake_city": BushelSite(
+        key="smithfield_lake_city",
+        company="Smithfield Grain",
+        url="https://smithfieldgrain.com/cashbidssingle-1688",
+        currency="USD",
+        default_location="Lake City",
+        verified=True,
+        location_labels={"Lake City, SC": "Lake City"},
+        notes="Verified live 2026-11-19 (Cycle 15): 200 at the "
+        "per-location target (Lake City Elevator, SC, from the "
+        "East Region per-location list). Standard wrapped 7-col "
+        ".cbmod widget, 1 row (Soybeans), USD/bu.",
+    ),
+    # Cycle 15 batch A (2026-11-19): the six Smithfield East
+    # Region per-location targets before the batch-B IDs — 1675
+    # Raeford, 1676 Red Springs, 1678 Walstonburg, 1679
+    # Weeksville, 1681 The Chief Feed Mill, 1682 Laurinburg
+    # Feed Mill — one polite GET each. Five parsed cleanly
+    # (standard wrapped 7-col .cbmod widgets, generic parser,
+    # no changes; all widget headers dated Thursday, November
+    # 19, 2026). Raeford (1675) is NOT registered: HTTP 200 but
+    # the page is the generic site shell with an empty .cbmod
+    # widget — no location h2, no header date, 0 rows parsed
+    # (status "empty"); re-probe in a later cycle before ever
+    # registering it. The Chief Feed Mill's live h2 is
+    # "Rose Hill, NC" (the mill's town), mapped to "Rose Hill".
+    "smithfield_red_springs": BushelSite(
+        key="smithfield_red_springs",
+        company="Smithfield Grain",
+        url="https://smithfieldgrain.com/cashbidssingle-1676",
+        currency="USD",
+        default_location="Red Springs",
+        verified=True,
+        location_labels={"Red Springs, NC": "Red Springs"},
+        notes="Verified live 2026-11-19 (Cycle 15 batch A): 200 at "
+        "the per-location target (Red Springs Elevator, from the "
+        "East Region per-location list). Standard wrapped 7-col "
+        ".cbmod widget, 1 row (Soybeans), USD/bu.",
+    ),
+    "smithfield_walstonburg": BushelSite(
+        key="smithfield_walstonburg",
+        company="Smithfield Grain",
+        url="https://smithfieldgrain.com/cashbidssingle-1678",
+        currency="USD",
+        default_location="Walstonburg",
+        verified=True,
+        location_labels={"Walstonburg, NC": "Walstonburg"},
+        notes="Verified live 2026-11-19 (Cycle 15 batch A): 200 at "
+        "the per-location target (Walstonburg Elevator, from the "
+        "East Region per-location list). Standard wrapped 7-col "
+        ".cbmod widget, 3 rows (Corn 1, Soybeans 1, Wheat 1), "
+        "USD/bu.",
+    ),
+    "smithfield_weeksville": BushelSite(
+        key="smithfield_weeksville",
+        company="Smithfield Grain",
+        url="https://smithfieldgrain.com/cashbidssingle-1679",
+        currency="USD",
+        default_location="Weeksville",
+        verified=True,
+        location_labels={"Weeksville, NC": "Weeksville"},
+        notes="Verified live 2026-11-19 (Cycle 15 batch A): 200 at "
+        "the per-location target (Weeksville Elevator, from the "
+        "East Region per-location list). Standard wrapped 7-col "
+        ".cbmod widget, 2 rows (Soybeans 1, Wheat 1), USD/bu.",
+    ),
+    "smithfield_chief_feed_mill": BushelSite(
+        key="smithfield_chief_feed_mill",
+        company="Smithfield Grain",
+        url="https://smithfieldgrain.com/cashbidssingle-1681",
+        currency="USD",
+        default_location="Rose Hill",
+        verified=True,
+        location_labels={"Rose Hill, NC": "Rose Hill"},
+        notes="Verified live 2026-11-19 (Cycle 15 batch A): 200 at "
+        "the per-location target (The Chief Feed Mill, from the "
+        "East Region per-location list). Standard wrapped 7-col "
+        ".cbmod widget, 2 rows (Corn 1, Wheat 1), USD/bu. Live "
+        "location h2 is \"Rose Hill, NC\" (the mill's town), "
+        "mapped to \"Rose Hill\".",
+    ),
+    "smithfield_laurinburg_feed_mill": BushelSite(
+        key="smithfield_laurinburg_feed_mill",
+        company="Smithfield Grain",
+        url="https://smithfieldgrain.com/cashbidssingle-1682",
+        currency="USD",
+        default_location="Laurinburg Feed Mill",
+        verified=True,
+        location_labels={"Laurinburg Feed Mill, NC": "Laurinburg Feed Mill"},
+        notes="Verified live 2026-11-19 (Cycle 15 batch A): 200 at "
+        "the per-location target (Laurinburg Feed Mill, from the "
+        "East Region per-location list). Standard wrapped 7-col "
+        ".cbmod widget, 2 rows (Corn 1, Wheat 1), USD/bu.",
+    ),
 }
 
 
@@ -1765,3 +1937,99 @@ def fetch_smithfield_mount_olive() -> dict[str, Any]:
     Wheat 1), USD/bu.
     """
     return fetch_bushel_site("smithfield_mount_olive")
+
+
+def fetch_smithfield_creswell() -> dict[str, Any]:
+    """Fetch Smithfield Grain (Creswell, NC) via the per-location
+    target 1683. Verified live 2026-11-19 (Cycle 15): 200, standard
+    wrapped 7-col .cbmod widget, 2 rows (Corn 2), USD/bu. Live
+    location h2 is 'Creswell, NC' (the list page calls it Creswell
+    Feed Mill).
+    """
+    return fetch_bushel_site("smithfield_creswell")
+
+
+def fetch_smithfield_warsaw() -> dict[str, Any]:
+    """Fetch Smithfield Grain (Warsaw, NC) via the per-location
+    target 1684. Verified live 2026-11-19 (Cycle 15): 200, standard
+    wrapped 7-col .cbmod widget, 2 rows (Corn 1, Wheat 1), USD/bu.
+    """
+    return fetch_bushel_site("smithfield_warsaw")
+
+
+def fetch_smithfield_harpster() -> dict[str, Any]:
+    """Fetch Smithfield Grain (Harpster, OH) via the per-location
+    target 1685. Verified live 2026-11-19 (Cycle 15): 200, standard
+    wrapped 7-col .cbmod widget, 1 row (Corn), USD/bu. Live
+    location h2 is bare 'Harpster' (no state suffix).
+    """
+    return fetch_bushel_site("smithfield_harpster")
+
+
+def fetch_smithfield_morral() -> dict[str, Any]:
+    """Fetch Smithfield Grain (Morral, OH) via the per-location
+    target 1686. Verified live 2026-11-19 (Cycle 15): 200, standard
+    wrapped 7-col .cbmod widget, 1 row (Soybeans), USD/bu.
+    """
+    return fetch_bushel_site("smithfield_morral")
+
+
+def fetch_smithfield_darlington() -> dict[str, Any]:
+    """Fetch Smithfield Grain (Darlington, SC) via the per-location
+    target 1687. Verified live 2026-11-19 (Cycle 15): 200, standard
+    wrapped 7-col .cbmod widget, 1 row (Soybeans), USD/bu.
+    """
+    return fetch_bushel_site("smithfield_darlington")
+
+
+def fetch_smithfield_lake_city() -> dict[str, Any]:
+    """Fetch Smithfield Grain (Lake City, SC) via the per-location
+    target 1688. Verified live 2026-11-19 (Cycle 15): 200, standard
+    wrapped 7-col .cbmod widget, 1 row (Soybeans), USD/bu.
+    """
+    return fetch_bushel_site("smithfield_lake_city")
+
+
+def fetch_smithfield_red_springs() -> dict[str, Any]:
+    """Fetch Smithfield Grain (Red Springs, NC) via the per-location
+    target 1676. Verified live 2026-11-19 (Cycle 15 batch A): 200,
+    standard wrapped 7-col .cbmod widget, 1 row (Soybeans), USD/bu.
+    """
+    return fetch_bushel_site("smithfield_red_springs")
+
+
+def fetch_smithfield_walstonburg() -> dict[str, Any]:
+    """Fetch Smithfield Grain (Walstonburg, NC) via the per-location
+    target 1678. Verified live 2026-11-19 (Cycle 15 batch A): 200,
+    standard wrapped 7-col .cbmod widget, 3 rows (Corn 1, Soybeans 1,
+    Wheat 1), USD/bu.
+    """
+    return fetch_bushel_site("smithfield_walstonburg")
+
+
+def fetch_smithfield_weeksville() -> dict[str, Any]:
+    """Fetch Smithfield Grain (Weeksville, NC) via the per-location
+    target 1679. Verified live 2026-11-19 (Cycle 15 batch A): 200,
+    standard wrapped 7-col .cbmod widget, 2 rows (Soybeans 1,
+    Wheat 1), USD/bu.
+    """
+    return fetch_bushel_site("smithfield_weeksville")
+
+
+def fetch_smithfield_chief_feed_mill() -> dict[str, Any]:
+    """Fetch Smithfield Grain (The Chief Feed Mill, Rose Hill, NC)
+    via the per-location target 1681. Verified live 2026-11-19
+    (Cycle 15 batch A): 200, standard wrapped 7-col .cbmod widget,
+    2 rows (Corn 1, Wheat 1), USD/bu. Live location h2 is
+    "Rose Hill, NC".
+    """
+    return fetch_bushel_site("smithfield_chief_feed_mill")
+
+
+def fetch_smithfield_laurinburg_feed_mill() -> dict[str, Any]:
+    """Fetch Smithfield Grain (Laurinburg Feed Mill, NC) via the
+    per-location target 1682. Verified live 2026-11-19 (Cycle 15
+    batch A): 200, standard wrapped 7-col .cbmod widget, 2 rows
+    (Corn 1, Wheat 1), USD/bu.
+    """
+    return fetch_bushel_site("smithfield_laurinburg_feed_mill")

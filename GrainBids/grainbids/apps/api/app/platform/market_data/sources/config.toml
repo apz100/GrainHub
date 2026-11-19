@@ -43,6 +43,8 @@ rugby      = true
 lake_norden = true
 united_coop = true  # Webster City, IA per live footer (Cycle 5)
 forest_river = true
+ace_ethanol = true  # Bushel .cbmod, verified live 2026-11-19 (Cycle 6)
+alliance_grain = true  # Bushel .cbmod, verified live 2026-11-19 (Cycle 6)
 usda_mirror_jvg = true  # USDA AMS cash-bid report mirror, verified live 2026-11-19 (Cycle 4)
 usda_mirror_fsg = true  # same report, second host (FS Grain)
 

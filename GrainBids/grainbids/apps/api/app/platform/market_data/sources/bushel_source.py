@@ -328,9 +328,29 @@ BUSHEL_SITES: dict[str, BushelSite] = {
         "3 rows, 7-col layout, USD/bu. Grade-prefixed commodity "
         "labels ('#1 Spring Wheat', '#2 Yellow Corn', '#2 Yellow "
         "Soybeans'). First section heads Bid as 'Cash Price' with a "
-        "blank Delivery header; futures/change in fractional cents "
-        "notation ('630-0' -> 630.25). Footer address: Forest River, "
-        "ND 58233.",
+        \"blank Delivery header; futures/change in fractional cents \"
+        \"notation ('630-0' -> 630.25). Footer address: Forest River, \"
+        \"ND 58233.\",
+    ),
+    "ace_ethanol": BushelSite(
+        key="ace_ethanol",
+        company="Ace Ethanol",
+        url="https://www.aceethanol.com/cash-bids",
+        currency="USD",
+        verified=True,
+        notes="Verified live 2026-11-19 (Cycle 6 DTN sweep): 200, "
+        "Bushel .cbmod widget in static HTML, 11 rows Corn, 7-col.",
+    ),
+    "alliance_grain": BushelSite(
+        key="alliance_grain",
+        company="Alliance Grain",
+        url="https://www.alliance-grain.com/cash-bids",
+        currency="USD",
+        default_location="Gibson City",
+        verified=True,
+        notes="Verified live 2026-11-19 (Cycle 6 DTN sweep): 200, "
+        "Bushel .cbmod widget in static HTML, 10 rows (Corn 5 + "
+        "Soybeans 5), 7-col; location h2 'Gibson City - West'.",
     ),
 }
 
@@ -828,3 +848,13 @@ def fetch_united_coop() -> dict[str, Any]:
 def fetch_forest_river() -> dict[str, Any]:
     """Fetch Forest River Coop (Forest River, ND). Verified live 2026-11-19."""
     return fetch_bushel_site("forest_river")
+
+
+def fetch_ace_ethanol() -> dict[str, Any]:
+    """Fetch Ace Ethanol. Verified live 2026-11-19 (Cycle 6 DTN sweep)."""
+    return fetch_bushel_site("ace_ethanol")
+
+
+def fetch_alliance_grain() -> dict[str, Any]:
+    """Fetch Alliance Grain (Gibson City). Verified live 2026-11-19 (Cycle 6 DTN sweep)."""
+    return fetch_bushel_site("alliance_grain")

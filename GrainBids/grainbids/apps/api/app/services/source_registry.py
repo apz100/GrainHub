@@ -46,6 +46,8 @@ ADAPTERS: dict[str, SourceAdapter] = {
     "lake_norden": SourceAdapter("lake_norden", "bushel_source", "fetch_lake_norden", "direct_dict", "scraper", 15, 90),
     "united_coop": SourceAdapter("united_coop", "bushel_source", "fetch_united_coop", "direct_dict", "scraper", 15, 90),
     "forest_river": SourceAdapter("forest_river", "bushel_source", "fetch_forest_river", "direct_dict", "scraper", 15, 90),
+    "ace_ethanol": SourceAdapter("ace_ethanol", "bushel_source", "fetch_ace_ethanol", "direct_dict", "scraper", 15, 90),
+    "alliance_grain": SourceAdapter("alliance_grain", "bushel_source", "fetch_alliance_grain", "direct_dict", "scraper", 15, 90),
     "usda_mirror_jvg": SourceAdapter("usda_mirror_jvg", "usda_mirror_source", "fetch_usda_mirror", "direct_dict", "scraper", 15, 90),
     "usda_mirror_fsg": SourceAdapter("usda_mirror_fsg", "usda_mirror_source", "fetch_usda_mirror_fs_grain", "direct_dict", "scraper", 15, 90),
 }

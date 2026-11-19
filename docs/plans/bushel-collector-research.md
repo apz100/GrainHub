@@ -3,6 +3,17 @@
 Research only — no collector was written. One polite GET per URL,
 contact User-Agent `GrainHub-Research/1.0 +https://github.com/apz100/GrainHub`.
 
+> **Correction (Cycle 4):** the bids are **not** in `<table
+> class="standardTable">` / `<table class="market_table">`. On both
+> verified sites the bids live in the `.cbmod` div widget — the same
+> structure `collwest_source.py` already parses. FAC's only
+> `standardTable` is a 4-row "Data provided by Bushel" footer and
+> Collwest's `market_table` is the futures market table. The generic
+> collector (`bushel_source.py`) parses the widget first and only
+> falls back to a real `<table>` when its header contains both
+> "Delivery" and "Bid". FAC verified live: 45 rows, 3 locations.
+> Collwest cross-check: 16/16 rows match the existing collector.
+
 ## Question
 
 Can one collector pattern cover the 11 disabled Bushel-pattern sites

@@ -7,6 +7,7 @@ from app.api.routes.alerts import router as alerts_router
 from app.api.routes.bids import router as bids_router
 from app.api.routes.ingestion import router as ingestion_router
 from app.api.routes.market_data import router as market_data_router
+from app.api.routes.market_search import router as market_search_router
 from app.api.routes.market_report import router as market_report_router
 from app.api.routes.newsletter import router as newsletter_router
 from app.api.routes.normalized_prices import router as normalized_prices_router
@@ -65,6 +66,7 @@ def create_app() -> FastAPI:
     app.include_router(sources_router)
     app.include_router(ingestion_router)
     app.include_router(market_data_router)
+    app.include_router(market_search_router)
     app.include_router(market_report_router)
     app.include_router(newsletter_router)
     app.include_router(normalized_prices_router)

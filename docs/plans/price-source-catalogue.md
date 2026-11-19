@@ -170,13 +170,13 @@ Peterborough-Norwood), Homeland Grain (Norwich), GFO SellSmart
 
 | Company | Location | URL | Type | Crops | Frequency | Status |
 |---|---|---|---|---|---|---|
-| Ag Plus | — | https://www.agplusinc.com/markets/cash.php | AgriCharts | corn, wheat | intraday | Verified 2026-11-19. Keep. |
-| Farmers Win Coop | — | https://www.farmerswin.com/markets/cash.php | AgriCharts | corn, soybean | intraday | Verified. Keep. |
-| Heartland Coop | — | https://www.heartlandcoop.com/markets/cash.php | AgriCharts | corn | intraday | Verified. **Config fixed**: `config.toml` used `myaccount.heartlandcoop.com/bids.htm` (no bid marker); switched to cash.php. |
-| Heritage Grain Cooperative | — | https://www.heritagegrain.com/markets/cash.php | AgriCharts | corn, wheat | intraday | Verified. Keep. (Page title says "Legacy Grain" — possible rebrand.) |
-| Keller | — | https://www.kellergrain.com/markets/cash.php | AgriCharts | corn, soybean, wheat | intraday | Verified. Keep. |
-| Kokomo Grain | Kokomo, IN | https://www.kokomograin.com/markets/cash.php?location_filter= | AgriCharts | corn, soybean, wheat | intraday | Verified. Keep. |
-| Legacy Farmers | — | https://www.legacyfarmers.com/markets/cash.php | AgriCharts | corn, wheat | intraday | Verified. Keep. |
+| Ag Plus | — | https://www.agplusinc.com/markets/cash.php | AgriCharts | corn, wheat | intraday | Verified 2026-11-19. Keep. **Cycle 21 (2026-11-19):** wrapper `fetch_ag_plus` verified live — 36 rows (Corn 12, Beans 12, Wheat 12), 6 locations (Churubusco, Edgerton, Garrett, Monroeville, Raber, South Whitley). |
+| Farmers Win Coop | — | https://www.farmerswin.com/markets/cash.php | AgriCharts | corn, soybean | intraday | Verified. Keep. **Cycle 21 (2026-11-19):** wrapper `fetch_farmers_win_coop` verified live — 171 rows (Corn 90, Soybeans 81), 18 locations. |
+| Heartland Coop | — | https://www.heartlandcoop.com/markets/cash.php | AgriCharts | corn | intraday | Verified. **Config fixed**: `config.toml` used `myaccount.heartlandcoop.com/bids.htm` (no bid marker); switched to cash.php. **Cycle 21 (2026-11-19):** wrapper `fetch_heartland_coop` returned 0 rows — page fetched (2xx) but no `jsquote.php` script tag in the HTML, so `fetch_us_agricharts` bailed before parsing. Site-side change (page restructured or tag removed); wrapper URL/name verified correct against config + Cycle 1 discovery, no wrapper change. Re-probe in a later cycle. |
+| Heritage Grain Cooperative | — | https://www.heritagegrain.com/markets/cash.php | AgriCharts | corn, wheat | intraday | Verified. Keep. (Page title says "Legacy Grain" — possible rebrand.) **Cycle 21 (2026-11-19):** wrapper `fetch_heritage_grain_cooperative` returned 3 rows only (CORN / BEANS / WHEAT - CASH, 1 each) and the `Location` labels are the commodity names — the page's `<h4>` tags hold commodity headings, not location names, so the generic parser's h4-as-location assumption mislabels them. Wrapper URL/name correct; site-structure quirk, not a wrapper bug. Follow-up: check whether the page genuinely lists only 3 cash bids or more rows in a format the regex skips. |
+| Keller | — | https://www.kellergrain.com/markets/cash.php | AgriCharts | corn, soybean, wheat | intraday | Verified. Keep. **Cycle 21 (2026-11-19):** wrapper `fetch_keller` verified live — 14 rows (Corn 7, Soybeans 7), 1 location (Keller). |
+| Kokomo Grain | Kokomo, IN | https://www.kokomograin.com/markets/cash.php?location_filter= | AgriCharts | corn, soybean, wheat | intraday | Verified. Keep. **Cycle 21 (2026-11-19):** wrapper `fetch_kokomo_grain` verified live — 63 rows (Corn 29, Soybeans 24, Wheat 5, NGMO Waxy 5), 8 locations. |
+| Legacy Farmers | — | https://www.legacyfarmers.com/markets/cash.php | AgriCharts | corn, wheat | intraday | Verified. Keep. **Cycle 21 (2026-11-19):** wrapper `fetch_legacy_farmers` verified live — 66 rows (Beans 25, Corn 24, Wheat 17), 10 locations. |
 | Sunrise | — | https://www.sunriseco-op.com | DTN `CashBidTable` on homepage | — | intraday | Verified widget on homepage; find its cash-bids sub-page for a stable URL. **Cycle 10 (2026-11-19):** confirmed classic DTN — `<div id="target">` + `CashBidTable(tableOptions)`, companyID 23043, CIHedging `CashBidWidget.js`, ATLAS DTN shell; no static bid rows. Reclassified `unknown → dtn` and enabled in `us_elevators_urls.toml` (covered by existing `us_dtn_source.py`); Playwright render check still open. |
 
 ### Dead — disabled in config (2026-11-19)
@@ -199,9 +199,9 @@ Bunge `bungeag.com/cash-bids` (redirects to a locations archive — no bid table
 
 | Company | Location | URL | Type | Crops | Frequency | Status |
 |---|---|---|---|---|---|---|
-| Central Farmers Coop | Salem, SD | https://www.cenfarmcoop.com/markets/cash.php | AgriCharts | corn, soybean, wheat, oats | intraday | **Verified** `writeBidRow`. Added to active config. |
-| Anthony Farmers Co-op | Harper, KS | https://www.anthonycoop.com/markets/cash.php | AgriCharts | corn, soybean, wheat, milo, canola | intraday | **Verified** `writeBidRow`. Added to active config. |
-| Mulvane Cooperative Union | Mulvane, KS | https://www.mulvanecoop.com/markets/cash.php | AgriCharts | corn, soybean, wheat, milo | intraday | **Verified** `writeBidRow`. Added to active config. |
+| Central Farmers Coop | Salem, SD | https://www.cenfarmcoop.com/markets/cash.php | AgriCharts | corn, soybean, wheat, oats | intraday | **Verified** `writeBidRow`. Added to active config. **Cycle 21 batch B (2026-11-19):** verified through the wrapper `fetch_central_farmers_coop()` — 75 rows (Corn 44, Soybeans 30, Winter Wheat 1; 11 locations). |
+| Anthony Farmers Co-op | Harper, KS | https://www.anthonycoop.com/markets/cash.php | AgriCharts | corn, soybean, wheat, milo, canola | intraday | **Verified** `writeBidRow`. Added to active config. **Cycle 21 batch B (2026-11-19):** verified through the wrapper `fetch_anthony_farmers_coop()` — 9 rows (Corn 3, Milo 3, Soybeans 3; ANTHONY, HARPER, SHARON). |
+| Mulvane Cooperative Union | Mulvane, KS | https://www.mulvanecoop.com/markets/cash.php | AgriCharts | corn, soybean, wheat, milo | intraday | **Verified** `writeBidRow`. Added to active config. **Cycle 21 batch B (2026-11-19):** wrapper `fetch_mulvane_coop()` returns **0 rows** — HTTP 200 but no `jsquote.php` script tag on the page (site-side; not a wrapper bug). Re-probe in a later cycle. |
 | Brubaker Grain | West Alexandria, OH | https://dtn.brubakergrain.com/ | DTN | corn, soybean, wheat | intraday | Widget ref + live bid rows in search index. Added to active config; confirm rows in Playwright. |
 | Hoffman Ag Service | Marshall, MI | https://dtn.hoffmanag.com/ | DTN | corn, soybean, wheat | intraday | Same as above. Added to active config. |
 | Wilton Farmers Union Elevator | Wilton, ND | https://www.wiltonfarmerselevator.com/index.cfm?show=11&mid=5&theLocation=1&cmid=all&layout=19 | DTN | spring/durum wheat, soybean, corn, flax, canola, sunflower, barley, oats, peas, pinto beans | intraday | Broadest crop list in the survey. Added to active config; confirm rows in Playwright. |
@@ -2863,19 +2863,19 @@ or bid was invented.
 
 | Entry | URL | Status | Adapter key | Toggle |
 | --- | --- | --- | --- | --- |
-| Ag Plus | https://www.agplusinc.com/markets/cash.php | static-capable — writeBidRow confirmed, Cycle 1 discovery | `ag_plus` | true |
-| Farmers Win Coop | https://www.farmerswin.com/markets/cash.php | static-capable — writeBidRow confirmed, Cycle 1 discovery | `farmers_win_coop` | true |
-| Heartland Coop | https://www.heartlandcoop.com/markets/cash.php | static-capable — writeBidRow confirmed, Cycle 1 discovery | `heartland_coop` | true |
-| Heritage Grain Cooperative | https://www.heritagegrain.com/markets/cash.php | static-capable — writeBidRow confirmed, Cycle 1 discovery; distinct from `heritage_coop` (Heritage Cooperative, agricharts-embed) | `heritage_grain_cooperative` | true |
-| Keller | https://www.kellergrain.com/markets/cash.php | static-capable — writeBidRow confirmed, Cycle 1 discovery | `keller` | true |
-| Kokomo Grain | https://www.kokomograin.com/markets/cash.php?location_filter= | static-capable — writeBidRow confirmed, Cycle 1 discovery | `kokomo_grain` | true |
-| Legacy Farmers | https://www.legacyfarmers.com/markets/cash.php | static-capable — writeBidRow confirmed, Cycle 1 discovery | `legacy_farmers` | true |
-| Pro Ag | https://www.proagfarmers.com/markets/cash.php | static-capable — verified live Cycle 11: 78 static writeBidRow rows (Corn / Soybeans / Wheat, 6 h4 locations) | `pro_ag` | true |
-| West-Con | https://www.west-con.com/markets/cash.php | static-capable — verified live Cycles 11–12: 84 static writeBidRow rows; month-name delivery labels ('Dec 2026'), kept verbatim | `west_con` | true |
-| Wheaton Dumont | https://www.wdcoop.com/markets/cash.php | static-capable — verified live Cycle 12: 43 static writeBidRow rows; short month labels ('Nov 26', 'Jan 27'), kept verbatim | `wheaton_dumont` | true |
-| Central Farmers Coop | https://www.cenfarmcoop.com/markets/cash.php | static-capable — writeBidRow confirmed in fetched HTML, Cycle 1 ("enable immediately") | `central_farmers_coop` | true |
-| Anthony Farmers Co-op | https://www.anthonycoop.com/markets/cash.php | static-capable — writeBidRow confirmed in fetched HTML, Cycle 1 ("enable immediately") | `anthony_farmers_coop` | true |
-| Mulvane Coop | https://www.mulvanecoop.com/markets/cash.php | static-capable — writeBidRow confirmed in fetched HTML, Cycle 1 ("enable immediately") | `mulvane_coop` | true |
+| Ag Plus | https://www.agplusinc.com/markets/cash.php | static-capable — writeBidRow confirmed, Cycle 1 discovery. **Cycle 21: verified live through wrapper `fetch_ag_plus` — 36 rows (Corn 12, Beans 12, Wheat 12), 6 locations** | `ag_plus` | true |
+| Farmers Win Coop | https://www.farmerswin.com/markets/cash.php | static-capable — writeBidRow confirmed, Cycle 1 discovery. **Cycle 21: verified live through wrapper `fetch_farmers_win_coop` — 171 rows (Corn 90, Soybeans 81), 18 locations** | `farmers_win_coop` | true |
+| Heartland Coop | https://www.heartlandcoop.com/markets/cash.php | static-capable — writeBidRow confirmed, Cycle 1 discovery. **Cycle 21: wrapper `fetch_heartland_coop` returned 0 rows — page fetched (2xx) but no `jsquote.php` script tag in HTML; site-side change, wrapper URL/name correct, no fix made. Re-probe in a later cycle** | `heartland_coop` | true |
+| Heritage Grain Cooperative | https://www.heritagegrain.com/markets/cash.php | static-capable — writeBidRow confirmed, Cycle 1 discovery; distinct from `heritage_coop` (Heritage Cooperative, agricharts-embed). **Cycle 21: wrapper `fetch_heritage_grain_cooperative` returned 3 rows only (CORN/BEANS/WHEAT - CASH, 1 each); page `<h4>` tags are commodity headings, so `Location` labels are commodity names — site-structure quirk, not a wrapper bug** | `heritage_grain_cooperative` | true |
+| Keller | https://www.kellergrain.com/markets/cash.php | static-capable — writeBidRow confirmed, Cycle 1 discovery. **Cycle 21: verified live through wrapper `fetch_keller` — 14 rows (Corn 7, Soybeans 7), 1 location** | `keller` | true |
+| Kokomo Grain | https://www.kokomograin.com/markets/cash.php?location_filter= | static-capable — writeBidRow confirmed, Cycle 1 discovery. **Cycle 21: verified live through wrapper `fetch_kokomo_grain` — 63 rows (Corn 29, Soybeans 24, Wheat 5, NGMO Waxy 5), 8 locations** | `kokomo_grain` | true |
+| Legacy Farmers | https://www.legacyfarmers.com/markets/cash.php | static-capable — writeBidRow confirmed, Cycle 1 discovery. **Cycle 21: verified live through wrapper `fetch_legacy_farmers` — 66 rows (Beans 25, Corn 24, Wheat 17), 10 locations** | `legacy_farmers` | true |
+| Pro Ag | https://www.proagfarmers.com/markets/cash.php | static-capable — verified live Cycle 11: 78 static writeBidRow rows (Corn / Soybeans / Wheat, 6 h4 locations). **Cycle 21 batch B (2026-11-19): verified THROUGH the wrapper** `fetch_pro_ag()` — 78 rows, identical count and locations to Cycle 11 (Soybeans 35, Corn 31, Wheat 12; Brandon, CLARISSA, EAGLE BEND / EAGLE BEND WEST, GARFIELD, Hoffman, PARKERS PRAIRIE). No wrapper bug. | `pro_ag` | true |
+| West-Con | https://www.west-con.com/markets/cash.php | static-capable — verified live Cycles 11–12: 84 static writeBidRow rows; month-name delivery labels ('Dec 2026'), kept verbatim. **Cycle 21 batch B (2026-11-19): verified THROUGH the wrapper** `fetch_west_con()` — 84 rows (Soybeans 44, Corn 30, DNS Wheat (Milling Quality) 10; deliveries 'Dec 2026'–'Jul 2027' month labels). Note: all rows carry the single fallback location `West-Con - West-Con` — the page has no `<h4>` location headings before its rows, so the parser's company-name fallback applies (generic-parser behaviour, not a wrapper bug). | `west_con` | true |
+| Wheaton Dumont | https://www.wdcoop.com/markets/cash.php | static-capable — verified live Cycle 12: 43 static writeBidRow rows; short month labels ('Nov 26', 'Jan 27'), kept verbatim. **Cycle 21 batch B (2026-11-19): verified THROUGH the wrapper** `fetch_wheaton_dumont()` — 43 rows, identical count to Cycle 12 (Corn 18, Soybeans 16, Spring Wheat 9; 8 locations; deliveries 'Nov 26'–'Oct 27'). No wrapper bug. | `wheaton_dumont` | true |
+| Central Farmers Coop | https://www.cenfarmcoop.com/markets/cash.php | static-capable — writeBidRow confirmed in fetched HTML, Cycle 1 ("enable immediately"). **Cycle 21 batch B (2026-11-19): verified THROUGH the wrapper** `fetch_central_farmers_coop()` — 75 rows (Corn 44, Soybeans 30, Winter Wheat 1; 11 locations: Canova, Dimock, Freeman, Lyons, Marion, Montrose, Mt Vernon, Salem, Springfield, Tyndall, Viborg). No wrapper bug. | `central_farmers_coop` | true |
+| Anthony Farmers Co-op | https://www.anthonycoop.com/markets/cash.php | static-capable — writeBidRow confirmed in fetched HTML, Cycle 1 ("enable immediately"). **Cycle 21 batch B (2026-11-19): verified THROUGH the wrapper** `fetch_anthony_farmers_coop()` — 9 rows (Corn 3, Milo 3, Soybeans 3; 3 locations: ANTHONY, HARPER, SHARON; single delivery 09/01/2026). Thin page but structurally sound — 3 locations × 3 commodities, one delivery month each. No wrapper bug. | `anthony_farmers_coop` | true |
+| Mulvane Coop | https://www.mulvanecoop.com/markets/cash.php | static-capable — writeBidRow confirmed in fetched HTML, Cycle 1 ("enable immediately"). **Cycle 21 batch B (2026-11-19): FAILED through the wrapper** `fetch_mulvane_coop()` — HTTP 200 but **0 rows**: `[US-AG WARN] Mulvane Coop: jsquote script tag not found in page`. The page no longer carries the `jsquote.php` script tag the generic parser requires, so `fetch_us_agricharts` returns empty before parsing any rows. **Not a wrapper bug** — the wrapper passes the exact toml URL/name (`https://www.mulvanecoop.com/markets/cash.php`, "Mulvane Coop"); the failure is site-side (page template changed since Cycle 1, or the cash page is now JS-rendered / served differently). Wrapper left unchanged; toggle stays `true` for now but the adapter yields nothing until the site is re-probed. **Follow-up (later cycle, 1 GET):** re-probe the cash page and inspect what it serves now — if the jsquote tag is gone for good, the entry needs either a new static route or a toggle flip to `false`. | `mulvane_coop` | true |
 
 ### Per-entry table — enabled DTN (13, all JS-only)
 
@@ -2911,7 +2911,30 @@ classification gap.
    Cycle 11–12 entries — Pro Ag, West-Con, Wheaton Dumont — were
    verified live against the generic, but not through these
    wrappers; the other ten were confirmed from fetched HTML in
-   Cycle 1, not through a wrapper call).
+   Cycle 1, not through a wrapper call). **Cycle 21 (2026-11-19):
+   batch B verified 6 of the 13 through their wrappers** — Pro Ag
+   (78 rows), West-Con (84), Wheaton Dumont (43), Central Farmers
+   Coop (75), Anthony Farmers Co-op (9) all return rows; **Mulvane
+   Coop returns 0 rows** (HTTP 200, no `jsquote.php` script tag on
+   the page — site-side, not a wrapper bug; re-probe in a later
+   cycle). A sibling batch A is verifying the remaining 7 wrappers
+   (ag_plus, farmers_win_coop, heartland_coop,
+   heritage_grain_cooperative, keller, kokomo_grain, legacy_farmers)
+   in parallel; see "Cycle 21 agricharts wrapper verification —
+   batch B" below. **Cycle 21 (2026-11-19):
+   7 of 13 done** — Ag Plus (36 rows), Farmers Win Coop (171),
+   Keller (14), Kokomo Grain (63), Legacy Farmers (66) all verified
+   live through their wrappers; Heartland Coop returned 0 rows
+   (page fetched but no `jsquote.php` script tag — site-side change,
+   re-probe later); Heritage Grain Cooperative returned 3 rows with
+   `Location` labels mis-set to commodity names (page `<h4>` tags
+   are commodity headings — site-structure quirk). **All 13 now
+   verified through wrappers:** batch B covered the other 6 (Pro Ag
+   78, West-Con 84, Wheaton Dumont 43, Central Farmers Coop 75,
+   Anthony Farmers Co-op 9 — all returning rows; Mulvane Coop 0
+   rows, same missing-`jsquote.php`-tag failure as Heartland).
+   Net: 11 of 13 return rows; 2 (Heartland, Mulvane) fail site-side
+   on the missing jsquote tag.
 2. **DTN adapters (13):** Playwright render check, one per page —
    confirm the widget renders rows and that `_parse_cash_table`
    parses them. Until then every DTN adapter honestly returns
@@ -2930,3 +2953,129 @@ classification gap.
    `[sources]` toggles, so the toggle-off state alone does not gate
    seeding — the coordinator should confirm the intended gate
    before seeding the DTN keys.
+
+## Cycle 21 — live verification of AgriCharts wrappers 1–7 (2026-11-19)
+
+Closes the first half of Cycle 20 follow-up item 1: 7 of the 13
+zero-arg AgriCharts wrappers were called live, one wrapper call
+each (7 page GETs, ~2 s spacing, no retries), run from the API venv
+as `fetch_<slug>()` with no arguments. No live price, basis, or bid
+was saved to the repo — counts and structure only. No wrapper bug
+was found, so no wrapper code was changed and no new tests were
+added; the full test suite was not re-run (no code changed).
+
+### Per-wrapper results
+
+| Wrapper | URL | Rows | Commodities (rows) | Locations | Status |
+| --- | --- | --- | --- | --- | --- |
+| `fetch_ag_plus` | https://www.agplusinc.com/markets/cash.php | 36 | Corn 12, Beans 12, Wheat 12 | 6 (Churubusco, Edgerton, Garrett, Monroeville, Raber, South Whitley) | OK — verified live through wrapper |
+| `fetch_farmers_win_coop` | https://www.farmerswin.com/markets/cash.php | 171 | Corn 90, Soybeans 81 | 18 | OK — verified live through wrapper |
+| `fetch_heartland_coop` | https://www.heartlandcoop.com/markets/cash.php | 0 | — | — | FAIL (site-side) — page fetched (2xx, no HTTP error) but no `jsquote.php` script tag in the HTML, so `fetch_us_agricharts` returned empty before parsing. Wrapper URL/name verified correct against `us_elevators_urls.toml` + Cycle 1 discovery; no wrapper change |
+| `fetch_heritage_grain_cooperative` | https://www.heritagegrain.com/markets/cash.php | 3 | CORN - CASH 1, BEANS - CASH 1, WHEAT - CASH 1 | 3, but mislabelled — `Location` values are the commodity names | PARTIAL (site-structure quirk) — page `<h4>` tags hold commodity headings, not location names, so the generic parser's h4-as-location assumption mislabels them. Wrapper URL/name correct; no wrapper change |
+| `fetch_keller` | https://www.kellergrain.com/markets/cash.php | 14 | Corn 7, Soybeans 7 | 1 (Keller) | OK — verified live through wrapper |
+| `fetch_kokomo_grain` | https://www.kokomograin.com/markets/cash.php?location_filter= | 63 | Corn 29, Soybeans 24, Wheat 5, NGMO Waxy 5 | 8 (Adm Fkt, Amboy, Anderson, Edinburgh, Emporia, Kokomo, T-L Laf, Winamac) | OK — verified live through wrapper |
+| `fetch_legacy_farmers` | https://www.legacyfarmers.com/markets/cash.php | 66 | Beans 25, Corn 24, Wheat 17 | 10 (Apex Grain Marketing, Custar, Deshler, East Findlay, Fostoria, McComb, Mt Blanchard, Mt Cory, North Findlay, West Findlay) | OK — verified live through wrapper |
+
+All 7 returned DataFrames have the standard 10 columns
+(`Location`, `Name`, `Delivery`, `Delivery End`, `Futures Month`,
+`Futures Price`, `Change`, `Basis`, `Bushel Cash Price`,
+`MT Cash Price`).
+
+### Observations / follow-ups
+
+1. **Heartland Coop — re-probe in a later cycle (1 GET).** The
+   page served a 2xx response but without the `jsquote.php` script
+   tag the generic collector depends on. Possibilities: the site
+   restructured its cash page, dropped the AgriCharts embed, or
+   served a different template to this request. Do not flip its
+   `[sources]` toggle off on one observation; a single re-probe
+   decides whether it is a transient template change or a real
+   break. If the tag is gone for good, the fix belongs in the
+   generic collector (alternate futures source), not the wrapper.
+2. **Heritage Grain Cooperative — parser follow-up, not a wrapper
+   bug.** Only 3 rows parsed and their `Location` values are
+   commodity names. Open questions for a later cycle: does the page
+   genuinely list only 3 cash bids (one per commodity, single
+   delivery point), or are more rows present in a shape the
+   `writeBidRow` regex skips (e.g. a different delivery format)?
+   Separately, the generic parser assumes `<h4>` = location name;
+   on this page `<h4>` = commodity heading. A later cycle could
+   teach the parser to detect h4-as-commodity pages (or to fall
+   back to the company name as the location when the h4 text
+   matches a commodity name). No change made here — out of scope
+   for a wrapper-verification task.
+3. **User-Agent note for the coordinator:** the task brief said the
+   fetch functions send `GrainHub-Research/1.0`, but
+   `us_agricharts_source.py` `_HEADERS` actually sends a Chrome
+   `Mozilla/5.0` UA. The wrappers were run as-is (no override, per
+   the brief); if the intended UA is `GrainHub-Research/1.0`, that
+   is a deliberate change for a later cycle, not something this
+   worker silently altered.
+4. **Remaining wrapper verifications (6) — done by sibling batch B
+   in parallel:** Pro Ag (78 rows), West-Con (84), Wheaton Dumont
+   (43), Central Farmers Coop (75), Anthony Farmers Co-op (9) all
+   verified through their wrappers; Mulvane Coop returned 0 rows
+   with the same missing-`jsquote.php`-tag failure as Heartland
+   Coop. All 13 wrappers are now verified through live calls.
+
+## Cycle 21 agricharts wrapper verification — batch B
+
+Closes the second half of Cycle 20 follow-up item 1: the remaining
+6 of the 13 zero-arg AgriCharts wrappers were called live, one
+wrapper call each (6 page GETs, ~2 s spacing, no retries), run from
+the API venv as `fetch_<slug>()` with no arguments. This completes
+the 6 left open by the sibling batch A (its item 4); combined,
+Cycle 21 has now verified all 13 AgriCharts wrappers live. No live
+price, basis, or bid was saved to the repo — counts and structure
+only. No wrapper bug was found, so no wrapper code was changed and
+no new tests were added; the full test suite was not re-run (no code
+changed).
+
+### Per-wrapper results
+
+| Wrapper | URL | Rows | Commodities (rows) | Locations | Status |
+| --- | --- | --- | --- | --- | --- |
+| `fetch_mulvane_coop` | https://www.mulvanecoop.com/markets/cash.php | 0 | — | — | FAIL (site-side) — HTTP 200, but no `jsquote.php` script tag in the page, so `fetch_us_agricharts` returned empty before parsing (`[US-AG WARN] Mulvane Coop: jsquote script tag not found in page`). Wrapper URL/name verified correct against `us_elevators_urls.toml` (line 679) + Cycle 1 discovery; no wrapper change |
+| `fetch_pro_ag` | https://www.proagfarmers.com/markets/cash.php | 78 | Soybeans 35, Corn 31, Wheat 12 | 6 (Brandon, CLARISSA, EAGLE BEND / EAGLE BEND WEST, GARFIELD, Hoffman, PARKERS PRAIRIE) | OK — verified live through wrapper; count and locations identical to Cycle 11 |
+| `fetch_west_con` | https://www.west-con.com/markets/cash.php | 84 | Soybeans 44, Corn 30, DNS Wheat (Milling Quality) 10 | 1 (fallback `West-Con - West-Con` — see note) | OK — verified live through wrapper; count identical to Cycles 11–12, month-name deliveries ('Dec 2026'–'Jul 2027') kept verbatim |
+| `fetch_wheaton_dumont` | https://www.wdcoop.com/markets/cash.php | 43 | Corn 18, Soybeans 16, Spring Wheat 9 | 8 (AGP DLVD ABERDEEN, SD; AGP DLVD DAWSON, MN; Britton, SD; Browns Valley/Sisseton, SD; Graceville/Tenney; Rutland, ND; Wheaton/Dumont/Browns Valley/LaMars/Hankinson/Mantador/Sisseton; Wheaton/Dumont/Tenney/LaMars/Hankinson/Mantador) | OK — verified live through wrapper; count identical to Cycle 12, short month labels ('Nov 26'–'Oct 27') kept verbatim |
+| `fetch_central_farmers_coop` | https://www.cenfarmcoop.com/markets/cash.php | 75 | Corn 44, Soybeans 30, Winter Wheat 1 | 11 (Canova, Dimock, Freeman, Lyons, Marion, Montrose, Mt Vernon, Salem, Springfield, Tyndall, Viborg) | OK — verified live through wrapper (first live verification; previously Cycle 1 HTML only) |
+| `fetch_anthony_farmers_coop` | https://www.anthonycoop.com/markets/cash.php | 9 | Corn 3, Milo 3, Soybeans 3 | 3 (ANTHONY, HARPER, SHARON) | OK — verified live through wrapper (first live verification; previously Cycle 1 HTML only). Thin page but structurally sound: 3 locations × 3 commodities, single delivery 09/01/2026 |
+
+All 5 non-empty DataFrames have the standard 10 columns
+(`Location`, `Name`, `Delivery`, `Delivery End`, `Futures Month`,
+`Futures Price`, `Change`, `Basis`, `Bushel Cash Price`,
+`MT Cash Price`).
+
+### Observations / follow-ups
+
+1. **Mulvane Coop — re-probe in a later cycle (1 GET).** Same
+   failure mode as Heartland Coop in batch A (2xx, no `jsquote.php`
+   script tag): the page no longer carries the tag the generic
+   collector requires, so the adapter yields nothing even though
+   its toggle is `true` and the wrapper is correct. Possibilities:
+   the site restructured its cash page, dropped the AgriCharts
+   embed, or served a different template to this request. Do not
+   flip its `[sources]` toggle off on one observation; a single
+   re-probe decides whether it is transient or a real break. If
+   the tag is gone for good, the fix belongs in the generic
+   collector (alternate futures source), not the wrapper — and the
+   same fix would cover Heartland Coop.
+2. **West-Con location fallback.** All 84 rows carry the single
+   location `West-Con - West-Con`: the page has no `<h4>` location
+   headings before its rows, so the parser's company-name fallback
+   applies. This matches Cycle 11–12 (location param `All`) and is
+   generic-parser behaviour, not a wrapper bug — no change made.
+3. **Cycle 21 totals (both batches):** 11 of 13 AgriCharts
+   wrappers verified live returning rows (289 rows this batch +
+   batch A's 353 = 642 rows across the cycle); 2 return 0 rows for
+   the same site-side reason (Heartland Coop, Mulvane Coop —
+   missing `jsquote.php` tag). No wrapper bug was found in either
+   batch. Cycle 20 follow-up item 1 is now closed for the
+   AgriCharts half; the DTN half (item 2) is untouched.
+4. **User-Agent note (agrees with batch A):** the task brief said
+   the fetch functions send `GrainHub-Research/1.0`, but
+   `us_agricharts_source.py` `_HEADERS` actually sends a Chrome
+   `Mozilla/5.0` UA. The wrappers were run as-is (no override, per
+   the brief); if the intended UA is `GrainHub-Research/1.0`, that
+   is a deliberate change for a later cycle.

@@ -968,3 +968,230 @@ static collection, browser-only — and Landus, Vercel checkpoint);
 Chadbourn + Hamer + Skyland 3370/3621 staleness watch; Mae-Mart
 cash-price decision; poller scheduling decision; US agricharts/DTN
 adapter gap; `bunge`/`mapleview` toggle question.
+
+---
+
+## Cycle 20 (added Cycle 21)
+
+### 0f. Branch chain — Cycle 20, verified from git
+
+The chain is **still linear**: `git log --oneline
+master..overnight/grainhub-cycle-20` gives **59 commits** (57
+through Cycle 19 + 2 in Cycle 20), **0 merge commits**, no
+branch points. Cycle 20's first commit `24a61d0` has parent
+`b47d638` (the Cycle 19 tip), and merge-base(19, 20) is the
+Cycle 19 tip `b47d638`. Per-branch commit count for Cycle 20: 2
+(`24a61d0`, `9329169`).
+
+That means the §2 procedure continues unchanged: merge Cycle 20
+after 19, one branch at a time with `--no-ff`, running the §3
+gates at each step. A single fast-forward of `master` to the
+`cycle-20` tip (`9329169`) would give the same tree as twenty
+sequential merges; prefer the sequential merges for the same
+reason as §0 (a review checkpoint and stop point per cycle).
+
+(The Cycle 19 section's "57 commits master..cycle-19" figure
+was re-verified in Cycle 21 and is correct — no correction
+needed.)
+
+### 1f. What the branch contains (Cycle 20)
+
+| Branch | Tip | Tests at tip | Web build at tip |
+|---|---|---|---|
+| Cycle 20 | `9329169` | 692 passed, 0 failed | Not re-run (no web files changed; last full pass Cycle 17) |
+
+Tip commit hash (full): `9329169d6d564107ab93d062d49f4397f2e967bb`.
+No web files changed in Cycle 20, so there is no fresh
+web-build evidence in this range.
+
+- **Cycle 20** (`overnight/grainhub-cycle-20`; commits `24a61d0`,
+  `9329169`): 26 US agricharts/DTN registry adapters wired —
+  13 AgriCharts (all static-capable: Ag Plus, Farmers Win Coop,
+  Heartland Coop, Heritage Grain Cooperative, Keller, Kokomo
+  Grain, Legacy Farmers, Pro Ag, West-Con, Wheaton Dumont,
+  Central Farmers Coop, Anthony Farmers Co-op, Mulvane Coop)
+  and 13 DTN (all JS-only: Ag Partners, Al-Corn, Allied
+  Cooperative, Aurora Coop, CFS, Elite Octane, Frontier Coop,
+  Green Plains, Kanza Coop, Sunrise, Brubaker Grain, Hoffman Ag,
+  Wilton Farmers Union Elevator). `US_AGRICHARTS_SITES` map +
+  13 zero-arg `fetch_<slug>()` wrappers calling
+  `fetch_us_agricharts(url, name)`; `US_DTN_SITES` map + 13
+  wrappers calling `fetch_us_dtn(url, name, None)`; plus an
+  explicit guard at the top of `fetch_us_dtn`: with
+  `playwright=None` it returns an empty DataFrame before
+  touching Playwright or the network. 26 new `[sources]`
+  toggles (none pre-existed, no existing value touched):
+  agricharts 13 = `true`, DTN 13 = `false` (JS-only, same
+  precedent as `bunge`/`mapleview`). All 26 wired into
+  `source_registry.py` by the coordinator (mode `"direct"`,
+  `15, 90`, like the other adapters); registry now holds **119
+  adapters** (93 + 26). Frontier Coop is StoneX, not DTN —
+  flagged in code, catalogue, and toggles; the DTN adapter
+  returns empty for it by design. 30 new tests (synthetic
+  fixtures only, generic fetch mocked, no network). **0 web
+  fetches this cycle** — live verification of the 13
+  agricharts wrappers (1 GET each) and a Playwright render
+  check per DTN page (Al-Corn and Sunrise first) are later-cycle
+  work; DTN toggles must stay `false` until then.
+- **Seeding + poller honour `[sources]` toggles (Cycle 19 gap
+  closed):** new `app/services/source_toggles.py` — single place
+  the FastAPI side consults the toggles, reusing the existing
+  loader (`source_enabled()`, "missing toggle = enabled"); only
+  an explicit `false` disables an adapter, and an
+  unreadable/missing config fails open rather than breaking
+  seed/poll. `seed_sources_from_registry()` now returns a
+  `SeedSourcesResult(created, skipped_disabled)` and skips any
+  adapter whose toggle is off; today `seed scope=all` creates
+  **104 rows** (119 adapters − 15 toggled off: bunge, mapleview,
+  13 DTN) and reports `skipped_disabled` with all 15 keys.
+  `list_due_sources()` filters out rows whose adapter toggle is
+  off, even if the `Source` row already exists (defence in
+  depth). `POST /api/sources/seed` now returns `{"created",
+  "skipped_disabled", "scope", "adapter_keys"}`. 6 new tests in
+  `tests/test_source_toggle_gating.py`. **Coordinator fix during
+  wiring:** adding the 26 adapters broke 8 tests whose count
+  assertions hardcoded "only bunge/mapleview are disabled";
+  fixed by deriving the disabled set from the real toggles
+  (`disabled_adapter_keys(sorted(ADAPTERS))`) in both test
+  files — no production code changed for this. 36 new tests in
+  total this cycle, suite 656 → 692.
+- **Deployment note:** `docs/plans/deployment-checklist.md` §4
+  step 6 (new) + §8 checkbox — schedule the poller as a second
+  cron job alongside the file job, with the consequence stated.
+  Exact invocation verified from code:
+  `python -m app.jobs.poll_sources` (run from `apps/api` with
+  the API's env; default one-shot run; `--loop --sleep-seconds
+  60` for continuous). No deployment config or cron was changed.
+  Note also recorded: the poller errors out if the `Commodity`
+  table is empty, so at least one Commodity row must exist
+  before the first run.
+- **Merge plan extended to Cycle 19** (176 lines added, 0
+  removed). The Cycles 16–18 section's "55 commits" figure
+  re-verified correct.
+- **Super-plan §9 extended to Cycle 19** (heading/intro now
+  cover Cycles 1–19, test chain 179 → 656; Cycle 19 bullet
+  added; blockers updated — poller reaches all 93 adapters,
+  now 119 with the new ones, but the deployed cron still runs
+  the file job, not the poller; Mae-Mart proxy live).
+  Full detail: `docs/plans/overnight-cycle-19-report.md` for the
+  merge-plan/super-plan work and
+  `docs/plans/overnight-cycle-20-report.md` for this cycle.
+
+### 3f. Gates — updated expectations for Cycle 20
+
+§3 applies unchanged, with these per-cycle numbers:
+
+1. **Full API test suite** — expect Cycle 20: 692 — **0 failed**.
+   (656 at Cycle 19 + 36 new: agricharts/DTN adapters 30,
+   toggle gating 6.)
+2. **Web build** — re-run once at the Cycle 20 step so the final
+   tree is verified as a whole. No web files changed in Cycle 20,
+   so a build failure at this step would point at an earlier
+   cycle, not the branch being merged. Last full pass was
+   Cycle 17.
+3. **Alembic chain** — head is **still `0019`**. Verified from
+   git: no migration file was added in Cycle 20 (`git log` on
+   the Alembic versions dir in `cycle-19..cycle-20` is empty, and
+   the file list at the Cycle 20 tip is `0001`–`0019`). The only
+   two commits ever touching that directory in
+   `master..cycle-20` are from Cycle 1 and Cycle 7 (which added
+   `0019`). Expect exactly one head, `0019`, at the Cycle 20 step.
+4. **Boundary spot-check** — the Cycle 20 report has its own
+   boundary section (zero new references, verified by grep on the
+   added lines). Re-check once at the Cycle 20 step as in §3.4.
+5. **No-secrets spot-check** — as §3.5; the report states none.
+
+### 4f. Known conflicts and overlaps — Cycle 20
+
+The chain is still linear, so a sequential merge still produces
+no conflicts. The §4 watch-list extends as follows:
+
+- **Price-source catalogue** (`docs/plans/price-source-catalogue.md`)
+  — edited in **Cycle 20** as well (200 lines changed; the 26
+  new sites documented, Frontier Coop flagged StoneX). Same rule
+  as §4: later wins.
+- **`us_agricharts_source.py` + `us_dtn_source.py`** — both **new
+  files** in Cycle 20 (127 + 211 lines: the site maps, the 26
+  zero-arg wrappers, and the `fetch_us_dtn` `playwright=None`
+  guard). No earlier cycle touches either file, so no overlap;
+  the guard is additive and legacy GrainBidder calls with a real
+  playwright are unaffected.
+- **`config.toml`**
+  (`app/platform/market_data/sources/config.toml`) — touched in
+  Cycle 20 (31 lines: the 26 new `[sources]` toggles, none
+  pre-existed, no existing value touched). The Cycle 18 synced
+  `[us]` list is the base; the toggles here are purely additive.
+- **Source registry** (`app/services/source_registry.py`) —
+  touched in **Cycle 20** (26 lines: the 26 adapter
+  registrations, mode `"direct"`, `15, 90`). Later wins, never
+  drop a registration. Registry now holds 119 adapters.
+- **Source toggles** (`app/services/source_toggles.py`) — **new
+  file** in Cycle 20 (52 lines: `is_adapter_enabled`,
+  `disabled_adapter_keys`). No earlier cycle touches it; it is
+  the single place the FastAPI side consults the toggles.
+- **Source orchestration** (`app/services/source_orchestration.py`)
+  — touched in **Cycle 20** (32 lines: seed + due-list toggle
+  gating) and in **Cycle 19** (pilot-allowlist removal from
+  `list_due_sources()`). Both changes live in the same
+  functions' neighbourhood, so a careless resolve could drop
+  either the allowlist removal or the toggle gating — sequential
+  merge carries both; verify both behaviours survive (the
+  toggle-gating tests and the Cycle 19 orchestration regression
+  tests). `app/api/routes/sources.py` was also touched in
+  Cycle 20 (9 lines: the seed response shape); no earlier cycle
+  touches it.
+- **Deployment checklist** (`docs/plans/deployment-checklist.md`)
+  — touched in Cycle 20 (§4 step 6 new + §8 checkbox: poller as
+  a second cron). Additive; no deployment config or cron was
+  changed.
+- **Super-plan §9** (`docs/plans/grainhub-super-plan.md`) —
+  updated in **Cycle 20** (progress to Cycle 19, test chain
+  179 → 656). Linear, no conflict expected.
+- **Migration chain** — unchanged: `0015 → … → 0018` (Cycle 1)
+  then `0019` (Cycle 7), single head throughout Cycle 20.
+
+### 5f. What must NOT be merged as-is — update
+
+- **The CI workflow file is STILL not in any branch.** Verified
+  2026-11-19 (Cycle 21): `?? .github/` in `git status` on the
+  Cycle 21 checkout (`.github/workflows/api-tests.yml`).
+  Merging Cycle 20 as well as 1–19 will **not** bring it into
+  `master`. Same remedy as §5: Adam re-authenticates `gh` with
+  `workflow` scope, or adds the file via the GitHub web UI. Do
+  not hand-copy it into a merge commit.
+- **Nothing else new is held back in Cycle 20.** No new unpushed
+  files, secrets, or held-back work is reported in the Cycle 20
+  report. The §5 review-not-blocker list is unchanged and carried
+  forward: email-bid endpoint public by default, futures
+  endpoints still return prices `null` until a licensed feed is
+  wired (the Mae-Mart proxy now fills `futures_price` on
+  collector rows only — it does not feed the futures endpoints),
+  Advisor `/ask` is a 501 scaffold, eSign is a stub, normalized
+  price rows carry no currency (`currency: null`).
+- **Open decisions carried forward from Cycle 20 (not
+  blockers):** live verification of the 13 agricharts wrappers
+  (1 GET each); Playwright render check per DTN page (Al-Corn +
+  Sunrise first — classic shape the generic was written for);
+  Frontier Coop needs a StoneX collector as a separate
+  later-cycle item (the DTN adapter returns empty for it by
+  design); DTN toggles stay `false` until verified; scheduling
+  the poller as a second cron job (deployment decision,
+  checklist §4 step 6); Mae-Mart `cash_price` from futures +
+  static basis (still open, gated on the licensed-feed
+  decision); at least one `Commodity` row must exist before the
+  first poller run.
+
+### 7f. After the merges — updated
+
+§7 applies with the Cycle 20 tip as the end state: Alembic head
+`0019` (unchanged since Cycle 7), test suite 692 passed / 0
+failed, web build last fully passed in Cycle 17 (re-run at the
+Cycle 20 merge step). The still-open decisions list in §7.4 is
+unchanged by Cycle 20 except for the additions in §5f above.
+Open work carried forward: Playwright render checks (DTN family
+— Al-Corn + Sunrise first — FMN filtered view, Mapleview,
+StoneX including Frontier, The Andersons — closed for static
+collection, browser-only — and Landus, Vercel checkpoint); live
+verification of the 13 agricharts wrappers; Chadbourn + Hamer +
+Skyland 3370/3621 staleness watch; Mae-Mart cash-price decision;
+poller scheduling decision; currency decision.

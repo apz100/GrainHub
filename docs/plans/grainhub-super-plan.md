@@ -49,7 +49,7 @@ pushed to https://github.com/apz100/GrainHub (public, master branch).
 
 - Playwright web collectors, Outlook email bid parsing (OCR for image tables),
   Bank of Canada FX, basis normalisation, CSV / Excel / PDF daily reports
-- North Gower pricing-decision layer: competitor benchmarks, USD-basis
+- pricing-decision layer: competitor benchmarks, USD-basis
   ceilings, recommended max CAD basis
 - Reporting roadmap: Elevator Basis Market Position, Direct-Ship Buyer
   Comparison, Daily Market Movement, Opportunity Summary

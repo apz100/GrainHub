@@ -71,14 +71,14 @@ def _make_snapshot(captured_at, **overrides):
 def _make_price(captured_at, **overrides):
     values = {
         "snapshot_id": uuid.uuid4(),
-        "location": "North Gower",
+        "location": "Testville",
         "commodity_name": "Corn",
         "cash_price_bu": Decimal("5.00"),
         "cash_price_mt": Decimal("196.85"),
         "basis": Decimal("0.50"),
         "futures_month": "July 2026",
         "delivery_label": "July 2026",
-        "composite_key": "north gower|corn|july 2026|",
+        "composite_key": "testville|corn|july 2026|",
         "location_id": LOCATION_ID,
         "company_id": COMPANY_ID,
     }

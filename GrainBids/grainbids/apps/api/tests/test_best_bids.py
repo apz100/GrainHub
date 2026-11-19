@@ -66,7 +66,7 @@ def _make_snapshot(captured_at):
 def _make_price(captured_at, **overrides):
     values = {
         "snapshot_id": uuid.uuid4(),
-        "location": "North Gower",
+        "location": "Testville",
         "commodity_name": "Corn",
         "cash_price_bu": Decimal("5.00"),
         "cash_price_mt": Decimal("196.85"),
@@ -74,7 +74,7 @@ def _make_price(captured_at, **overrides):
         "futures_month": "July 2026",
         "delivery_label": "July 2026",
         "source_name": "Great Lakes Grain",
-        "composite_key": "north gower|corn|july 2026|",
+        "composite_key": "testville|corn|july 2026|",
         "company_id": COMPANY_A,
     }
     values.update(overrides)
@@ -108,7 +108,7 @@ def test_best_bids_works_without_auth_headers() -> None:
     assert body["bid_count"] == 1
     bid = body["groups"][0]["bids"][0]
     assert bid["company_name"] == "Great Lakes Grain"
-    assert bid["location"] == "North Gower"
+    assert bid["location"] == "Testville"
     assert bid["cash_price_bu"] == 5.25
     assert bid["basis"] == 0.5
     assert bid["currency"] is None

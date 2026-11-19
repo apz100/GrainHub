@@ -108,11 +108,11 @@ def _make_profile(**overrides):
 def _make_price(**overrides):
     values = {
         "snapshot_id": uuid.uuid4(),
-        "location": "North Gower",
+        "location": "Testville",
         "commodity_name": "Corn",
         "cash_price_bu": Decimal("5.00"),
         "futures_price": Decimal("5.20"),
-        "composite_key": "north gower|corn|||",
+        "composite_key": "testville|corn|||",
     }
     values.update(overrides)
     return NormalizedPrice(**values)

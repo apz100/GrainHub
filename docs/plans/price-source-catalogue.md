@@ -31,7 +31,7 @@ was seen in a direct fetch. **Partially verified** = live homepage
 
 | Company | Location | URL | Type | Crops | Frequency | Status |
 |---|---|---|---|---|---|---|
-| North Gower Grains | North Gower | https://northgowergrains.com/ (#cash-bids) | Plain HTML daily post + homepage widget | corn, soy, SRW/HRW/HRS wheat (incl. protein) | daily ~7:00 am | **Verified** — 2026-11-17 post read in full; dated table, spot + Harvest 2026/2027. Adam's own elevator; top priority to add. |
+| North Gower Grains | North Gower | https://northgowergrains.com/ (#cash-bids) | Plain HTML daily post + homepage widget | corn, soy, SRW/HRW/HRS wheat (incl. protein) | daily ~7:00 am | **Verified** — 2026-11-17 post read in full; dated table, spot + Harvest 2026/2027. Ordinary source; no special treatment. |
 | Collwest Grain | Collingwood | https://www.collwestgrain.com/ | Bushel-powered site | corn, soy, wheat, canola, barley, oats | daily | **Verified 2026-11-19** — direct fetch 200, "Cash Bid" content in HTML. Add after collector pass. |
 | Mae-Mart Farms | Norfolk County | http://www.mae-martfarms.com/ | Plain HTML | corn, soy, wheat, rye | continuous in market hours | **Verified 2026-11-19** — direct fetch 200, "Cash Price" content in HTML. Add after collector pass. |
 | Mapleview Grain | London | https://www.mapleviewgrain.ca/ | Plain HTML | corn, soy, wheat (old + new crop) | not stated | **Verified 2026-11-19** — direct fetch 200, "Cash bid" content in HTML. Add after collector pass. |

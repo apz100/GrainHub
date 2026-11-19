@@ -5,6 +5,7 @@ from sqlalchemy import text
 
 from app.api.routes.alerts import router as alerts_router
 from app.api.routes.advisor import router as advisor_router
+from app.api.routes.basis import router as basis_router
 from app.api.routes.best_bids import router as best_bids_router
 from app.api.routes.bids import router as bids_router
 from app.api.routes.elevator_ops import router as elevator_ops_router
@@ -71,6 +72,7 @@ def create_app() -> FastAPI:
     app.include_router(elevator_ops_router)
     app.include_router(reference_router)
     app.include_router(research_router)
+    app.include_router(basis_router)
     app.include_router(best_bids_router)
     app.include_router(bids_router)
     app.include_router(sources_router)

@@ -15,8 +15,8 @@ from app.api.routes.market_search import (  # noqa: E402
 
 
 def test_haversine_km_north_gower_to_russell_is_about_20km() -> None:
-    # North Gower ~45.13, -75.72; Russell ~45.26, -75.36.
-    distance = haversine_km(45.13, -75.72, 45.26, -75.36)
+    # Testville ~45.05, -75.55; Russell ~45.26, -75.36.
+    distance = haversine_km(45.05, -75.55, 45.26, -75.36)
     assert 25.0 < distance < 35.0
 
 

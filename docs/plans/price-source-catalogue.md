@@ -619,7 +619,7 @@ recorded here — row counts and widget patterns only.
 | StateLine Coop | https://www.statelinecoop.com | 200 (→ `statelinecoop.com/`) | No | WordPress homepage, no challenge page this time (Cycle 1 reported a Cloudflare challenge; the reCAPTCHA strings now are form-related). No widget on homepage; nav links `/cash-bids`; page CSS references `table.cashbid_table`, hinting at an embed on the sub-page | None at this URL — stays `unknown`; one GET of `/cash-bids` next. **Cycle 11 (2026-11-19):** 200 at `/cash-bids` — AgriCharts `cashbids.php` embed (`statelinecoop.agricharts.com`, `groupby=location`) plus custom CSS for `table.cashbid_table`, no static rows; reclassified `unknown → agricharts-embed`, still disabled; `cashbids-js.php` check open. **Cycle 12 (2026-11-19):** `cashbids-js.php` 200, `var bids` JSON, 126 rows (11 locations — Corn 60, Soybeans 66); enabled, registry entry `stateline_coop`. |
 | Sunrise | https://www.sunriseco-op.com | 200 | No | **Classic DTN**: `<div id="target">` + `CashBidTable(tableOptions)`, companyID 23043, CIHedging `CashBidWidget.js` / `ChartJS.js`, ATLAS DTN shell (`/dtncashbidwidget/bindlocation`) | **Exact fit for existing `us_dtn_source.py`** — reclassified `unknown → dtn` and **enabled** in `us_elevators_urls.toml` (the only enable in this cycle). Playwright render check still open |
 | Synergy | https://www.synergycoop.com | 200 | **Yes — 4 rows, Corn 2 + Soybeans 2, Cameron, 6-col widget, dated header Nov 19, 2026** | Bushel `.cbmod` widget in static HTML (div/`ul` rows, `sixColumnsBigFirst`, not `<table>` rows) | **Collector candidate — ready:** the existing generic `bushel_source.py` parses the saved HTML with status ok (4 rows, Cameron, Corn 2 + Soybeans 2). Reclassified `unknown → bushel` and enabled; `BUSHEL_SITES` registry entry + `fetch_synergy()` added in Cycle 10 (3 tests) |
-| The Andersons | https://www.andersonsgrain.com | 200 | No | Corporate Trade Group homepage, no widget; bid links `/locations/cash-bids/` + `/local-bids/locations-list/` | None at this URL — stays `unknown`; one GET of a bid sub-page next. Distinct from The Andersons Canada (DTN, Ontario section). **Cycle 11 (2026-11-19):** 200 at `/locations/cash-bids/` — proprietary GRAINweb "MyCashBids" **interactive location-picker** (choose a location + commodities, click Add; selections saved for next visit), no static rows, no recognizable embed; bids load via JS after a location is picked; needs a browser/API investigation; stays `unknown`, still disabled. **Cycle 14 (2026-11-19):** the `my-cash-bids` bundle fetched verbatim (1,079 bytes) — picker logic only, **no network call of any kind, no API route, no POST target**; confirmed browser-only (form POST + server render, possibly account-bound). See "The Andersons — GRAINweb investigation (Cycle 13)" + Cycle 14 addendum. Stays `unknown`, still disabled. **Cycle 15 (2026-11-19):** the locations-list page fetched verbatim — HTTP 200, 27,082 bytes; a plain 41-facility directory, 0 tables, 0 forms, no static bids. The Andersons is **closed for static collection**; only a rendered browser session (possibly account-bound) remains. |
+| The Andersons | https://www.andersonsgrain.com | 200 | No | Corporate Trade Group homepage, no widget; bid links `/locations/cash-bids/` + `/local-bids/locations-list/` | None at this URL — stays `unknown`; one GET of a bid sub-page next. Distinct from The Andersons Canada (DTN, Ontario section). **Cycle 11 (2026-11-19):** 200 at `/locations/cash-bids/` — proprietary GRAINweb "MyCashBids" **interactive location-picker** (choose a location + commodities, click Add; selections saved for next visit), no static rows, no recognizable embed; bids load via JS after a location is picked; needs a browser/API investigation; stays `unknown`, still disabled. **Cycle 14 (2026-11-19):** the `my-cash-bids` bundle fetched verbatim (1,079 bytes) — picker logic only, **no network call of any kind, no API route, no POST target**; confirmed browser-only (form POST + server render, possibly account-bound). See "The Andersons — GRAINweb investigation (Cycle 13)" + Cycle 14 addendum. Stays `unknown`, still disabled. **Cycle 15 (2026-11-19):** the locations-list page fetched verbatim — HTTP 200, 27,082 bytes; a plain 41-facility directory, 0 tables, 0 forms, no static bids. The Andersons is **closed for static collection**; only a rendered browser session (possibly account-bound) remains. **Cycle 16 (2026-11-19):** both confirmatory checks named in Cycle 15 are done — the Maumee facility page (HTTP 200) DOES carry static bid tables (3 tables: Corn 10 rows, Soybeans 10, Red Wheat 3), but the page states all market data is provided by Barchart Solutions, so the tables are licensed data and are NOT collected; the Ohio per-state list page (HTTP 200) is the same directory markup with no bids. The Andersons is now **fully closed** — the closure rests on licensing, not absence of static rows. See the Cycle 16 loose-ends section. |
 | UFC | https://www.ufcmn.com | 200 (→ `centralunitedcoop.com/`) | No | **StoneX**: redirects to the Central United Cooperative homepage (same site/org as CRC); Cash Bids section is a StoneX component iframe (`stonehedge.stonex.com/component/bids`, `hideRows=true`). The DTN widget hits are map/weather widgets, not cash bids | StoneX — same family as Frontier Coop / CRC (JS app shell, no static route per Cycle 8 research). Reclassified `unknown → stonex`, still disabled; render check is the only open route |
 | West-Con | https://www.west-con.com | 200 | No | AgriCharts-hosted homepage (s3 `media.agricharts.com` assets, `quotelib.js`); homepage cash widget is **JS-filled — values blank (`&nbsp;`) in static HTML**, location scaffolding Holloway / Appleton / Milbank / DLVD AGP Dawson / Aberdeen | None at this URL — stays `unknown`; one GET of `/markets/cash.php` next to confirm the `writeBidRow` route. **Cycle 11 (2026-11-19):** 200 at `/markets/cash.php` — **84 static `writeBidRow` rows** (Corn / Soybeans / DNS Wheat) — **but a parser gap:** delivery start/end are month-name labels (`'Dec 2026'`, `'Jan 2027'`), not `MM/DD/YYYY`, so the existing `us_agricharts_source.py` `_WRITEBIDROW_RX` matches **0/84**; reclassified `unknown → agricharts`, still disabled pending a small regex extension. |
 | Wheaton Dumont | https://www.wdcoop.com | 200 | No | AgriCharts-hosted homepage (s3 `media.agricharts.com` assets, `quotelib.js`); homepage cash widget is **JS-filled — values blank in static HTML**, location scaffolding Wheaton / Dumont / Browns Valley / LaMars / Hankinson / Mantador / Sisseton (+ Britton, SD / Rutland, ND) | None at this URL — stays `unknown`; one GET of `/markets/cash.php` next to confirm the `writeBidRow` route. **Cycle 11 (2026-11-19):** dropped from the sub-page sweep to stay in the 9-GET budget (same AgriCharts pattern as West-Con); the `/markets/cash.php` probe is still open. |
@@ -718,9 +718,9 @@ see below).
 | Pro Ag | https://www.proagfarmers.com/markets/cash.php | 200 | **Yes — 78 rows** (Corn / Soybeans / Wheat, 6 `h4` locations: Brandon, CLARISSA, EAGLE BEND / EAGLE BEND WEST, GARFIELD, Hoffman, PARKERS PRAIRIE) | Classic AgriCharts `writeBidRow()` calls inline in static HTML, `MM/DD/YYYY` delivery dates | **Collector-ready:** all 78 calls match the existing `us_agricharts_source.py` `_WRITEBIDROW_RX` (verified against saved HTML). Reclassified `unknown → agricharts` and **enabled** (entry URL updated to `/markets/cash.php`); no registry adapter needed — the orchestrator drives `fetch_us_agricharts(url, name)` from the toml |
 | West-Con | https://www.west-con.com/markets/cash.php | 200 | **Yes — 84 rows** (Corn / Soybeans / DNS Wheat, location param `All`) | Classic AgriCharts `writeBidRow()` calls inline in static HTML — **but delivery start/end are month-name labels** (`'Dec 2026'`, `'Jan 2027'`, 10 distinct), not `MM/DD/YYYY` | **Parser gap found:** the existing `_WRITEBIDROW_RX` requires `MM/DD/YYYY` dates and matches **0/84**. Reclassified `unknown → agricharts`, still disabled; a small regex extension (accept month-name delivery labels) unblocks it. **Cycle 12 (2026-11-19):** regex extended to accept month-name labels; verified **84/84** against the saved Cycle 11 HTML (10 distinct labels, start == end on all rows). **Enabled** (toml entry flipped `enabled = true`); no registry adapter needed — the orchestrator drives `fetch_us_agricharts` from the toml. 7 tests in `test_us_agricharts_source.py`. |
 | StateLine Coop | https://www.statelinecoop.com/cash-bids | 200 (→ `statelinecoop.com/cash-bids/`) | No | **AgriCharts `cashbids.php` embed** (`statelinecoop.agricharts.com`, `groupby=location`) on a WordPress page, plus custom CSS for `table.cashbid_table` (the Cycle 10 hint was right); no bid table in static HTML. Footer: "All market data is provided by Barchart Solutions" (attribution only — no Barchart link followed) | AgriCharts embed — same family as Hull Coop / PRO Coop. Reclassified `unknown → agricharts-embed`, still disabled; `cashbids-js.php` check open. **Cycle 12 (2026-11-19):** proven — 200, `var bids` JSON, 126 rows (11 locations — Corn 60, Soybeans 66); enabled. |
-| The Andersons | https://www.andersonsgrain.com/locations/cash-bids/ | 200 | No | Proprietary GRAINweb **"MyCashBids" interactive location-picker**: "Customize Your Cash Bids! Select the location first, and then the commodities…" with an Add-commodity form (`data-ui="add-commodity"`), a "Bid and Basis Charts" modal, and an empty-src `chartFrame` iframe; links to `/local-bids/locations-list/` and `/local-bids/locations/` | No recognizable embed and no static rows; bids load via JS after a location is picked. Stays `unknown`, still disabled; needs a browser/API investigation (distinct from The Andersons Canada, DTN, in the Ontario section). **Cycle 15 (2026-11-19):** the locations-list page (`/local-bids/locations-list/`) fetched verbatim — HTTP 200, 27,082 bytes; a plain 41-facility directory, 0 tables, 0 forms, no static bids. The Andersons is **closed for static collection**; only a rendered browser session remains. |
+| The Andersons | https://www.andersonsgrain.com/locations/cash-bids/ | 200 | No | Proprietary GRAINweb **"MyCashBids" interactive location-picker**: "Customize Your Cash Bids! Select the location first, and then the commodities…" with an Add-commodity form (`data-ui="add-commodity"`), a "Bid and Basis Charts" modal, and an empty-src `chartFrame` iframe; links to `/local-bids/locations-list/` and `/local-bids/locations/` | No recognizable embed and no static rows; bids load via JS after a location is picked. Stays `unknown`, still disabled; needs a browser/API investigation (distinct from The Andersons Canada, DTN, in the Ontario section). **Cycle 15 (2026-11-19):** the locations-list page (`/local-bids/locations-list/`) fetched verbatim — HTTP 200, 27,082 bytes; a plain 41-facility directory, 0 tables, 0 forms, no static bids. The Andersons is **closed for static collection**; only a rendered browser session remains. **Cycle 16 (2026-11-19):** both confirmatory checks named in Cycle 15 are done — the Maumee facility page (HTTP 200) DOES carry static bid tables (3 tables: Corn 10 rows, Soybeans 10, Red Wheat 3), but the page states all market data is provided by Barchart Solutions, so the tables are licensed data and are NOT collected; the Ohio per-state list page (HTTP 200) is the same directory markup with no bids. The Andersons is now **fully closed** — the closure rests on licensing, not absence of static rows. See the Cycle 16 loose-ends section. |
 | Skyland Grain | https://www.skylandgrain.com/cashbidssingle- | 200 | **Yes — 6 rows** (Corn 2, Milo 1, Red Wheat 2, Soybeans 1, Cunningham Area), widget header dated Nov 19, 2026 | The nav link target is literally **`/cashbidssingle-` (empty ID)** and serves a **14-location picker** (`CashBidsLocationID`s 2730–3621 in static HTML) **AND** a static 7-col Bushel `.cbmod` widget for the default location (Cunningham Area). The sweep worker reported "no `.cbmod` widget, no bid rows" — **wrong; corrected by the coordinator's re-check** (a fresh GET parses ok, 6 rows; the saved `/tmp/cycle11` HTML parses ok too). Same canonical trailing-dash pattern as Williams Gin (Cycle 5) | **Collector-ready:** the existing generic `bushel_source.py` parses it with no changes. **Enabled** (entry URL updated to `/cashbidssingle-`); `BUSHEL_SITES` registry entry + `fetch_skyland()` added in Cycle 11 (6 tests). Per-location `/cashbidssingle-<id>` targets still open. **Cycle 12 (2026-11-19):** 200 at `/cashbidssingle-2730` — **static 7-col `.cbmod` widget, 6 rows (Corn 2, Milo 1, Red Wheat 2, Soybeans 1, Cunningham Area)** — 2730 is Cunningham Area's own per-location ID, so the rows duplicate the default page; **enabled** as a separate entry (`skyland_2730` + `fetch_skyland_2730()`); 13 picker IDs still open. **Cycle 13 (2026-11-19):** 6 more per-location targets probed (2731 Conlen - Hartley, 2734 Etter, 2740 Moscow/Dermot/Kismet/Pleasant Valley, 2742 Johnson - Ulysses - N Sublette, 2754 Olton Area, 2761 Elkhart - Hough - Rolla Area) — all 200, all static 7-col `.cbmod` widgets; **enabled** as separate entries; 7 picker IDs still open (2763, 2766, 2770, 2771, 2778, 3370, 3621). **Cycle 14 (2026-11-19):** the last 7 per-location targets probed (2763 Satanta - Ryus, 2766 Spearman - Gruver - Texline, 2770 Sunray Area, 2771 Kendall - Midway - Lydia, 2778 Buckeye - Syracuse, 3370 Hugoton, 3621 Vilas - Walsh) — all 200, all static 7-col `.cbmod` widgets; **enabled** as separate entries; **all 14 picker IDs now verified — the Skyland sweep is complete**. |
-| Smithfield | https://smithfieldgrain.com/fccp-cash-bids-east-region-20249 | 200 | No | **Bushel FCCP per-location link list** (NC / IN / OH / SC / VA, ~30 locations, e.g. Bentonville 1666, Bladenboro 1725); no static rows, no `.cbmod` widget; page JS iframes `/cashbidssingle-<locId>` per location | Bushel — bids live on the per-location `/cashbidssingle-<id>` targets. Stays `bushel`, still disabled; probe one per-location target next (e.g. `/cashbidssingle-1666`, Bentonville). **Cycle 12 (2026-11-19):** 200 at `/cashbidssingle-1666` — **static 7-col `.cbmod` widget, 3 rows (Soybeans 1, Wheat 1, Corn 1, Bentonville, NC)**; **enabled** as a separate per-location entry (`smithfield_bentonville` + `fetch_smithfield_bentonville()`); ~29 East Region locations still open. **Cycle 13 (2026-11-19):** 4 more per-location targets probed (1725 Bladenboro, 1667 Bladenboro Feed Mill, 2294 Chadbourn, 1668 Clarkton) — all 200, all static 7-col `.cbmod` widgets; **enabled** as separate entries; 26 East Region locations still open. **Cycle 14 (2026-11-19):** 6 more per-location targets probed (1669 Clinton, 1670 Hobbsville, 1671 Kinston, 1672 LaGrange, 1673 Morgan's Corner, 1674 Mount Olive) — all 200, all static 7-col `.cbmod` widgets; **enabled** as separate entries; 20 East Region locations still open. **Cycle 15 batch B (2026-11-19):** 6 more per-location targets probed (1683 Creswell, 1684 Warsaw, 1685 Harpster, 1686 Morral, 1687 Darlington, 1688 Lake City) — all 200, all static 7-col `.cbmod` widgets, all widget headers dated Nov 19, 2026; **enabled** as separate entries; 14 East Region locations still open after this batch (1675, 1676, 1678, 1679, 1681, 1682, 1689, 1690, 1691, 2064, 2065, 2066, 2067, 2179) — the sibling batch A is probing 1675–1682 in parallel. **Cycle 15 batch A (2026-11-19):** 5 of the 6 batch-A targets verified (1676 Red Springs, 1678 Walstonburg, 1679 Weeksville, 1681 The Chief Feed Mill, 1682 Laurinburg Feed Mill) — all 200, all static 7-col `.cbmod` widgets, all headers Nov 19, 2026; **enabled** as separate entries. 1675 Raeford returned 200 with an **empty widget, 0 rows — NOT registered**, re-probe later. Combined, Cycle 15 leaves 8 East Region locations still open (1689, 1690, 1691, 2064, 2065, 2066, 2067, 2179) plus the Raeford re-probe. |
+| Smithfield | https://smithfieldgrain.com/fccp-cash-bids-east-region-20249 | 200 | No | **Bushel FCCP per-location link list** (NC / IN / OH / SC / VA, ~30 locations, e.g. Bentonville 1666, Bladenboro 1725); no static rows, no `.cbmod` widget; page JS iframes `/cashbidssingle-<locId>` per location | Bushel — bids live on the per-location `/cashbidssingle-<id>` targets. Stays `bushel`, still disabled; probe one per-location target next (e.g. `/cashbidssingle-1666`, Bentonville). **Cycle 12 (2026-11-19):** 200 at `/cashbidssingle-1666` — **static 7-col `.cbmod` widget, 3 rows (Soybeans 1, Wheat 1, Corn 1, Bentonville, NC)**; **enabled** as a separate per-location entry (`smithfield_bentonville` + `fetch_smithfield_bentonville()`); ~29 East Region locations still open. **Cycle 13 (2026-11-19):** 4 more per-location targets probed (1725 Bladenboro, 1667 Bladenboro Feed Mill, 2294 Chadbourn, 1668 Clarkton) — all 200, all static 7-col `.cbmod` widgets; **enabled** as separate entries; 26 East Region locations still open. **Cycle 14 (2026-11-19):** 6 more per-location targets probed (1669 Clinton, 1670 Hobbsville, 1671 Kinston, 1672 LaGrange, 1673 Morgan's Corner, 1674 Mount Olive) — all 200, all static 7-col `.cbmod` widgets; **enabled** as separate entries; 20 East Region locations still open. **Cycle 15 batch B (2026-11-19):** 6 more per-location targets probed (1683 Creswell, 1684 Warsaw, 1685 Harpster, 1686 Morral, 1687 Darlington, 1688 Lake City) — all 200, all static 7-col `.cbmod` widgets, all widget headers dated Nov 19, 2026; **enabled** as separate entries; 14 East Region locations still open after this batch (1675, 1676, 1678, 1679, 1681, 1682, 1689, 1690, 1691, 2064, 2065, 2066, 2067, 2179) — the sibling batch A is probing 1675–1682 in parallel. **Cycle 15 batch A (2026-11-19):** 5 of the 6 batch-A targets verified (1676 Red Springs, 1678 Walstonburg, 1679 Weeksville, 1681 The Chief Feed Mill, 1682 Laurinburg Feed Mill) — all 200, all static 7-col `.cbmod` widgets, all headers Nov 19, 2026; **enabled** as separate entries. 1675 Raeford returned 200 with an **empty widget, 0 rows — NOT registered**, re-probe later. Combined, Cycle 15 leaves 8 East Region locations still open (1689, 1690, 1691, 2064, 2065, 2066, 2067, 2179) plus the Raeford re-probe. **Cycle 16 (2026-11-19):** 6 more per-location targets probed (1689 Nichols, 1690 Petersburg, 1691 Waverly, 2064 Kinston JCH, 2065 Jones County, 2066 Deep Run JCH) — all 200, all static 7-col `.cbmod` widgets, all widget headers dated Nov 19, 2026; **enabled** as separate entries; Waverly is the fattest Smithfield page yet (7 rows, incl. the first Grain Sorghum on a Smithfield page). Only 2 East Region locations still open (2067, 2179) plus the Raeford re-probe. **Cycle 16 loose ends (2026-11-19):** both done — 2067 Lapaz (2 Corn rows, fresh Nov 19 header) and 2179 Hamer (1 Soybeans row, header a day stale, Nov 18) verified and **enabled** as separate entries (`smithfield_lapaz`, `smithfield_hamer`); Raeford (1675) re-probed and **still empty** (0 rows, status "empty", second probe in a row) — **NOT registered**, and no further re-probe is planned. The 31-location East Region list is now fully covered except Raeford. See the Cycle 16 loose-ends section. |
 | Winchester Ag | https://www.wheatongrain.com/cashbidssingle-3439?embed=y | 200 | **Yes — 10 rows** (Corn 5 + Soybeans 5, Winchester), widget header dated Nov 19, 2026 | Bushel **`.cbmod` widget in static HTML**, standard wrapped shape: `div.cbCommodity` + `ul.sevenColumnsBigFirst` 7-col rows (Delivery / Bid / Basis / Futures / Change / Futures Month / Last Trade) — the FAC shape, not Wheaton Grain's tabbed variant | **Collector-ready:** the existing generic `bushel_source.py` `parse_bushel_html` verified status ok, 10 rows, against saved HTML — no parser change needed. **Enabled** (entry URL updated to the embed target); `BUSHEL_SITES` registry entry + `fetch_winchester()` added in Cycle 11 (6 tests). The 3440 target stays open. **Cycle 12 (2026-11-19):** 200 at `/cashbidssingle-3440?embed=y` — **static 7-col `.cbmod` widget, 5 rows (Soybeans only)** — but the location h2 is **"Georgetown"**: 3440 serves Wheaton's Georgetown location, not Winchester; **enabled** as a separate entry (`winchester_3440` + `fetch_winchester_3440()`). |
 | Wheaton Dumont | — (not probed) | — | — | Dropped to stay in the 9-GET budget (Skyland took 2 GETs); same AgriCharts-hosted pattern as West-Con | Still open: one GET of `https://www.wdcoop.com/markets/cash.php` next. **Cycle 12 (2026-11-19):** one GET of `https://www.wdcoop.com/markets/cash.php` returned 200 with **43 static `writeBidRow` rows** (Corn 18 / Soybeans 16 / Spring Wheat 9, 8 `<h4>` locations) — but delivery labels are the SHORT month form (`'Nov 26'`, `'Jan 27'`, 6 distinct), so the Cycle 12 regex needed a second extension (2-digit years) before it matched; verified **43/43** against saved HTML, 6 rows span two adjacent months. Reclassified `unknown → agricharts` and **enabled** (entry URL updated to `/markets/cash.php`); no registry adapter needed. |
 
@@ -871,6 +871,34 @@ groups, no login wall), with **0 tables, 0 forms, and no
 bids. The Andersons is **closed for static collection**; only a
 rendered browser session (possibly account-bound) remains. Full
 findings in the Cycle 15 section below.
+
+**Cycle 16 (2026-11-19) — confirmatory checks done, closure
+now rests on licensing.** Both low-odds checks named in Cycle 15
+were fetched (one GET each, HTTP 200, saved to `/tmp/cycle16/`):
+the Maumee facility page
+(`https://www.andersonsgrain.com/locations/oh/maumee/`) and the
+Ohio per-state list page
+(`https://www.andersonsgrain.com/local-bids/locations-list/location-list/ohio/`).
+The Ohio list page is the same directory markup as the master
+list — body lists the same 7 Ohio facilities, no bids. The
+Maumee page is the surprise: alongside the expected facility
+info (Hours, Discount Schedules, DP/Storage Rates, Contacts,
+About This Facility, Maps embed) it carries **3 static
+`styled-table` bid tables** (Corn 10 delivery rows, Soybeans
+10, Red Wheat 3; columns Delivery / Bid / Basis / Futures /
+Chg / Symbol / Last Trade) — static bid rows DO exist on
+Andersons facility pages. But the page carries a Barchart
+disclaimer ("All market data is provided by Barchart
+Solutions"), so the tables are **Barchart-licensed data** and
+are deliberately NOT collected, NOT registered, and no toml
+entry was added. The Andersons is therefore **fully closed**:
+no static-collection path remains that is in scope — the
+facility tables are licensed, the picker is a JS form POST
+(possibly account-bound), and the list pages are directories.
+No new probe exists: the other 40 facility pages would serve
+the same Barchart-licensed tables (do not probe them — the
+answer is already known and the data is out of scope). Full
+findings in the Cycle 16 loose-ends section below.
 
 **Cycle 14 addendum (2026-11-19) — bundle fetched verbatim, thread
 closed.** One GET of the bundle URL above (HTTP 200, 1,079 bytes,
@@ -1499,15 +1527,39 @@ can be built from static fetches. Stays `unknown`, still
 disabled. Full findings also recorded as a Cycle 15 addendum
 under "The Andersons — GRAINweb investigation (Cycle 13)" above.
 
+**Cycle 16 (2026-11-19) — confirmatory checks done, closure
+refined.** Both checks named below were fetched: the Maumee
+facility page DOES carry static bid tables (3 tables: Corn 10
+rows, Soybeans 10, Red Wheat 3), but the page states all market
+data is provided by Barchart Solutions — the tables are
+licensed data and are NOT collected. The Ohio per-state list
+page is the same directory markup, no bids. The Andersons is
+now **fully closed**: the closure rests on licensing, not on
+absence of static rows. No new probe exists (the other 40
+facility pages would serve the same Barchart-licensed tables;
+do not probe them). Full findings in the Cycle 16 loose-ends
+section below.
+
 ### Next probes, if a later cycle wants confirmatory checks (NOT fetched — 1 GET each, low odds)
+
+**Cycle 16 (2026-11-19): both checks below are DONE — this list
+is spent, do not re-fetch.**
 
 1. `https://www.andersonsgrain.com/locations/oh/maumee/` — one
    representative facility page (Maumee, OH, flagship Ohio
    location): tests whether facility pages carry static bids or
    only contact/directions info. Expected: info only.
+   **Cycle 16 result: expectation WRONG — the page DOES carry
+   static bid tables (3 tables: Corn 10 rows, Soybeans 10, Red
+   Wheat 3), but the page states all market data is provided by
+   Barchart Solutions, so the tables are licensed data and are
+   NOT collected. See the Cycle 16 loose-ends section.**
 2. `https://www.andersonsgrain.com/local-bids/locations-list/location-list/ohio/`
    — one per-state list page: tests whether state lists differ
    from the master list. Expected: same directory markup, no bids.
+   **Cycle 16 result: expectation CONFIRMED — same directory
+   markup (same 7 Ohio facilities), no bids. See the Cycle 16
+   loose-ends section.**
 3. (No third candidate — `/locations/cash-bids/` was already
    probed in Cycle 11 and is the picker itself, not a new target.)
 
@@ -1601,6 +1653,10 @@ entries unchanged.
   Smithfield targets outside NC (Harpster/Morral OH, Darlington/
   Lake City SC) — the h2 state suffix varies (", OH", ", SC"),
   and Harpster's live h2 is bare "Harpster" with no state.
+  **Cycle 16 (2026-11-19):** 1689 Nichols, 1690 Petersburg,
+  1691 Waverly, 2064 Kinston JCH, 2065 Jones County, 2066 Deep
+  Run JCH probed and enabled — only 2067 and 2179 still open,
+  plus the Raeford re-probe.
 - **Smithfield row counts:** Cycle 14 revises the Cycle 13
   thin-page expectation — five of six pages carry a full 3 rows
   (Corn + Soybeans + Wheat); only Morgan's Corner is thin
@@ -1775,7 +1831,16 @@ entries unchanged.
   is a second Kinston target (JCH - Kinston Elevator),
   distinct from 1671; 2065/2066 are the remaining JCH targets
   (Deep Run Feed Mill / Jones County Elevator, per the list
-  page). Probe a few per cycle, not in bulk.
+  page). Probe a few per cycle, not in bulk. **Cycle 16
+  (2026-11-19):** that next batch is done — 1689 Nichols, 1690
+  Petersburg, 1691 Waverly, 2064 Kinston JCH, 2065 Jones
+  County, 2066 Deep Run JCH all probed and enabled; only 2067
+  and 2179 still open, plus the Raeford re-probe.
+  **Cycle 16 loose ends (2026-11-19):** those are done too —
+  2067 Lapaz (2 Corn rows) and 2179 Hamer (1 Soybeans row)
+  probed and enabled; Raeford re-probed and still empty (not
+  registered). The East Region list is now fully covered except
+  Raeford; see the Cycle 16 loose-ends section.
 - **Smithfield row counts:** Cycle 15 batch B revises the Cycle
   14 full-page expectation again — only Creswell and Warsaw
   carry 2 rows; the other four are thin 1-row pages (Corn for
@@ -1878,7 +1943,11 @@ disabled. All other entries unchanged.
   `/cashbidssingle-1675` in a later cycle; if it then carries
   rows, register it like the others. If it stays empty across
   two probes, treat it as a location that posts no public bids
-  and stop spending GETs on it.
+  and stop spending GETs on it. **Cycle 16 (2026-11-19):**
+  re-probed — still empty (HTTP 200, generic shell, empty
+  `.cbmod` widget, 0 rows, status "empty"); NOT registered, and
+  no further re-probe is planned. See the Cycle 16 loose-ends
+  section.
 - **More Smithfield per-location probes (one GET each):** 8 East
   Region locations still open (1689 Nichols, 1690 Petersburg,
   1691 Waverly Feed Mill, 2064 JCH - Kinston, 2065 JCH - Jones
@@ -1897,3 +1966,221 @@ disabled. All other entries unchanged.
 - **Freshness:** all five batch-A widget headers are dated
   Thursday, November 19, 2026 — fresh, no Chadbourn-style lag
   on this batch.
+- **Cycle 16 (2026-11-19):** this batch is now done — 1689
+  Nichols, 1690 Petersburg, 1691 Waverly, 2064 Kinston JCH,
+  2065 Jones County, 2066 Deep Run JCH all probed and enabled
+  (see the Cycle 16 section). Only 2 East Region locations
+  still open (2067 Lapaz, 2179 Hamer) plus the Raeford re-probe.
+  **Cycle 16 loose ends (2026-11-19):** those are done too —
+  2067 Lapaz and 2179 Hamer probed and enabled, Raeford
+  re-probed and still empty (not registered). The East Region
+  list is now fully covered except Raeford; see the Cycle 16
+  loose-ends section.
+
+## United States — Cycle 16 Smithfield East Region (2026-11-19)
+
+Probed the next six Smithfield East Region per-location targets,
+one polite GET each (User-Agent `GrainHub-Research/1.0`, ~2 s
+spacing, no retries) — 6 GETs total, budget respected. The list
+page itself was recovered from the saved Cycle 11 page
+(`/tmp/cycle11/smithfield_fccp.html`), so no GET was spent
+re-fetching it; the six targets (1689 Nichols, 1690 Petersburg,
+1691 Waverly, 2064 JCH - Kinston, 2065 JCH - Jones County,
+2066 JCH - Deep Run Feed Mill) are the next six IDs in numeric
+order after the Cycle 15 batches (1683–1688 and 1675–1682).
+All six served 200 and parsed cleanly with the existing
+generic parser — no parser change needed. Raw HTML saved to
+`/tmp/cycle16/` scratch only, never the repo. No prices are
+recorded here — row counts, location/commodity breakdowns and
+widget patterns only.
+
+### Counts
+
+| Status | Count | Meaning |
+|---|---|---|
+| HTTP 200 | 6 | Every probed target served (no 404s, blocks, or empty bodies) |
+| Static bid rows visible in static HTML | **6** | Nichols (1), Petersburg (4), Waverly (7), Kinston JCH (3), Jones County (3), Deep Run JCH (2) — 20 rows total |
+| New parser gap | 0 | All six pages are the standard wrapped `.cbCommodity` + 7-col shape (the FAC shape); the parser already normalizes the widget's "Sorghum" header to "Grain Sorghum" |
+| Stale widget headers | 0 | All six headers dated Thursday, November 19, 2026 — fresh, no Chadbourn-style lag |
+| Empty widgets | 0 | No Raeford-style empty widget in this batch |
+
+### Per-site results
+
+| Company | URL probed | HTTP | Static bid rows? | Widget / pattern in static HTML | Collector pattern |
+|---|---|---|---|---|---|
+| Smithfield Grain — Nichols (1689) | https://smithfieldgrain.com/cashbidssingle-1689 | 200 | **Yes — 1 row** (Soybeans), widget header dated Nov 19, 2026 | Bushel **`.cbmod` widget in static HTML**, standard wrapped shape — the FAC shape. Location h2 is "Nichols, SC" (mapped to "Nichols"). Thin page: a single Soybeans row | **Collector-ready:** `parse_bushel_html` verified status ok, 1 row, against saved HTML — no parser change needed. **Enabled** (new toml entry; the East Region link-list entry stays disabled); registry entry `smithfield_nichols` + `fetch_smithfield_nichols()` added in Cycle 16 |
+| Smithfield Grain — Petersburg (1690) | https://smithfieldgrain.com/cashbidssingle-1690 | 200 | **Yes — 4 rows** (Corn 1, Wheat 1, Soybeans 2), widget header dated Nov 19, 2026 | Bushel **`.cbmod` widget in static HTML**, standard wrapped shape — the FAC shape. Location h2 is "Petersburg, VA" (mapped to "Petersburg"); the Soybeans rows share one `.cbCommodity` block, two data rows | **Collector-ready:** `parse_bushel_html` verified status ok, 4 rows, against saved HTML — no parser change needed. **Enabled** (new toml entry); registry entry `smithfield_petersburg` + `fetch_smithfield_petersburg()` added in Cycle 16 |
+| Smithfield Grain — Waverly (1691) | https://smithfieldgrain.com/cashbidssingle-1691 | 200 | **Yes — 7 rows** (Corn 3, Wheat 2, Grain Sorghum 2), widget header dated Nov 19, 2026 | Bushel **`.cbmod` widget in static HTML**, standard wrapped shape — the FAC shape. Location h2 is "Waverly, VA" (mapped to "Waverly"). The widget publishes the sorghum block as "Sorghum"; the parser normalizes it to "Grain Sorghum". **The fattest Smithfield page yet (7 rows) and the first to carry Grain Sorghum** | **Collector-ready:** `parse_bushel_html` verified status ok, 7 rows, against saved HTML — no parser change needed. **Enabled** (new toml entry); registry entry `smithfield_waverly` + `fetch_smithfield_waverly()` added in Cycle 16 |
+| Smithfield Grain — Kinston JCH (2064) | https://smithfieldgrain.com/cashbidssingle-2064 | 200 | **Yes — 3 rows** (Corn 1, Wheat 1, Soybeans 1), widget header dated Nov 19, 2026 | Bushel **`.cbmod` widget in static HTML**, standard wrapped shape — the FAC shape. Location h2 is "Kinston JCH, NC" (mapped to "Kinston JCH" — the list page calls it JCH - Kinston Elevator). **A second Kinston target, distinct from smithfield_kinston (1671, Kinston Elevator)** | **Collector-ready:** `parse_bushel_html` verified status ok, 3 rows, against saved HTML — no parser change needed. **Enabled** (new toml entry); registry entry `smithfield_kinston_jch` + `fetch_smithfield_kinston_jch()` added in Cycle 16 |
+| Smithfield Grain — Jones County (2065) | https://smithfieldgrain.com/cashbidssingle-2065 | 200 | **Yes — 3 rows** (Corn 1, Wheat 1, Soybeans 1), widget header dated Nov 19, 2026 | Bushel **`.cbmod` widget in static HTML**, standard wrapped shape — the FAC shape. Location h2 is "Jones County, NC" (mapped to "Jones County"; the list page calls it JCH - Jones County Elevator) | **Collector-ready:** `parse_bushel_html` verified status ok, 3 rows, against saved HTML — no parser change needed. **Enabled** (new toml entry); registry entry `smithfield_jones_county` + `fetch_smithfield_jones_county()` added in Cycle 16 |
+| Smithfield Grain — Deep Run JCH (2066) | https://smithfieldgrain.com/cashbidssingle-2066 | 200 | **Yes — 2 rows** (Corn 1, Wheat 1), widget header dated Nov 19, 2026 | Bushel **`.cbmod` widget in static HTML**, standard wrapped shape — the FAC shape. Location h2 is "Deep Run JCH, NC" (mapped to "Deep Run JCH"; the list page calls it JCH - Deep Run Feed Mill) | **Collector-ready:** `parse_bushel_html` verified status ok, 2 rows, against saved HTML — no parser change needed. **Enabled** (new toml entry); registry entry `smithfield_deep_run_jch` + `fetch_smithfield_deep_run_jch()` added in Cycle 16 |
+
+### Static-HTML sites — parser verification (saved HTML only, no new fetch)
+
+- **Smithfield 1689 / 1690 / 1691 / 2064 / 2065 / 2066 — parse
+  cleanly.** `parse_bushel_html` run against each saved
+  `/tmp/cycle16` HTML returns status ok with 1 / 4 / 7 / 3 / 3 /
+  2 rows and the mapped locations ("Kinston JCH" and "Deep Run
+  JCH" for the two JCH h2s). No `bushel_source.py` change needed
+  for the widget shape — the registry additions are the only
+  code change.
+
+### Tests
+
+6 new tests in `tests/test_bushel_cycle16_smithfield.py` (one per
+verified location: registry entry exists + synthetic-fixture
+parse, all fixture values invented). No negative test in this
+batch — no empty widget was served (the Raeford empty-widget
+case is covered in `test_bushel_cycle15_smithfield.py`). Full
+API suite: **635 passed, 0 failed** (Cycle 15 baseline 629 + 6
+new Cycle 16 tests).
+
+### Reclassifications applied (`us_elevators_urls.toml`)
+
+Six new `[[us.elevators]]` entries, all `type = "bushel"`,
+`enabled = true`: Smithfield Grain — Nichols (1689),
+Petersburg (1690), Waverly (1691), Kinston JCH (2064), Jones
+County (2065), Deep Run JCH (2066). `config.toml` gains six
+toggles (`smithfield_nichols`, `smithfield_petersburg`,
+`smithfield_waverly`, `smithfield_kinston_jch`,
+`smithfield_jones_county`, `smithfield_deep_run_jch`), all
+true. The East Region link-list entry stays disabled. All other
+entries unchanged.
+
+### Follow-ups for a later cycle
+
+- **Raeford (1675) re-probe (one GET):** the only Smithfield
+  target so far to serve an empty widget. Re-fetch
+  `/cashbidssingle-1675` in a later cycle; if it then carries
+  rows, register it like the others. If it stays empty across
+  two probes, treat it as a location that posts no public bids
+  and stop spending GETs on it. **Cycle 16 loose ends
+  (2026-11-19):** re-probed — still empty (0 rows, status
+  "empty"), NOT registered, and no further re-probe is planned.
+  See the Cycle 16 loose-ends section.
+- **More Smithfield per-location probes (one GET each):** only 2
+  East Region locations still open (2067 Lapaz, 2179 Hamer —
+  from the saved Cycle 11 East Region link list). Probe them
+  in a later cycle, one GET each. After those, the 31-location
+  East Region list is fully covered except Raeford (1675),
+  pending its re-probe. **Cycle 16 loose ends (2026-11-19):**
+  both probed and enabled (Lapaz 2 Corn rows, Hamer 1 Soybeans
+  row); the East Region list is now fully covered except
+  Raeford. See the Cycle 16 loose-ends section.
+- **Registry wiring (coordinator):** the six new Cycle 16
+  registry entries (`smithfield_nichols`,
+  `smithfield_petersburg`, `smithfield_waverly`,
+  `smithfield_kinston_jch`, `smithfield_jones_county`,
+  `smithfield_deep_run_jch` in `BUSHEL_SITES`) and their
+  `fetch_` functions are in `bushel_source.py`;
+  `source_registry.py` wiring is the coordinator's step (that
+  file is coordinator-only this cycle).
+- **Freshness:** all six Cycle 16 widget headers are dated
+  Thursday, November 19, 2026 — fresh, no Chadbourn-style lag
+  on this batch.
+- **Smithfield row counts:** Waverly (7 rows) breaks the Cycle
+  15 batch-B expectation that Smithfield pages top out at 3
+  rows; the new ceiling is 7, and Grain Sorghum is now a
+  fourth commodity on Smithfield pages (Corn, Soybeans, Wheat,
+  Grain Sorghum). Row count and commodity mix are per-location,
+  not a family trait.
+
+## United States — Cycle 16 Smithfield loose ends + Andersons confirmatory checks (2026-11-19)
+
+Closed the two loose ends left by Cycle 15, in one 5-GET task
+(User-Agent `GrainHub-Research/1.0`, ~2 s spacing, no retries):
+the Raeford (1675) re-probe, the last two open Smithfield East
+Region IDs (2067 Lapaz, 2179 Hamer), and the two low-odds
+Andersons confirmatory checks named in the Cycle 15 Andersons
+section (Maumee facility page, Ohio per-state list page). The
+Smithfield location names come from the saved Cycle 11 list page
+(`/tmp/cycle11/smithfield_fccp.html`), so no GET was spent
+re-fetching it. Raw HTML saved to `/tmp/cycle16/` scratch only,
+never the repo. No prices are recorded here — row counts,
+location/commodity breakdowns and widget patterns only.
+
+### Counts
+
+| Status | Count | Meaning |
+|---|---|---|
+| HTTP 200 | 5 | Every probed target served (no 404s, blocks, or empty bodies) |
+| Smithfield static bid rows visible in static HTML | **2 of 3** | Lapaz (2 Corn rows), Hamer (1 Soybeans row); Raeford still empty, 0 rows |
+| Andersons static bid rows visible in static HTML | **1 of 2 pages** | Maumee facility page carries 3 static bid tables (see below) — but the page states the data is provided by Barchart Solutions, so it is licensed data and NOT collected; the Ohio list page carries no bids |
+| New parser gap | 0 | Lapaz and Hamer are the standard wrapped `.cbCommodity` + 7-col shape (the FAC shape); the parser already handles both |
+| Stale widget headers | 1 | Hamer's header is dated Wednesday, November 18, 2026 — a day stale, like Chadbourn (Cycle 13); Lapaz is fresh (Nov 19) |
+| Empty widgets | 1 | Raeford, second probe in a row |
+
+### Per-site results
+
+| Company | URL probed | HTTP | Static bid rows? | Widget / pattern in static HTML | Collector pattern |
+|---|---|---|---|---|---|
+| Smithfield Grain — Raeford (1675), re-probe | https://smithfieldgrain.com/cashbidssingle-1675 | 200 | **No — still empty** (0 rows, status "empty") | Generic site shell with an empty `.cbmod` widget: 1 `cbmod` marker, 0 `cbCommodity`, 0 `sevenColumnsBigFirst`; no location h2, no header date — identical shape to the Cycle 15 batch-A probe | **NOT registered** (second empty probe in a row). Per the Cycle 15 batch-A follow-up, treat Raeford as a location that posts no public bids and stop spending GETs on it. Pinned by a negative test in `tests/test_bushel_cycle16_raeford.py` (unknown site key + empty-widget shape parses to status "empty") |
+| Smithfield Grain — Lapaz (2067) | https://smithfieldgrain.com/cashbidssingle-2067 | 200 | **Yes — 2 rows** (Corn 2), widget header dated Thursday, November 19, 2026 (fresh) | Bushel **`.cbmod` widget in static HTML**, standard wrapped shape — the FAC shape. Location h2 is "Lapaz, IN" (mapped to "Lapaz"; the list page calls it IN - Lapaz Elevator (LAP)) | **Collector-ready:** `parse_bushel_html` verified status ok, 2 rows, against saved HTML — no parser change needed. **Enabled** (new toml entry); registry entry `smithfield_lapaz` + `fetch_smithfield_lapaz()` added in Cycle 16 |
+| Smithfield Grain — Hamer (2179) | https://smithfieldgrain.com/cashbidssingle-2179 | 200 | **Yes — 1 row** (Soybeans), widget header dated Wednesday, November 18, 2026 | Bushel **`.cbmod` widget in static HTML**, standard wrapped shape — the FAC shape. Location h2 is "Hamer, SC" (mapped to "Hamer"; the list page calls it SC - Hamer Elevator). Thin page: a single Soybeans row. **Header a day stale** — the Hamer widget had not refreshed at probe time, like Chadbourn (Cycle 13); worth watching on the next fetch, not a parser issue | **Collector-ready:** `parse_bushel_html` verified status ok, 1 row, against saved HTML — no parser change needed. **Enabled** (new toml entry); registry entry `smithfield_hamer` + `fetch_smithfield_hamer()` added in Cycle 16 |
+| The Andersons — Maumee facility page | https://www.andersonsgrain.com/locations/oh/maumee/ | 200 | **Yes — static tables, but NOT collectable (see right)** | Facility info page (title "Maumee Grain Elevator - The Andersons Trade Group", h1 "Maumee"): Hours, Discount Schedules, Important Info, DP/Storage Rates, Contacts, About This Facility, Google Maps embed — **plus 3 static `styled-table` bid tables** under a "Cash Bids" tab ("Corn, Beans, Red Wheat"): columns Delivery / Bid / Basis / Futures / Chg / Symbol / Last Trade; Corn 10 delivery rows, Soybeans 10, Red Wheat 3 (23 rows total); last-trade stamps in the early-morning hours. The "Bid and Basis Charts" section itself is JS-driven (empty-src `chartFrame` iframe), but the tables are plain static HTML. Disclaimer on the page: cash prices update at 10-minute intervals through the CBOT day session, basis values update daily at 5:10 pm EST, all bids subject to change | **NOT collected, NOT registered.** The page carries a Barchart disclaimer ("All market data is provided by Barchart Solutions", `barcharts-disclaimer` div, link to `barchart.com/solutions`) — the tables are **Barchart-licensed data**, out of scope for GrainHub collection under the no-licensed-data guardrail. This finding does NOT reopen the Andersons: the closure now rests on licensing, not on absence of static rows (see the Cycle 16 addendum under "The Andersons — GRAINweb investigation (Cycle 13)"). No collector, no toml entry |
+| The Andersons — Ohio per-state list page | https://www.andersonsgrain.com/local-bids/locations-list/location-list/ohio/ | 200 | **No** | Title "Ohio - The Andersons Trade Group". Same directory substance as the master list page (Cycle 15): body lists the same 7 Ohio facilities (Greenville, Maumee, Metamora, Port William, Toledo - Edwin Dr, Toledo - Kuhlman Dr, Toledo - Reynolds Rd) in 3 small layout tables (2 facility names each); the page also carries the full 41-facility directory in its nav links (all states). 0 bid tables, 0 price-like strings, 0 `styled-table` elements | None — directory only, confirms the master-list finding. No collector |
+
+### Static-HTML sites — parser verification (saved HTML only, no new fetch)
+
+- **Smithfield 2067 / 2179 — parse cleanly.**
+  `parse_bushel_html` run against each saved `/tmp/cycle16`
+  HTML with its new registry site returns status ok with 2
+  rows (Lapaz, Corn 2) / 1 row (Hamer, Soybeans 1) and the
+  mapped locations ("Lapaz", "Hamer"). No `bushel_source.py`
+  change needed for the widget shape — the registry additions
+  are the only code change.
+- **Smithfield 1675 (Raeford) — still empty.**
+  `parse_bushel_html` run against the saved `/tmp/cycle16`
+  HTML returns status "empty", 0 rows, location None — same as
+  Cycle 15 batch A. No registry entry, by design.
+
+### Tests
+
+3 new tests in `tests/test_bushel_cycle16_raeford.py` (Lapaz and
+Hamer: registry entry exists + synthetic-fixture parse, all
+fixture values invented; Raeford: negative test — unknown site
+key raises `KeyError` and the empty-widget shape parses to
+status "empty"). Full API suite: **638 passed, 0 failed**
+(Cycle 15 baseline 629 + 6 sibling Cycle 16 tests + 3 new
+tests in this task).
+
+### Reclassifications applied (`us_elevators_urls.toml`)
+
+Two new `[[us.elevators]]` entries, both `type = "bushel"`,
+`enabled = true`: Smithfield Grain — Lapaz (2067), Hamer
+(2179). `config.toml` gains two toggles (`smithfield_lapaz`,
+`smithfield_hamer`), both true. No Andersons entry: the Maumee
+tables are Barchart-licensed data and are deliberately not
+collected. The East Region link-list entry stays disabled. All
+other entries unchanged.
+
+### Follow-ups for a later cycle
+
+- **Smithfield East Region is now fully covered (except
+  Raeford).** With Lapaz (2067) and Hamer (2179) enabled, every
+  ID on the saved Cycle 11 East Region list page is verified
+  except Raeford (1675), which has now served an empty widget
+  on two probes (Cycle 15 batch A, Cycle 16). No further
+  Smithfield East Region probes are open; do not spend more
+  GETs on Raeford unless the widget shape changes.
+- **Stale headers to watch:** Hamer's widget header is dated
+  November 18, 2026 — a day stale, like Chadbourn (Cycle 13).
+  If the collector adds a same-day freshness check, Hamer (and
+  Chadbourn) will trip it; that is a data-freshness flag, not a
+  parser issue.
+- **The Andersons is now fully closed.** Both confirmatory
+  checks named in Cycle 15 are done: the Maumee facility page
+  and the Ohio per-state list page. The Maumee check surfaced
+  static bid tables, but they are Barchart-licensed data and
+  are not collected — so the closure stands, now on licensing
+  grounds rather than absence of static rows. No new Andersons
+  probe exists: the remaining 40 facility pages would serve
+  the same Barchart-licensed tables (do not probe them — the
+  answer is already known and the data is out of scope), and
+  the only other path (a rendered browser session against the
+  GRAINweb picker) is unchanged from Cycle 15.
+- **Registry wiring (coordinator):** the two new Cycle 16
+  registry entries (`smithfield_lapaz`, `smithfield_hamer` in
+  `BUSHEL_SITES`) and their `fetch_` functions are in
+  `bushel_source.py`; `source_registry.py` wiring is the
+  coordinator's step (that file is coordinator-only this cycle).

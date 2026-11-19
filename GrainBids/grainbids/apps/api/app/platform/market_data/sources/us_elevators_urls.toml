@@ -494,6 +494,54 @@ name    = "Smithfield Grain — Laurinburg Feed Mill (1682)"
 url     = "https://smithfieldgrain.com/cashbidssingle-1682"
 
 [[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 16): HTTP 200 at the per-location target /cashbidssingle-1689 (Nichols Elevator, SC, from the East Region per-location list) — static Bushel .cbmod widget, 1 row (Soybeans), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 1 row, against saved HTML — BUSHEL_SITES registry entry + fetch_smithfield_nichols() added in Cycle 16
+type    = "bushel"
+name    = "Smithfield Grain — Nichols (1689)"
+url     = "https://smithfieldgrain.com/cashbidssingle-1689"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 16): HTTP 200 at the per-location target /cashbidssingle-1690 (Petersburg Elevator, VA, from the East Region per-location list) — static Bushel .cbmod widget, 4 rows (Corn 1, Wheat 1, Soybeans 2), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 4 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_smithfield_petersburg() added in Cycle 16
+type    = "bushel"
+name    = "Smithfield Grain — Petersburg (1690)"
+url     = "https://smithfieldgrain.com/cashbidssingle-1690"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 16): HTTP 200 at the per-location target /cashbidssingle-1691 (Waverly Feed Mill, VA, from the East Region per-location list) — static Bushel .cbmod widget, 7 rows (Corn 3, Wheat 2, Grain Sorghum 2), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 7 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_smithfield_waverly() added in Cycle 16; first Smithfield page to carry Grain Sorghum
+type    = "bushel"
+name    = "Smithfield Grain — Waverly (1691)"
+url     = "https://smithfieldgrain.com/cashbidssingle-1691"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 16): HTTP 200 at the per-location target /cashbidssingle-2064 (JCH - Kinston Elevator, NC, from the East Region per-location list) — static Bushel .cbmod widget, 3 rows (Corn 1, Wheat 1, Soybeans 1), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 3 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_smithfield_kinston_jch() added in Cycle 16; live location h2 is "Kinston JCH, NC", distinct from smithfield_kinston (1671)
+type    = "bushel"
+name    = "Smithfield Grain — Kinston JCH (2064)"
+url     = "https://smithfieldgrain.com/cashbidssingle-2064"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 16): HTTP 200 at the per-location target /cashbidssingle-2065 (JCH - Jones County Elevator, NC, from the East Region per-location list) — static Bushel .cbmod widget, 3 rows (Corn 1, Wheat 1, Soybeans 1), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 3 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_smithfield_jones_county() added in Cycle 16; live location h2 is "Jones County, NC"
+type    = "bushel"
+name    = "Smithfield Grain — Jones County (2065)"
+url     = "https://smithfieldgrain.com/cashbidssingle-2065"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 16): HTTP 200 at the per-location target /cashbidssingle-2066 (JCH - Deep Run Feed Mill, NC, from the East Region per-location list) — static Bushel .cbmod widget, 2 rows (Corn 1, Wheat 1), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 2 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_smithfield_deep_run_jch() added in Cycle 16; live location h2 is "Deep Run JCH, NC"
+type    = "bushel"
+name    = "Smithfield Grain — Deep Run JCH (2066)"
+url     = "https://smithfieldgrain.com/cashbidssingle-2066"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 16): HTTP 200 at the per-location target /cashbidssingle-2067 (Lapaz Elevator, IN, from the East Region per-location list) — static Bushel .cbmod widget, 2 rows (Corn 2), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 2 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_smithfield_lapaz() added in Cycle 16; widget header dated Thursday, November 19, 2026 (fresh)
+type    = "bushel"
+name    = "Smithfield Grain — Lapaz (2067)"
+url     = "https://smithfieldgrain.com/cashbidssingle-2067"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 16): HTTP 200 at the per-location target /cashbidssingle-2179 (Hamer Elevator, SC, from the East Region per-location list) — static Bushel .cbmod widget, 1 row (Soybeans), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 1 row, against saved HTML — BUSHEL_SITES registry entry + fetch_smithfield_hamer() added in Cycle 16; widget header dated Wednesday, November 18, 2026 — a day stale, like Chadbourn (Cycle 13)
+type    = "bushel"
+name    = "Smithfield Grain — Hamer (2179)"
+url     = "https://smithfieldgrain.com/cashbidssingle-2179"
+
+[[us.elevators]]
 enabled = false
 type    = "none"  # reclassified 2026-11-19 (Cycle 10): milling-company homepage, zero cash-bid mentions and no grain/bid links — no public bid page, do not add
 name    = "Star of the West"

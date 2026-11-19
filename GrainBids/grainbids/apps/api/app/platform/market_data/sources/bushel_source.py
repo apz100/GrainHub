@@ -971,8 +971,12 @@ BUSHEL_SITES: dict[str, BushelSite] = {
     # 19, 2026). Raeford (1675) is NOT registered: HTTP 200 but
     # the page is the generic site shell with an empty .cbmod
     # widget — no location h2, no header date, 0 rows parsed
-    # (status "empty"); re-probe in a later cycle before ever
-    # registering it. The Chief Feed Mill's live h2 is
+    # (status "empty"); re-probed in Cycle 16 (2026-11-19):
+    # still empty — HTTP 200, generic shell, empty .cbmod
+    # widget (1 cbmod marker, 0 cbCommodity, 0 sevenColumns),
+    # no location h2, no header date, 0 rows (status "empty");
+    # still NOT registered, and no further re-probe is planned
+    # unless the widget shape changes. The Chief Feed Mill's live h2 is
     # "Rose Hill, NC" (the mill's town), mapped to "Rose Hill".
     "smithfield_red_springs": BushelSite(
         key="smithfield_red_springs",
@@ -1041,6 +1045,154 @@ BUSHEL_SITES: dict[str, BushelSite] = {
         "the per-location target (Laurinburg Feed Mill, from the "
         "East Region per-location list). Standard wrapped 7-col "
         ".cbmod widget, 2 rows (Corn 1, Wheat 1), USD/bu.",
+    ),
+    # Cycle 16 (2026-11-19): six more Smithfield East Region
+    # per-location targets, one polite GET each — all 200, all
+    # standard wrapped 7-col .cbmod widgets, all parsed by the
+    # generic parser with no changes. Nichols is a thin 1-row page
+    # (Soybeans); Petersburg carries 4 rows (Corn 1, Wheat 1,
+    # Soybeans 2); Waverly is the fattest Smithfield page yet at
+    # 7 rows (Corn 3, Wheat 2, Grain Sorghum 2 — the first
+    # Smithfield page to carry Grain Sorghum); Kinston JCH and
+    # Jones County each carry 3 rows (Corn + Wheat + Soybeans);
+    # Deep Run JCH carries 2 rows (Corn + Wheat). Location h2s
+    # carry the state (", SC", ", VA", ", NC") and are mapped to
+    # the town name, as with Bentonville — except the two JCH
+    # h2s, which read "Kinston JCH, NC" and "Deep Run JCH, NC"
+    # and are mapped to "Kinston JCH" / "Deep Run JCH" so the
+    # 2064 target stays distinct from smithfield_kinston (1671).
+    # Jones County's live h2 is "Jones County, NC" (the list page
+    # calls it JCH - Jones County Elevator). All six widget headers
+    # are dated Thursday, November 19, 2026 (fresh — no
+    # Chadbourn-style lag).
+    "smithfield_nichols": BushelSite(
+        key="smithfield_nichols",
+        company="Smithfield Grain",
+        url="https://smithfieldgrain.com/cashbidssingle-1689",
+        currency="USD",
+        default_location="Nichols",
+        verified=True,
+        location_labels={"Nichols, SC": "Nichols"},
+        notes="Verified live 2026-11-19 (Cycle 16): 200 at the "
+        "per-location target (Nichols Elevator, SC, from the East "
+        "Region per-location list). Standard wrapped 7-col .cbmod "
+        "widget, 1 row (Soybeans), USD/bu.",
+    ),
+    "smithfield_petersburg": BushelSite(
+        key="smithfield_petersburg",
+        company="Smithfield Grain",
+        url="https://smithfieldgrain.com/cashbidssingle-1690",
+        currency="USD",
+        default_location="Petersburg",
+        verified=True,
+        location_labels={"Petersburg, VA": "Petersburg"},
+        notes="Verified live 2026-11-19 (Cycle 16): 200 at the "
+        "per-location target (Petersburg Elevator, VA, from the "
+        "East Region per-location list). Standard wrapped 7-col "
+        ".cbmod widget, 4 rows (Corn 1, Wheat 1, Soybeans 2), "
+        "USD/bu.",
+    ),
+    "smithfield_waverly": BushelSite(
+        key="smithfield_waverly",
+        company="Smithfield Grain",
+        url="https://smithfieldgrain.com/cashbidssingle-1691",
+        currency="USD",
+        default_location="Waverly",
+        verified=True,
+        location_labels={"Waverly, VA": "Waverly"},
+        notes="Verified live 2026-11-19 (Cycle 16): 200 at the "
+        "per-location target (Waverly Feed Mill, VA, from the East "
+        "Region per-location list). Standard wrapped 7-col .cbmod "
+        "widget, 7 rows (Corn 3, Wheat 2, Grain Sorghum 2), "
+        "USD/bu. The first Smithfield page to carry Grain Sorghum; "
+        "the fattest Smithfield page yet.",
+    ),
+    "smithfield_kinston_jch": BushelSite(
+        key="smithfield_kinston_jch",
+        company="Smithfield Grain",
+        url="https://smithfieldgrain.com/cashbidssingle-2064",
+        currency="USD",
+        default_location="Kinston JCH",
+        verified=True,
+        location_labels={"Kinston JCH, NC": "Kinston JCH"},
+        notes="Verified live 2026-11-19 (Cycle 16): 200 at the "
+        "per-location target (JCH - Kinston Elevator, from the "
+        "East Region per-location list). Standard wrapped 7-col "
+        ".cbmod widget, 3 rows (Corn 1, Wheat 1, Soybeans 1), "
+        "USD/bu. Live location h2 is 'Kinston JCH, NC'; mapped to "
+        "'Kinston JCH' to stay distinct from smithfield_kinston "
+        "(1671, Kinston Elevator).",
+    ),
+    "smithfield_jones_county": BushelSite(
+        key="smithfield_jones_county",
+        company="Smithfield Grain",
+        url="https://smithfieldgrain.com/cashbidssingle-2065",
+        currency="USD",
+        default_location="Jones County",
+        verified=True,
+        location_labels={"Jones County, NC": "Jones County"},
+        notes="Verified live 2026-11-19 (Cycle 16): 200 at the "
+        "per-location target (JCH - Jones County Elevator, from "
+        "the East Region per-location list). Standard wrapped 7-col "
+        ".cbmod widget, 3 rows (Corn 1, Wheat 1, Soybeans 1), "
+        "USD/bu. Live location h2 is 'Jones County, NC' (the list "
+        "page calls it JCH - Jones County Elevator).",
+    ),
+    "smithfield_deep_run_jch": BushelSite(
+        key="smithfield_deep_run_jch",
+        company="Smithfield Grain",
+        url="https://smithfieldgrain.com/cashbidssingle-2066",
+        currency="USD",
+        default_location="Deep Run JCH",
+        verified=True,
+        location_labels={"Deep Run JCH, NC": "Deep Run JCH"},
+        notes="Verified live 2026-11-19 (Cycle 16): 200 at the "
+        "per-location target (JCH - Deep Run Feed Mill, from the "
+        "East Region per-location list). Standard wrapped 7-col "
+        ".cbmod widget, 2 rows (Corn 1, Wheat 1), USD/bu. Live "
+        "location h2 is 'Deep Run JCH, NC'.",
+    ),
+    # Cycle 16 loose ends (2026-11-19): the last two open
+    # Smithfield East Region IDs from the Cycle 11 list page —
+    # 2067 (Lapaz Elevator, IN) and 2179 (Hamer Elevator, SC) —
+    # one polite GET each. Both 200, both standard wrapped
+    # 7-col .cbmod widgets parsed by the generic parser with no
+    # changes. Lapaz carries 2 Corn rows with a fresh header
+    # (Thursday, November 19, 2026); Hamer is a thin 1-row page
+    # (Soybeans) whose header is dated Wednesday, November 18,
+    # 2026 — a day stale, like Chadbourn (Cycle 13). Location
+    # h2s carry the state (", IN", ", SC") and are mapped to the
+    # town name, as with Bentonville. With these two, every
+    # Smithfield ID on the Cycle 11 list page is now verified
+    # except Raeford (1675), which re-probed empty again.
+    "smithfield_lapaz": BushelSite(
+        key="smithfield_lapaz",
+        company="Smithfield Grain",
+        url="https://smithfieldgrain.com/cashbidssingle-2067",
+        currency="USD",
+        default_location="Lapaz",
+        verified=True,
+        location_labels={"Lapaz, IN": "Lapaz"},
+        notes="Verified live 2026-11-19 (Cycle 16): 200 at the "
+        "per-location target (Lapaz Elevator, IN, from the East "
+        "Region per-location list). Standard wrapped 7-col .cbmod "
+        "widget, 2 rows (Corn 2), USD/bu. Widget header dated "
+        "Thursday, November 19, 2026 (fresh).",
+    ),
+    "smithfield_hamer": BushelSite(
+        key="smithfield_hamer",
+        company="Smithfield Grain",
+        url="https://smithfieldgrain.com/cashbidssingle-2179",
+        currency="USD",
+        default_location="Hamer",
+        verified=True,
+        location_labels={"Hamer, SC": "Hamer"},
+        notes="Verified live 2026-11-19 (Cycle 16): 200 at the "
+        "per-location target (Hamer Elevator, SC, from the East "
+        "Region per-location list). Standard wrapped 7-col .cbmod "
+        "widget, 1 row (Soybeans), USD/bu. Widget header dated "
+        "Wednesday, November 18, 2026 — a day stale, like "
+        "Chadbourn (Cycle 13).",
     ),
 }
 
@@ -2033,3 +2185,79 @@ def fetch_smithfield_laurinburg_feed_mill() -> dict[str, Any]:
     (Corn 1, Wheat 1), USD/bu.
     """
     return fetch_bushel_site("smithfield_laurinburg_feed_mill")
+
+
+def fetch_smithfield_nichols() -> dict[str, Any]:
+    """Fetch Smithfield Grain (Nichols Elevator, SC) via the
+    per-location target 1689. Verified live 2026-11-19
+    (Cycle 16): 200, standard wrapped 7-col .cbmod widget,
+    1 row (Soybeans), USD/bu.
+    """
+    return fetch_bushel_site("smithfield_nichols")
+
+
+def fetch_smithfield_petersburg() -> dict[str, Any]:
+    """Fetch Smithfield Grain (Petersburg Elevator, VA) via the
+    per-location target 1690. Verified live 2026-11-19
+    (Cycle 16): 200, standard wrapped 7-col .cbmod widget,
+    4 rows (Corn 1, Wheat 1, Soybeans 2), USD/bu.
+    """
+    return fetch_bushel_site("smithfield_petersburg")
+
+
+def fetch_smithfield_waverly() -> dict[str, Any]:
+    """Fetch Smithfield Grain (Waverly Feed Mill, VA) via the
+    per-location target 1691. Verified live 2026-11-19
+    (Cycle 16): 200, standard wrapped 7-col .cbmod widget,
+    7 rows (Corn 3, Wheat 2, Grain Sorghum 2), USD/bu.
+    """
+    return fetch_bushel_site("smithfield_waverly")
+
+
+def fetch_smithfield_kinston_jch() -> dict[str, Any]:
+    """Fetch Smithfield Grain (JCH - Kinston Elevator, NC) via
+    the per-location target 2064. Verified live 2026-11-19
+    (Cycle 16): 200, standard wrapped 7-col .cbmod widget,
+    3 rows (Corn 1, Wheat 1, Soybeans 1), USD/bu. Live location
+    h2 is "Kinston JCH, NC" — distinct from smithfield_kinston
+    (1671, Kinston Elevator).
+    """
+    return fetch_bushel_site("smithfield_kinston_jch")
+
+
+def fetch_smithfield_jones_county() -> dict[str, Any]:
+    """Fetch Smithfield Grain (JCH - Jones County Elevator, NC)
+    via the per-location target 2065. Verified live 2026-11-19
+    (Cycle 16): 200, standard wrapped 7-col .cbmod widget,
+    3 rows (Corn 1, Wheat 1, Soybeans 1), USD/bu.
+    """
+    return fetch_bushel_site("smithfield_jones_county")
+
+
+def fetch_smithfield_deep_run_jch() -> dict[str, Any]:
+    """Fetch Smithfield Grain (JCH - Deep Run Feed Mill, NC)
+    via the per-location target 2066. Verified live 2026-11-19
+    (Cycle 16): 200, standard wrapped 7-col .cbmod widget,
+    2 rows (Corn 1, Wheat 1), USD/bu.
+    """
+    return fetch_bushel_site("smithfield_deep_run_jch")
+
+
+def fetch_smithfield_lapaz() -> dict[str, Any]:
+    """Fetch Smithfield Grain (Lapaz Elevator, IN) via the
+    per-location target 2067. Verified live 2026-11-19
+    (Cycle 16): 200, standard wrapped 7-col .cbmod widget,
+    2 rows (Corn 2), USD/bu. Widget header dated Thursday,
+    November 19, 2026 (fresh).
+    """
+    return fetch_bushel_site("smithfield_lapaz")
+
+
+def fetch_smithfield_hamer() -> dict[str, Any]:
+    """Fetch Smithfield Grain (Hamer Elevator, SC) via the
+    per-location target 2179. Verified live 2026-11-19
+    (Cycle 16): 200, standard wrapped 7-col .cbmod widget,
+    1 row (Soybeans), USD/bu. Widget header dated Wednesday,
+    November 18, 2026 — a day stale, like Chadbourn.
+    """
+    return fetch_bushel_site("smithfield_hamer")

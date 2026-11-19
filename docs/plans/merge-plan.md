@@ -438,9 +438,10 @@ no conflicts. The §4 watch-list extends as follows:
   UI. Do not hand-copy it into a merge commit.
 - **§7 step 1 is partly done on the branch already:** Cycle 8
   (`b0ba527`) corrected `docs/plans/deployment-checklist.md` §3
-  to head `0019` — but the §8 deploy sign-off checklist still
-  says `alembic heads` = single head `0018` (stale line). Fix that
-  line when merging; do not deploy against the stale number.
+  to head `0019`, and Cycle 13 corrected the §8 deploy sign-off
+  line to `0019` as well (verified 2026-11-19, Cycle 16 — the
+  checklist now reads `0019` in both places). Nothing stale
+  remains to fix there when merging.
 - **Nothing else new is held back in Cycles 9–12.** No new
   unpushed files, secrets, or held-back work is reported in any
   of the five reports. The §5 review-not-blocker list is
@@ -456,3 +457,154 @@ failed, web build last fully passed in Cycle 10 (re-run at the
 Cycle 12 merge step). The still-open decisions list in §7.4 is
 unchanged by Cycles 8–12, plus the currency design doc now exists
 as the basis for the currency-column decision.
+
+---
+
+## Cycles 13–15 (added Cycle 16)
+
+**Status: PLAN ONLY — nothing has been merged.** §§0–7 above cover
+Cycles 1–7 and the Cycles 8–12 section covers Cycles 8–12; both
+are unchanged. This section extends the plan to Cycles 13–15,
+verified from git history and the cycle reports on 2026-11-19
+(Cycle 16). `master` is still at `f2c3206` — no cycle work is on
+`master` yet.
+
+### 0c. Branch chain — Cycles 13–15, verified from git
+
+The chain is **still linear**: `git log --oneline
+master..overnight/grainhub-cycle-15` gives **49 commits** (43
+through Cycle 12 + 6 in Cycles 13–15), **0 merge commits**, no
+branch points. Cycle 13's first commit `f1dc87f` has parent
+`4b2472b` (the Cycle 12 tip), and each later cycle branches from
+the previous tip. Per-branch commit counts: Cycle 13: 2, Cycle 14:
+2, Cycle 15: 2.
+
+That means the §2 procedure continues unchanged: merge in order
+13 → 15 after 12, one branch at a time with `--no-ff`, running the
+§3 gates at each step. A single fast-forward of `master` to the
+`cycle-15` tip (`7f8c263`) would give the same tree as fifteen
+sequential merges; prefer the sequential merges for the same
+reason as §0 (a review checkpoint and stop point per cycle).
+
+### 1c. What each branch contains (Cycles 13–15)
+
+| Branch | Tip | Tests at tip | Web build at tip |
+|---|---|---|---|
+| Cycle 13 | `6acc8e2` | 590 passed, 0 failed | **PASS** (re-run this cycle; no web files changed) |
+| Cycle 14 | `d196b2a` | 617 passed, 0 failed | Not re-run (no web files changed; last full pass Cycle 13) |
+| Cycle 15 | `7f8c263` | 629 passed, 0 failed | Not re-run (no web files changed; last full pass Cycle 13) |
+
+No web files changed in any of Cycles 13–15, so the only fresh
+web-build evidence in this range is Cycle 13's pass.
+
+- **Cycle 13** (`overnight/grainhub-cycle-13`; commits `f1dc87f`,
+  `6acc8e2`): PRO Coop second `cashbids.php` embed proven (12
+  rows, MANSON.IA — 13th embed site, registered as
+  `pro_coop_21302b`); 10 per-location Bushel probes verified
+  (Skyland 6, Smithfield 4, 30 tests); The Andersons GRAINweb
+  verdict from saved HTML — browser-only, no static route; merge
+  plan extended to Cycle 12; super-plan §9 extended to Cycle 12.
+  32 new tests, suite 590.
+  Full detail: `docs/plans/overnight-cycle-13-report.md`.
+- **Cycle 14** (`overnight/grainhub-cycle-14`; commits `94defb7`,
+  `d196b2a`): Skyland picker sweep complete — all 14 IDs verified
+  (39 rows this cycle, 7 registry entries, 21 tests); Smithfield
+  batch 1669–1674 (17 rows, 6 tests); Andersons bundle read
+  (1,079 bytes) confirms browser-only, no network call of any
+  kind; Chadbourn re-check still stale (Nov 18 header). 27 new
+  tests, suite 617.
+  Full detail: `docs/plans/overnight-cycle-14-report.md`.
+- **Cycle 15** (`overnight/grainhub-cycle-15`; commits `7b9d69d`,
+  `7f8c263`): Smithfield batches A + B — 11 locations verified
+  (1675–1688; 18 rows; 1675 Raeford served an empty widget, not
+  registered, guarded by a negative test; 1681's live h2 is "Rose
+  Hill, NC"); Andersons locations-list probe (27,082 bytes, a
+  pure per-location directory) closes the Andersons for static
+  collection — only a rendered browser session remains; super-plan
+  §9 extended to Cycle 14. Smithfield now 22 of 31 verified. 12
+  new tests, suite 629.
+  Full detail: `docs/plans/overnight-cycle-15-report.md`.
+
+### 3c. Gates — updated expectations for Cycles 13–15
+
+§3 applies unchanged, with these per-cycle numbers:
+
+1. **Full API test suite** — expect Cycle 13: 590, Cycle 14: 617,
+   Cycle 15: 629 — **0 failed** at every step.
+2. **Web build** — re-run once at the Cycle 13 step (it passed
+   there) and once at the Cycle 15 step so the final tree is
+   verified as a whole. Cycles 13–15 changed no web files, so a
+   build failure at one of those steps would point at an earlier
+   cycle, not the branch being merged.
+3. **Alembic chain** — head is **still `0019`**. Verified from
+   git: no migration file was added in Cycles 13–15 (`git log` on
+   the Alembic versions dir in `cycle-12..cycle-15` is empty, and
+   the file list at the Cycle 15 tip is `0001`–`0019`). Expect
+   exactly one head, `0019`, at every step 13–15.
+4. **Boundary spot-check** — each Cycle 13–15 report has its own
+   boundary section (zero new references, verified by grep on the
+   added lines). Re-check once at the Cycle 15 step as in §3.4.
+5. **No-secrets spot-check** — as §3.5; all three reports state
+   none. Note Cycle 15's Andersons page carried a
+   `data-google-api-key` attribute; its value was deliberately not
+   reproduced anywhere in the repo.
+
+### 4c. Known conflicts and overlaps — Cycles 13–15
+
+The chain is still linear, so a sequential merge still produces
+no conflicts. The §4 watch-list extends as follows:
+
+- **Price-source catalogue** (`docs/plans/price-source-catalogue.md`)
+  — edited in **every** cycle 13–15 as well (all three work
+  commits touch it). Same rule as §4: later wins.
+- **Source registry** (`app/services/source_registry.py`) —
+  touched in Cycles 13, 14, and 15: PRO Coop 21302b + 10
+  per-location adapters (13), 7 Skyland + 6 Smithfield adapters
+  (14), 11 Smithfield adapters (15). Later wins, never drop a
+  registration.
+- **`bushel_source.py`** — touched in all three cycles (13, 14,
+  15) for the per-location entries. Additive only; the Wheaton
+  tabbed-widget fallback from Cycle 11 is untouched in this
+  range.
+- **`us_elevators_urls.toml`** — reclassifications accumulate in
+  Cycles 13–15: PRO Coop 21302b + 10 per-location entries (13),
+  7 Skyland + 6 Smithfield entries (14), 11 Smithfield entries
+  (15). The Cycle 15 values are the current truth.
+- **Super-plan §9** (`docs/plans/grainhub-super-plan.md`) —
+  updated in Cycle 13 (progress to Cycle 12) and Cycle 15
+  (progress to Cycle 14); Cycle 14 did not touch it. Linear, no
+  conflict expected.
+- **Migration chain** — unchanged: `0015 → … → 0018` (Cycle 1)
+  then `0019` (Cycle 7), single head throughout Cycles 13–15.
+
+### 5c. What must NOT be merged as-is — update
+
+- **The CI workflow file is STILL not in any branch.** Verified
+  2026-11-19 (Cycle 16): `?? .github/` in `git status` on the
+  Cycle 16 checkout. Merging Cycles 13–15 as well as 1–12 will
+  **not** bring it into `master`. Same remedy as §5: Adam
+  re-authenticates `gh` with `workflow` scope, or adds the file
+  via the GitHub web UI. Do not hand-copy it into a merge commit.
+- **Nothing else new is held back in Cycles 13–15.** No new
+  unpushed files, secrets, or held-back work is reported in any
+  of the three reports. The §5 review-not-blocker list is
+  unchanged: email-bid endpoint public by default, futures
+  endpoints return prices `null` until a licensed feed is wired,
+  Advisor `/ask` is a 501 scaffold, eSign is a stub, normalized
+  price rows carry no currency (`currency: null`).
+- **Correction to §5b (made Cycle 16):** the §5b note that the
+  deployment checklist's §8 sign-off line still said head `0018`
+  is now stale — Cycle 13 corrected it to `0019`, and the
+  checklist now reads `0019` in both §3 and §8.
+
+### 7c. After the merges — updated
+
+§7 applies with the Cycle 15 tip as the end state: Alembic head
+`0019` (unchanged since Cycle 7), test suite 629 passed / 0
+failed, web build last fully passed in Cycle 13 (re-run at the
+Cycle 15 merge step). The still-open decisions list in §7.4 is
+unchanged by Cycles 13–15. Open work carried forward: 8
+Smithfield locations still unverified + the Raeford re-probe;
+Chadbourn + Skyland 3370/3621 staleness watch; Playwright render
+checks (DTN family, FMN filtered view, Mapleview, StoneX, and now
+The Andersons — closed for static collection, browser-only).

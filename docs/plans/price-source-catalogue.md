@@ -107,7 +107,7 @@ locations, crops, and structure only.
 |---|---|---|---|---|---|---|
 | North Gower Grains | North Gower | https://northgowergrains.com/ (daily blog post, e.g. /wednesday-november-18-2026-820-am/) | Plain HTML daily post table | corn, soy, SRW/HRW/HRS wheat (incl. protein) | daily ~7:00 am | **Collector added 2026-11-19 (Cycle 3):** `north_gower_source.py` parses the daily-post table (Name/Notes/Basis Month/Futures/Basis/Cash Price/Cash Price tonne); homepage `#cash-bids` is a CTA with no prices — collector follows the latest daily-post link. Ordinary source; no special treatment. |
 | Collwest Grain | Collingwood | https://www.collwestgrain.com/ | Homepage cash-bid widget (.cbmod) | corn, soy, SRW/HRW/HRS wheat, canola, barley, oats | daily | **Collector added 2026-11-19 (Cycle 3):** `collwest_source.py` parses the homepage widget (Delivery/Bid/Basis/Futures per crop-year). Verified live 200. **Cycle 4:** the generic Bushel collector (`bushel_source.py`, `fetch_collwest_bushel`) parses the same widget — verified live 2026-11-19, 16 rows, zero value differences vs `collwest_source.py`. **Country confirmed Canadian, CAD (2026-11-18):** footer address 2924 Sixth Line, Collingwood, ON L9Y 3Z1, phone 705-445-7276; canola/barley/oats per tonne, corn/soy/wheat per bushel; `collwestgrain.o.bushelsites.com` serves identical content — www domain is canonical. Do not enable in the US config. |
-| Mae-Mart Farms | Norfolk County | http://www.mae-martfarms.com/grain-pricing | Plain HTML tables (gp-table-*) | corn, soy, wheat, rye | continuous in market hours | **Collector added 2026-11-19 (Cycle 3):** `mae_mart_source.py` parses the tables. Basis is static; corn/soy/wheat cash prices are JS-filled from the site's futures proxy, so those rows carry basis with cash price empty + reason (never guessed). Rye has a static manualPrice, so its cash price is parsed. Homepage cards are "—" placeholders only. **Cycle 18 (2026-11-19):** proxy identified verbatim from the page's inline JS — `var PROXY = '/grain-proxy.php'`, called as `fetch(PROXY + '?symbols=' + encodeURIComponent(sym))`, one symbol per request, i.e. `http://www.mae-martfarms.com/grain-proxy.php?symbols=<SYMBOL>`. Symbols are Yahoo Finance format (`ZCZ26=F`, `ZSF27=F`, `ZWN27=F`). The proxy returns **futures quotes only**, not cash bids: JSON keyed by symbol, each entry with `price` and `currency`; `currency === 'USX'` means the price is in cents (client divides by 100) — `USX` is the Yahoo Finance currency code for CBOT grain futures. Cash is computed client-side as futures + static basis. No Barchart/DTN/AgriCharts markers anywhere in the page. Upstream is **not confirmed** (the proxy itself was not called — that is a later cycle's probe); the symbol format and `USX` handling are consistent with a Yahoo Finance public-quote relay, but that is inference from the client JS only. **Next probe (later cycle, 1 GET):** `GET /grain-proxy.php?symbols=ZCZ26=F` — confirm the response shape and whether the relay is live. Open decision for Adam/coordinator: even if live, using it means relying on the site's relay of third-party futures data plus the site's static basis to compute cash — the collector currently does not call it. |
+| Mae-Mart Farms | Norfolk County | http://www.mae-martfarms.com/grain-pricing | Plain HTML tables (gp-table-*) | corn, soy, wheat, rye | continuous in market hours | **Collector added 2026-11-19 (Cycle 3):** `mae_mart_source.py` parses the tables. Basis is static; corn/soy/wheat cash prices are JS-filled from the site's futures proxy, so those rows carry basis with cash price empty + reason (never guessed). Rye has a static manualPrice, so its cash price is parsed. Homepage cards are "—" placeholders only. **Cycle 18 (2026-11-19):** proxy identified verbatim from the page's inline JS — `var PROXY = '/grain-proxy.php'`, called as `fetch(PROXY + '?symbols=' + encodeURIComponent(sym))`, one symbol per request, i.e. `http://www.mae-martfarms.com/grain-proxy.php?symbols=<SYMBOL>`. Symbols are Yahoo Finance format (`ZCZ26=F`, `ZSF27=F`, `ZWN27=F`). The proxy returns **futures quotes only**, not cash bids: JSON keyed by symbol, each entry with `price` and `currency`; `currency === 'USX'` means the price is in cents (client divides by 100) — `USX` is the Yahoo Finance currency code for CBOT grain futures. Cash is computed client-side as futures + static basis. No Barchart/DTN/AgriCharts markers anywhere in the page. Upstream is **not confirmed** (the proxy itself was not called — that is a later cycle's probe); the symbol format and `USX` handling are consistent with a Yahoo Finance public-quote relay, but that is inference from the client JS only. **Next probe (later cycle, 1 GET):** `GET /grain-proxy.php?symbols=ZCZ26=F` — confirm the response shape and whether the relay is live. Open decision for Adam/coordinator: even if live, using it means relying on the site's relay of third-party futures data plus the site's static basis to compute cash — the collector currently does not call it. **Cycle 19 (2026-11-19): probe done — proxy is LIVE and matches the contract exactly.** `GET /grain-proxy.php?symbols=ZCZ26=F` (1 GET, http → 301 → https) returned HTTP 200, `application/json`, 89 bytes: JSON keyed by the symbol, entry with numeric `price`, `currency: "USX"`, plus `timestamp` and `fetched` fields. Contract confirmed: `USX` = cents. Collector now fills `futures_price` on corn/soy/wheat rows from the proxy (one GET per symbol, USX cents ÷ 100 per the page's own rule) as an optional second step that degrades gracefully to basis-only rows if the proxy fails. `cash_price` is still NOT computed from futures + basis — that remains an open decision for Adam/coordinator (relying on a third-party relay + static basis to compute cash is a bigger step). Rye untouched (no symbol, static manualPrice). 7 new tests in `tests/test_ontario_collectors.py`, all synthetic fixtures. |
 | Mapleview Grain | London | https://www.mapleviewgrain.ca/ → https://mapleview.graindiscovery.com/ | Grain Discovery JS app | corn, soy, wheat (old + new crop) | not stated | **No plain-HTML collector possible (Cycle 3):** homepage `#bids` is marketing copy; the bids page is a Next.js app shell with no bid content in static HTML. `mapleview_source.py` is a stub returning an explicit unsupported reason. Needs a Playwright render or a public Grain Discovery feed (later cycle). |
 | Charwen Farms | Thornton (Simcoe County) | https://charwenfarms.ca/ | Plain HTML | corn, soy, wheat | not stated | Partially verified — homepage live, cash-bids page exists per homepage but not yet fetched. Investigate: may duplicate LAC feed (Charwen is an LAC location). |
 | Addis Grain | Simcoe County area | https://www.addisgrain.com/ | Unknown | corn, soy, wheat (old + new crop) | not stated | Partially verified — homepage live only; bids page not yet located. Investigate. |
@@ -2587,3 +2587,146 @@ comments included), generated by script, not by hand:
   is now stale, since the section is generated. It sits outside the
   replaced section, so it was left byte-for-byte; the wording should be
   updated to point at `us_elevators_urls.toml` + the sync script.
+
+## Cycle 19 — Mae-Mart futures proxy probe (2026-11-19)
+
+### Probe result: proxy is LIVE and matches the documented contract
+
+- One GET, exactly as Cycle 18 specified: `GET http://www.mae-martfarms.com/grain-proxy.php?symbols=ZCZ26=F`, User-Agent `GrainHub-Research/1.0`.
+- The `http://` URL answered 301 (http → https redirect); following the redirect — the same logical probe, as the page's relative `fetch()` call uses the page scheme — returned **HTTP 200, `application/json; charset=utf-8`, 89 bytes**. Response saved to `/tmp/cycle19/mae_mart_proxy_zcz26.json` (not committed; it contains a live price, which is never copied into docs or reports).
+- Exact shape: a JSON object keyed by the requested symbol; the entry has a numeric `price`, a string `currency` (`"USX"`), plus numeric `timestamp` and `fetched` fields. This is exactly the contract the page's inline JS documents (JSON keyed by symbol, `price` + `currency`, `USX` = cents → client divides by 100). No extra keys beyond `timestamp`/`fetched`.
+- Upstream is still **not confirmed** — the proxy was called, not its upstream. The symbol format and `USX` handling remain consistent with a Yahoo Finance public-quote relay, but that is inference only.
+
+### What changed in the collector
+
+- `mae_mart_source.py`: `fetch_mae_mart()` now fills `futures_price` on corn/soybean/wheat rows from the proxy as an optional second step (`include_futures=True`, one GET per symbol: `ZCZ26=F`, `ZSF27=F`, `ZWN27=F`), following the page's own rule (`USX` cents ÷ 100; any other currency taken as dollars as-is). New helpers: `parse_mae_mart_proxy_json()` (pure parser, ignores malformed/unknown-symbol entries) and `fetch_mae_mart_futures()` (per-symbol failure is skipped, never fatal).
+- Graceful degradation: any proxy failure leaves the rows exactly as the static parse produced them (basis only, `futures_price=None`) and appends a "proxy unavailable" note.
+- Deliberately NOT changed: `cash_price` is still never computed from futures + basis. Using the site's relay of third-party futures data plus its static basis to compute cash remains an open decision for Adam/the coordinator. Rye is untouched (no futures symbol; static `manualPrice` cash price as before).
+- Tests: 7 new tests in `GrainBids/grainbids/apps/api/tests/test_ontario_collectors.py`, all against synthetic fixtures with invented values — proxy JSON cents→dollars, malformed-entry handling, fetch fills all three futures crops, proxy failure leaves rows unchanged, `include_futures=False` skips the proxy, and the proxy is called once per symbol with the contact User-Agent.
+
+## Cycle 19 — Ingestion-orchestrator coverage audit (code only, 0 GETs)
+
+### How the orchestrator enumerates sources
+
+There are three ingestion paths, and they enumerate sources three
+different ways — none of them reads `us_elevators_urls.toml` (no
+Python code reads that file; it is canonical input only for
+`scripts/sync_us_elevators_config.py`, which copies it into
+`config.toml` `[[us.elevators]]`).
+
+1. **FastAPI scheduled poll** — `app/jobs/poll_sources.py`
+   (`run_once` / `run_loop`) → `poll_due_sources()` →
+   `list_due_sources()` → `run_source_refresh()` → `_fetch_with_timeout()`
+   (spawned subprocess, per-source timeout) →
+   `fetch_with_adapter()` in `app/services/source_registry.py`.
+   Enumeration: `Source` rows in the database. `list_due_sources()`
+   filters `is_active=True`, `source_type == "automated"`,
+   `next_poll_at IS NULL OR next_poll_at <= now` (`next_poll_at` is
+   advanced by `update_source_health_state()` after each attempt, so
+   due-gating works). It did **not** read the registry, the
+   `config.toml` `[sources]` toggles, or either toml list.
+2. **Deployed 08:00 / 15:00 America/Toronto job** (deployment
+   checklist §4) — `python -m app.jobs.daily_source_ingestion` →
+   `run_scheduled_file_ingestion_cycle()`, which iterates only
+   `Source` rows with `source_type == "file"` and a `url`. It never
+   calls any registry adapter: **0 of 93 adapters** are reached by
+   the deployed schedule.
+3. **Legacy GrainBidder** —
+   `app/platform/market_data/sources/orchestrator/GrainBidder.py`
+   `_gather_source_data()` — a hardcoded list of 10 Ontario fetchers
+   gated by `config.source_enabled()` (`[sources]` toggles), plus
+   `config.toml` `[[us.elevators]]` (121 entries, synced from the
+   urls toml in Cycle 18) dispatched by `type` to the generic
+   `fetch_us_agricharts(url, name)` / `fetch_us_dtn(url, name,
+   playwright)`. It writes CSV/Excel only (plus an optional legacy
+   SQLite hook); it does not write to the platform database. Types
+   it skips with `[SKIP]`: `bushel`, `agricharts-embed`, `usda`,
+   `wpdatatables`, `stonex`, `unknown`, `unreachable`, `none`.
+4. **Manual path** — `POST /api/sources/{id}/refresh` →
+   `run_source_refresh()` — reaches any single adapter that has a
+   `Source` row. Seeding defaults to pilot scope
+   (`POST /api/sources/seed`, `scope=pilot`); `scope=all` seeds all
+   93 registry adapters.
+
+### Per-family trace (registry → orchestrator)
+
+Registry: **93 adapters**, all fetch functions present and callable
+with zero arguments (the `url`-taking ones — `fmn`, `usda_mirror`,
+`collwest`, `mae_mart`, `mapleview` — all have module-level URL
+defaults). By module: `bushel_source` 62, `cashbids_embed_source`
+13, `usda_mirror_source` 2, `wpdatatables_source` 1, `fmn_source` 1,
+Ontario playwright/direct modules 14.
+
+| Family | Registry adapters | Scheduled poll before fix | After fix |
+| --- | --- | --- | --- |
+| bushel (`bushel_source`, direct_dict) | 62 | 0 — none are pilot | all, when seeded + due |
+| agricharts-embed (`cashbids_embed_source`) | 13 | 0 | all, when seeded + due |
+| wpdatatables (`five_star_coop`) | 1 | 0 | yes, when seeded + due |
+| fmn (`fmn_source`) | 1 | 0 | yes, when seeded + due |
+| usda mirror (`usda_mirror_source`) | 2 | 0 | yes, when seeded + due |
+| Ontario direct_dict | 4 | 0 | yes, when seeded + due |
+| Ontario playwright | 9 | 4 of 5 pilot keys are playwright (`agricharts`, `glg`, `hensall`, `snobelen`); `lac`, `bunge`, `dg_global`, `ganaraska`, `wanstead` were unreachable | all, when seeded + due |
+| `andersons` (direct/api) | 1 | yes (pilot) | yes |
+| US agricharts / DTN generic (`us_agricharts_source`, `us_dtn_source`) | **0 — no adapter keys exist** | unreachable from the FastAPI platform entirely | still unreachable (see below) |
+
+### Gap found and fixed (small, safe)
+
+**`list_due_sources()` filtered on the 5-key pilot allowlist**
+(`Source.adapter_key.in_(pilot_keys)`), so the scheduled poll could
+only ever reach `agricharts`, `glg`, `hensall`, `snobelen`,
+`andersons` — 88 of 93 registry adapters were unreachable on
+schedule even after `seed scope=all`. Fix (Cycle 19):
+`app/services/source_orchestration.py` — removed the pilot-key
+clause; the remaining gates (`is_active`, `source_type ==
+"automated"`, due by `next_poll_at`) are unchanged. The pilot set
+still governs promotion status (`_promotion_status`) and remains
+the default seed scope, so existing pilot-only deployments are
+unaffected until an admin explicitly seeds `scope=all`. Regression
+tests: 3 new tests in
+`GrainBids/grainbids/apps/api/tests/test_source_orchestration_due_sources.py`
+(in-memory SQLite, seeded from the registry itself) asserting the
+due set equals the enabled registry set, that non-pilot adapters
+are included, and that inactive / file-type / not-yet-due rows are
+excluded. Verified the 3 tests fail on the pre-fix code and pass
+after it. Full API suite: **656 passed, 0 failed** (646 baseline +
+3 new + 7 sibling Cycle 19 Mae-Mart tests).
+
+### Gaps documented, NOT fixed (need a coordinator / Adam decision)
+
+1. **The deployed 08:00/15:00 cron runs the file-ingestion job,
+   not the poller.** Even after this fix, the scheduled job in the
+   deployment checklist (`python -m app.jobs.daily_source_ingestion`)
+   reaches 0 registry adapters. `app/jobs/poll_sources.py` exists
+   (plus a local Windows task script
+   `GrainBids/grainbids/infra/scripts/run-source-poller.ps1`) but
+   nothing in the deployment checklist schedules it. Deciding to
+   schedule the poller (and at what cadence — a full 93-source sweep
+   runs sequentially with per-source timeouts) is a deployment
+   decision, not a code change.
+2. **US agricharts / DTN have no registry adapters.** 13 enabled
+   `agricharts` + 13 enabled `dtn` entries in
+   `us_elevators_urls.toml` are reachable only through GrainBidder's
+   generic `fetch_us_agricharts(url, name)` /
+   `fetch_us_dtn(url, name, playwright)` (CSV output, not the
+   platform DB). The registry's `fetch_with_adapter()` calls
+   `fetch_fn()` with no arguments, and these functions require a
+   URL — so wiring them in needs an adapter-shape change (e.g.
+   per-URL adapter keys or a URL parameter on `SourceAdapter`), not
+   a one-line fix.
+3. **Toggled-off adapters are still seedable/fetchable.**
+   `config.toml` `[sources]` has exactly the 93 registry keys, with
+   2 off: `bunge = false` (URLs no longer valid) and `mapleview =
+   false` (stub only, JS-rendered). The FastAPI orchestrator never
+   reads `[sources]` — only GrainBidder does, and only for its 10
+   Ontario fetchers — so `seed scope=all` creates active `Source`
+   rows for both, manual refresh fetches them, and after this fix
+   scheduled polling would too. Decide whether seeding should honor
+   the `[sources]` toggles or the toggles are legacy-only and the
+   platform's `is_active` is the single gate. (Same class of
+   mismatch, name-level only and not asserted as the same source:
+   `us_elevators_urls.toml` lists `Bunge`, `Collwest Grain`,
+   `United Coop`, `The Andersons`, `Smithfield` as
+   `enabled = false` while registry keys `bunge`, `collwest`,
+   `united_coop`, `andersons`, `smithfield_*` are enabled — worth
+   confirming whether those rows are the same entities or stale
+   duplicates before any toggle is trusted.)

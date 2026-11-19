@@ -103,6 +103,178 @@ def test_mae_mart_missing_tables_is_unsupported() -> None:
 
 
 # ---------------------------------------------------------------------------
+# Mae-Mart futures proxy (Cycle 19 — proxy verified live, 1 GET)
+# ---------------------------------------------------------------------------
+
+# Synthetic proxy payloads: invented values, not live prices.
+_SYNTHETIC_PROXY_JSON = {
+    "ZCZ26=F": {"price": 450.25, "currency": "USX", "timestamp": 1000, "fetched": 1001},
+    "ZSF27=F": {"price": 1075.25, "currency": "USX", "timestamp": 1000, "fetched": 1001},
+    "ZWN27=F": {"price": 551.25, "currency": "USX", "timestamp": 1000, "fetched": 1001},
+}
+
+
+def _mae_mart_multi_crop_html() -> str:
+    """Synthetic 4-crop page mirroring the fixture's structure.
+
+    Corn/soy/wheat carry basis only (cash is JS-filled); rye has a
+    static manualPrice. All values are invented test data.
+    """
+    tables = ""
+    for table_id, delivery, basis in [
+        ("gp-table-corn", "HARVEST 2026", "+1.2500"),
+        ("gp-table-soybeans", "HARVEST 2026", "+0.7500"),
+        ("gp-table-wheat", "HARVEST 2026", "+0.5000"),
+        ("gp-table-rye", "Current Bid", "+0.0000"),
+    ]:
+        tables += (
+            f'<table class="gp-table" id="{table_id}"><tbody>'
+            f"<tr><td>Best Bid {delivery}</td><td>—</td><td>{basis}</td>"
+            "<td>—</td><td>—</td><td>Lock a Bid</td></tr>"
+            "</tbody></table>"
+        )
+    return (
+        "<html><body>" + tables + "<script>"
+        'var ALL_BIDS = {"corn":[{"symbol":"ZCZ26=F","basis":1.25,"manualPrice":null}],'
+        '"soybeans":[{"symbol":"ZSF27=F","basis":0.75,"manualPrice":null}],'
+        '"wheat":[{"symbol":"ZWN27=F","basis":0.5,"manualPrice":null}],'
+        '"rye":[{"symbol":"","basis":0,"manualPrice":7.77}]};'
+        "</script></body></html>"
+    )
+
+
+def test_mae_mart_proxy_json_cents_to_dollars() -> None:
+    result = mae_mart_source.parse_mae_mart_proxy_json(_SYNTHETIC_PROXY_JSON)
+    # USX = cents per the page's own rule: divide by 100.
+    assert result == {"Corn": 4.5025, "Soybeans": 10.7525, "Wheat": 5.5125}
+
+
+def test_mae_mart_proxy_json_ignores_bad_entries() -> None:
+    data = {
+        "ZCZ26=F": {"price": 400.0, "currency": "USD"},  # non-USX: as-is
+        "ZSF27=F": {"price": "not-a-number", "currency": "USX"},
+        "ZWN27=F": {"currency": "USX"},  # no price
+        "ZZZ99=F": {"price": 1.0, "currency": "USX"},  # unknown symbol
+        "BAD": "not-a-dict",
+    }
+    assert mae_mart_source.parse_mae_mart_proxy_json(data) == {"Corn": 400.0}
+    assert mae_mart_source.parse_mae_mart_proxy_json({}) == {}
+    assert mae_mart_source.parse_mae_mart_proxy_json(None) == {}  # type: ignore[arg-type]
+
+
+def test_mae_mart_fetch_fills_futures_and_leaves_cash_empty() -> None:
+    with (
+        patch.object(
+            mae_mart_source,
+            "fetch_mae_mart_html",
+            return_value=_read("mae_mart_sample.html"),
+        ),
+        patch.object(
+            mae_mart_source, "fetch_mae_mart_futures", return_value={"Corn": 4.50}
+        ),
+    ):
+        result = mae_mart_source.fetch_mae_mart()
+    assert result["status"] == "ok"
+    corn = next(r for r in result["rows"] if r["commodity"] == "Corn")
+    assert corn["futures_price"] == 4.50
+    # Cash is NEVER computed from futures + basis here.
+    assert corn["cash_price"] is None
+    assert corn["basis"] == 1.25
+    rye = next(r for r in result["rows"] if r["commodity"] == "Rye")
+    assert rye["futures_price"] is None  # no symbol, no proxy call
+    assert rye["cash_price"] == 6.11  # static manualPrice, untouched
+
+
+def test_mae_mart_fetch_fills_all_three_futures_crops() -> None:
+    with (
+        patch.object(
+            mae_mart_source,
+            "fetch_mae_mart_html",
+            return_value=_mae_mart_multi_crop_html(),
+        ),
+        patch.object(
+            mae_mart_source,
+            "fetch_mae_mart_futures",
+            return_value={"Corn": 4.50, "Soybeans": 10.75, "Wheat": 5.51},
+        ),
+    ):
+        result = mae_mart_source.fetch_mae_mart()
+    assert result["status"] == "ok"
+    assert len(result["rows"]) == 4
+    by_crop = {r["commodity"]: r for r in result["rows"]}
+    assert by_crop["Corn"]["futures_price"] == 4.50
+    assert by_crop["Soybeans"]["futures_price"] == 10.75
+    assert by_crop["Wheat"]["futures_price"] == 5.51
+    assert by_crop["Rye"]["futures_price"] is None
+    assert by_crop["Rye"]["cash_price"] == 7.77
+    for crop in ("Corn", "Soybeans", "Wheat"):
+        assert by_crop[crop]["cash_price"] is None
+
+
+def test_mae_mart_proxy_failure_leaves_rows_unchanged() -> None:
+    with (
+        patch.object(
+            mae_mart_source,
+            "fetch_mae_mart_html",
+            return_value=_read("mae_mart_sample.html"),
+        ),
+        patch.object(
+            mae_mart_source,
+            "fetch_mae_mart_futures",
+            side_effect=Exception("proxy down"),
+        ),
+    ):
+        result = mae_mart_source.fetch_mae_mart()
+    assert result["status"] == "ok"
+    corn = next(r for r in result["rows"] if r["commodity"] == "Corn")
+    assert corn["futures_price"] is None
+    assert corn["cash_price"] is None
+    assert corn["basis"] == 1.25
+    rye = next(r for r in result["rows"] if r["commodity"] == "Rye")
+    assert rye["cash_price"] == 6.11
+    assert any("proxy unavailable" in note for note in result["notes"])
+
+
+def test_mae_mart_proxy_disabled_skips_proxy() -> None:
+    with (
+        patch.object(
+            mae_mart_source,
+            "fetch_mae_mart_html",
+            return_value=_read("mae_mart_sample.html"),
+        ),
+        patch.object(
+            mae_mart_source, "fetch_mae_mart_futures"
+        ) as fake_futures,
+    ):
+        result = mae_mart_source.fetch_mae_mart(include_futures=False)
+    fake_futures.assert_not_called()
+    corn = next(r for r in result["rows"] if r["commodity"] == "Corn")
+    assert corn["futures_price"] is None
+
+
+def test_mae_mart_futures_calls_proxy_one_symbol_per_request() -> None:
+    class _FakeResponse:
+        def raise_for_status(self) -> None:
+            pass
+
+        def json(self) -> dict:
+            return _SYNTHETIC_PROXY_JSON
+
+    with patch(
+        "app.platform.market_data.sources.mae_mart_source.requests.get"
+    ) as fake_get:
+        fake_get.return_value = _FakeResponse()
+        result = mae_mart_source.fetch_mae_mart_futures()
+    assert result == {"Corn": 4.5025, "Soybeans": 10.7525, "Wheat": 5.5125}
+    assert fake_get.call_count == 3  # one GET per symbol, like the page
+    for call in fake_get.call_args_list:
+        args, kwargs = call
+        assert args[0] == mae_mart_source.MAE_MART_PROXY_URL
+        assert kwargs["params"]["symbols"] in ("ZCZ26=F", "ZSF27=F", "ZWN27=F")
+        assert kwargs["headers"]["User-Agent"] == mae_mart_source.CONTACT_USER_AGENT
+
+
+# ---------------------------------------------------------------------------
 # North Gower
 # ---------------------------------------------------------------------------
 

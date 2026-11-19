@@ -313,14 +313,19 @@ def build_sla_summary(db: Session, *, org_id: uuid.UUID | None = None) -> dict:
 
 
 def list_due_sources(db: Session, *, now: datetime | None = None) -> list[Source]:
+    # Cycle 19: scheduled polling covers every active automated source
+    # that is due — not just the pilot allowlist. The pilot set still
+    # gates promotion status (see _promotion_status) and remains the
+    # default seed scope (POST /api/sources/seed defaults to pilot),
+    # so existing deployments are unaffected until an admin explicitly
+    # seeds scope=all. Before this change, poll_due_sources could only
+    # ever reach the 5 pilot adapters while the registry held 93.
     current = now or datetime.now(timezone.utc)
-    pilot_keys = list_pilot_adapter_keys()
     return db.execute(
         select(Source).where(
             and_(
                 Source.is_active.is_(True),
                 Source.source_type == "automated",
-                Source.adapter_key.in_(pilot_keys),
                 (Source.next_poll_at.is_(None) | (Source.next_poll_at <= current)),
             )
         )

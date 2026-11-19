@@ -329,12 +329,12 @@ branch to GitHub frequently.
 - Elevator Ops: which ERP first (Agris / Agvance / AgTrax)?
 - US scope: Corn Belt first, or Corn Belt + Gulf / PNW from day one?
 
-## 9. Progress — Cycles 1–16 (2026-11-18/19)
+## 9. Progress — Cycles 1–18 (2026-11-18/19)
 
-Sixteen overnight autonomous cycles on branches `overnight/grainhub-cycle-1`
-through `overnight/grainhub-cycle-16`, none merged to master. Full API test
-suite grew **179 → 291 → 320 → 359 → 364 → 380 → 407 → 407 → 454 → 488 → 536 → 558 → 590 → 617 → 629 → 638 passed, 0 failed**
-across the sixteen cycles. Full detail in `docs/plans/overnight-cycle-N-report.md`.
+Eighteen overnight autonomous cycles on branches `overnight/grainhub-cycle-1`
+through `overnight/grainhub-cycle-18`, none merged to master. Full API test
+suite grew **179 → 291 → 320 → 359 → 364 → 380 → 407 → 407 → 454 → 488 → 536 → 558 → 590 → 617 → 629 → 638 → 643 → 646 passed, 0 failed**
+across the eighteen cycles. Full detail in `docs/plans/overnight-cycle-N-report.md`.
 Merge order, gates, and conflicts are in `docs/plans/merge-plan.md`.
 
 - **Cycle 1** (`overnight/grainhub-cycle-1`, 179 tests): Phase 0 hardening,
@@ -445,6 +445,20 @@ Merge order, gates, and conflicts are in `docs/plans/merge-plan.md`.
   page DOES carry 3 static bid tables but they are
   Barchart-licensed, so not collected; merge plan extended to
   Cycles 13–15 (49 commits, 0 merges).
+- **Cycle 17** (`overnight/grainhub-cycle-17`, 643 tests): source
+  audit — 15 verified sources enabled in the toml that stale Cycle
+  1 notes had left disabled (10 Cycle 4/5 Bushel sites, Ace,
+  Alliance, AGP, both USDA mirrors); CRC reclassified to stonex;
+  basis-tracker source-health wiring verified already real; price
+  history now carries source/as_of labels; report calendar already
+  wired to ingestion status; `config.toml` `[us]` drift found (30
+  vs 121 entries).
+- **Cycle 18** (`overnight/grainhub-cycle-18`, 646 tests): `config.toml`
+  `[us]` synced from the urls toml (121 entries, guard test, sync
+  script); Mae-Mart futures proxy identified (`grain-proxy.php`,
+  Yahoo-style `=F` symbols, futures only); CGB cash-bid page found
+  (AgriCharts embed — licensed, not fetched); unreachable trio
+  (CVA, Landus, Mercer) still blocked on re-check.
 
 **Remaining blockers that need Adam:** NASS API key (free) and FAS /
 data.gov key (free); LLM provider + key for Advisor `/ask`; Barchart /
@@ -465,13 +479,15 @@ now 13 sites (PRO Coop 21302b proven in Cycle 13); the Skyland
 picker sweep is complete (all 14 IDs verified) and the Smithfield
 East Region sweep is complete (30 of 31 locations; Raeford posts no
 public bids); the Andersons is fully closed for static collection
-(the Maumee facility tables are Barchart-licensed); the FMN
-collector is complete for the default view (453 rows, all 449
-futures-linked rows filled via the `jsquote.php` feed); Five Star's
-wpDataTables collector is built (299 rows); the DTN sweep found only
-2 of 28 sites static-HTML, 20 JS-only, 6 unreachable, with Al-Corn
-the only classic inline `CashBidTable` fit for the DTN collector
-(Sunrise is a second classic-DTN fit, enabled in Cycle 10). A
-Playwright render check of the DTN-family JS-only sites, the FMN
-filtered view, and Mapleview's Grain Discovery shell still needs a
-live browser session.
+(the Maumee facility tables are Barchart-licensed); CGB's cash-bid
+page is an AgriCharts embed (licensed, not fetched); Mae-Mart's
+futures proxy is identified (Yahoo-style symbols, futures only —
+probe pending); the FMN collector is complete for the default view
+(453 rows, all 449 futures-linked rows filled via the `jsquote.php`
+feed); Five Star's wpDataTables collector is built (299 rows); the
+DTN sweep found only 2 of 28 sites static-HTML, 20 JS-only, 6
+unreachable, with Al-Corn the only classic inline `CashBidTable`
+fit for the DTN collector (Sunrise is a second classic-DTN fit,
+enabled in Cycle 10). A Playwright render check of the DTN-family
+JS-only sites, the FMN filtered view, and Mapleview's Grain
+Discovery shell still needs a live browser session.

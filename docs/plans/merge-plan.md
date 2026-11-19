@@ -608,3 +608,187 @@ Smithfield locations still unverified + the Raeford re-probe;
 Chadbourn + Skyland 3370/3621 staleness watch; Playwright render
 checks (DTN family, FMN filtered view, Mapleview, StoneX, and now
 The Andersons — closed for static collection, browser-only).
+
+---
+
+## Cycles 16–18 (added Cycle 19)
+
+### 0d. Branch chain — Cycles 16–18, verified from git
+
+The chain is **still linear**: `git log --oneline
+master..overnight/grainhub-cycle-18` gives **55 commits** (49
+through Cycle 15 + 6 in Cycles 16–18), **0 merge commits**, no
+branch points. Cycle 16's first commit `58679eb` has parent
+`7f8c263` (the Cycle 15 tip), and each later cycle branches from
+the previous tip: merge-base(16, 17) is the Cycle 16 tip
+`ee1a794`, merge-base(17, 18) is the Cycle 17 tip `6154176`.
+Per-branch commit counts: Cycle 16: 2, Cycle 17: 2, Cycle 18: 2.
+
+That means the §2 procedure continues unchanged: merge in order
+16 → 18 after 15, one branch at a time with `--no-ff`, running the
+§3 gates at each step. A single fast-forward of `master` to the
+`cycle-18` tip (`722dd8f`) would give the same tree as eighteen
+sequential merges; prefer the sequential merges for the same
+reason as §0 (a review checkpoint and stop point per cycle).
+
+### 1d. What each branch contains (Cycles 16–18)
+
+| Branch | Tip | Tests at tip | Web build at tip |
+|---|---|---|---|
+| Cycle 16 | `ee1a794` | 638 passed, 0 failed | Not re-run (no web files changed; last full pass Cycle 13) |
+| Cycle 17 | `6154176` | 643 passed, 0 failed | **PASS** (re-run this cycle; `/history` page change compiled) |
+| Cycle 18 | `722dd8f` | 646 passed, 0 failed | Not re-run (no web files changed; last full pass Cycle 17) |
+
+Web files changed only in Cycle 17 (`app/history/page.tsx`), so
+the only fresh web-build evidence in this range is Cycle 17's
+pass.
+
+- **Cycle 16** (`overnight/grainhub-cycle-16`; commits `58679eb`,
+  `ee1a794`): Smithfield East Region sweep complete — 30 of 31
+  locations verified and registered (batch 5: 1689–1691,
+  2064–2066, 20 rows; loose ends: Lapaz 2067 and Hamer 2179
+  verified, Raeford 1675 re-probed still empty and left
+  unregistered); Waverly (1691) is the fattest Smithfield page yet
+  (7 rows) and the first to carry Grain Sorghum. The Andersons
+  fully closed on licensing grounds: the Maumee facility page
+  carries 3 static bid tables (23 rows) but they are
+  Barchart-licensed data, deliberately not collected; the Ohio
+  locations list is a pure directory. Merge plan extended to
+  Cycle 15. 9 new tests, suite 638.
+  Full detail: `docs/plans/overnight-cycle-16-report.md`.
+- **Cycle 17** (`overnight/grainhub-cycle-17`; commits `7187c16`,
+  `6154176`): source-catalogue audit, 0 GETs — 15 verified toml
+  entries enabled in `us_elevators_urls.toml` (10 Cycle 4/5 Bushel
+  sites, Ace Ethanol, Alliance Grain, AGP, 2 USDA mirrors); CRC
+  reclassified `unknown → stonex`; Collwest comment corrected
+  (country confirmed Canadian, entry stays disabled as a record).
+  Basis tracker + source health verified already real (no rewire);
+  price-history endpoints now return `source` and `as_of` on
+  every response and the web `/history` page threads them through
+  (2 new tests); report calendar verified already correctly
+  wired. Super-plan §9 extended to Cycle 16. Drift found, not
+  fixed: `config.toml` `[us]` list stale (30 vs 122 entries).
+  5 new tests, suite 643.
+  Full detail: `docs/plans/overnight-cycle-17-report.md`.
+- **Cycle 18** (`overnight/grainhub-cycle-18`; commits `1ef1da6`,
+  `722dd8f`): the Cycle 17 drift resolved — `config.toml` `[us]`
+  synced from the urls toml by a new script
+  (`scripts/sync_us_elevators_config.py`, idempotent, `--check`
+  mode) with a 3-test guard (`test_source_config_sync.py`).
+  Mae-Mart proxy identified from page JS (`grain-proxy.php`,
+  Yahoo Finance `=F` symbols, futures quotes only — not called,
+  next probe named for a later cycle). CGB cash-bid page found
+  via site navigation (`cgbgrain.com/cash-bids`, AgriCharts
+  embed, 113 locations in the dropdown) — the AgriCharts URL was
+  deliberately not fetched; CGB now sits in the licensed-feed
+  decision bucket. Unreachable trio re-checked (CVA 202/0 bytes,
+  Landus 429 Vercel checkpoint, Mercer Landmark 522/0 bytes) —
+  still blocked, toml comments updated only. 3 new tests,
+  suite 646.
+  Full detail: `docs/plans/overnight-cycle-18-report.md`.
+
+**Count correction carried forward (Cycle 18):** the Cycle 17
+report's "122 entries" in `us_elevators_urls.toml` was a grep
+artifact — one `[[us.elevators]]` string appears in a comment in
+the urls file header, so `grep -c` overcounts by one. The true
+count is **121 entries in both files, 102 enabled**, verified
+with `tomllib` by the coordinator. Use 121, not 122, from here
+on.
+
+### 3d. Gates — updated expectations for Cycles 16–18
+
+§3 applies unchanged, with these per-cycle numbers:
+
+1. **Full API test suite** — expect Cycle 16: 638, Cycle 17: 643,
+   Cycle 18: 646 — **0 failed** at every step.
+2. **Web build** — re-run once at the Cycle 17 step (it passed
+   there) and once at the Cycle 18 step so the final tree is
+   verified as a whole. Only Cycle 17 changed web files, so a
+   build failure at the Cycle 16 or 18 step would point at an
+   earlier cycle, not the branch being merged.
+3. **Alembic chain** — head is **still `0019`**. Verified from
+   git: no migration file was added in Cycles 16–18 (`git log` on
+   the Alembic versions dir in `cycle-15..cycle-18` is empty, and
+   the file list at the Cycle 18 tip is `0001`–`0019`). The only
+   two commits ever touching that directory in
+   `master..cycle-18` are from Cycle 1 and Cycle 7 (which added
+   `0019`). Expect exactly one head, `0019`, at every step 16–18.
+4. **Boundary spot-check** — each Cycle 16–18 report has its own
+   boundary section (zero new references, verified by grep on the
+   added lines). Re-check once at the Cycle 18 step as in §3.4.
+5. **No-secrets spot-check** — as §3.5; all three reports state
+   none. Note Cycle 18's Mae-Mart and CGB work deliberately did
+   not call the identified proxy or the AgriCharts embed URL.
+
+### 4d. Known conflicts and overlaps — Cycles 16–18
+
+The chain is still linear, so a sequential merge still produces
+no conflicts. The §4 watch-list extends as follows:
+
+- **Price-source catalogue** (`docs/plans/price-source-catalogue.md`)
+  — edited in **every** cycle 16–18 as well (all three work
+  commits touch it). Same rule as §4: later wins.
+- **Source registry** (`app/services/source_registry.py`) —
+  touched in **Cycle 16 only** in this range (8 Smithfield
+  adapters: batch 5 + Lapaz + Hamer). Cycles 17–18 did not touch
+  it. Later wins, never drop a registration.
+- **`bushel_source.py`** — touched in **Cycle 16 only** in this
+  range (Smithfield `fetch_smithfield_*()` wrappers + the Raeford
+  empty-widget comment). Cycles 17–18 did not touch it. Additive
+  only; the Wheaton tabbed-widget fallback from Cycle 11 is
+  untouched in this range.
+- **`us_elevators_urls.toml`** — edited in Cycles 17 and 18, not
+  16 (Cycle 16's toml changes went through `config.toml` toggles
+  + enabled entries recorded in the catalogue): 15 entries
+  enabled + CRC reclassified + Collwest comment (17); the
+  unreachable-trio re-check comments (18). The Cycle 18 values
+  are the current truth — **121 entries, 102 enabled**.
+- **`config.toml`** (`app/platform/market_data/sources/config.toml`)
+  — touched in Cycles 16 and 18, not 17: Smithfield toggles (16),
+  then the full `[us]` sync from the urls toml by script (18).
+  The Cycle 18 synced list is the current truth; the urls toml
+  is canonical and the sync script + guard test keep them in
+  step. Do not hand-edit the `[us]` list — re-run the script.
+- **Super-plan §9** (`docs/plans/grainhub-super-plan.md`) —
+  updated in **Cycle 17 only** in this range (progress to Cycle
+  16, test chain 179 → 638). Cycles 16 and 18 did not touch it.
+  Linear, no conflict expected.
+- **Migration chain** — unchanged: `0015 → … → 0018` (Cycle 1)
+  then `0019` (Cycle 7), single head throughout Cycles 16–18.
+
+### 5d. What must NOT be merged as-is — update
+
+- **The CI workflow file is STILL not in any branch.** Verified
+  2026-11-19 (Cycle 19): `?? .github/` in `git status` on the
+  Cycle 19 checkout. Merging Cycles 16–18 as well as 1–15 will
+  **not** bring it into `master`. Same remedy as §5: Adam
+  re-authenticates `gh` with `workflow` scope, or adds the file
+  via the GitHub web UI. Do not hand-copy it into a merge commit.
+- **Nothing else new is held back in Cycles 16–18.** No new
+  unpushed files, secrets, or held-back work is reported in any
+  of the three reports. The §5 review-not-blocker list is
+  unchanged: email-bid endpoint public by default, futures
+  endpoints return prices `null` until a licensed feed is wired,
+  Advisor `/ask` is a 501 scaffold, eSign is a stub, normalized
+  price rows carry no currency (`currency: null`).
+- **Open decisions carried forward from Cycles 16–18 (not
+  blockers):** the Mae-Mart proxy probe (1 GET, gated on whether
+  relying on the site's relay of third-party futures + static
+  basis is acceptable) and the CGB `cashbids-js.php` question are
+  both gated on the licensed-feed decision; the unreachable trio
+  (CVA, Landus, Mercer Landmark) stays re-check-only.
+
+### 7d. After the merges — updated
+
+§7 applies with the Cycle 18 tip as the end state: Alembic head
+`0019` (unchanged since Cycle 7), test suite 646 passed / 0
+failed, web build last fully passed in Cycle 17 (re-run at the
+Cycle 18 merge step). The still-open decisions list in §7.4 is
+unchanged by Cycles 16–18. Open work carried forward: the
+Smithfield + Skyland per-location sweeps are now complete (30 of
+31 Smithfield, Raeford posts no public bids); Playwright render
+checks (DTN family, FMN filtered view, Mapleview, StoneX, The
+Andersons — closed for static collection, browser-only — and now
+Landus, Vercel checkpoint); Chadbourn + Hamer + Skyland 3370/3621
+staleness watch; Mae-Mart proxy probe; CGB licensed-feed
+decision.

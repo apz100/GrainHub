@@ -16,16 +16,28 @@ Page structure (verified 2026-11-19, one polite GET):
 Static-HTML limits (recorded, not worked around):
   * The CBOT futures and Cash Price cells are "—" in static HTML.
     The page fills them client-side from its own
-    ``/grain-proxy.php?symbols=...`` futures proxy. This collector
-    does NOT call that proxy (it is the site's own market-data relay,
-    not a plain bid page), so corn/soybean/wheat rows carry
-    ``cash_price=None`` with a note.
+    ``/grain-proxy.php?symbols=...`` futures proxy.
   * Basis IS published statically (table cell and the inline
     ``ALL_BIDS`` JSON), so rows carry the site's basis.
   * Rye is the exception: it has no futures symbol and a static
     ``manualPrice`` in the inline ``ALL_BIDS`` JSON, which is exactly
     what the site displays as its cash price. Rye rows therefore
     carry ``cash_price`` from that value.
+
+Futures proxy (verified live 2026-11-19, Cycle 19, one GET):
+  ``GET /grain-proxy.php?symbols=ZCZ26=F`` returns HTTP 200,
+  ``application/json``, shaped exactly as the page's inline JS
+  documents: JSON keyed by symbol, each entry with a numeric
+  ``price`` and a ``currency``. ``currency == "USX"`` means the
+  price is in cents, so the client divides by 100 — this collector
+  follows the page's own rule. ``fetch_mae_mart`` therefore fills
+  ``futures_price`` on corn/soybean/wheat rows from the proxy as an
+  optional second step that degrades gracefully (rows keep
+  ``futures_price=None`` if the proxy fails). ``cash_price`` is
+  NEVER computed from futures + basis here: using the site's relay
+  of third-party futures data plus its static basis to compute cash
+  is a decision for Adam/the coordinator, so corn/soybean/wheat
+  rows still carry ``cash_price=None`` with a note.
 
 Currency/unit: the page states prices are "CAD/bu and CAD/tonne"
 and labels the cash column CAD/bu, so rows are currency CAD,
@@ -42,9 +54,18 @@ import requests
 from bs4 import BeautifulSoup
 
 MAE_MART_URL = "http://www.mae-martfarms.com/grain-pricing"
+MAE_MART_PROXY_URL = "http://www.mae-martfarms.com/grain-proxy.php"
 MAE_MART_COMPANY = "Mae-Mart Farms"
 MAE_MART_LOCATION = "Norfolk County"
 CONTACT_USER_AGENT = "GrainHub-Research/1.0 +https://github.com/apz100/GrainHub"
+
+# Futures symbols the page itself uses (from its inline JS, verified
+# 2026-11-19). Rye has no symbol — no proxy call for it.
+FUTURES_SYMBOLS = {
+    "Corn": "ZCZ26=F",
+    "Soybeans": "ZSF27=F",
+    "Wheat": "ZWN27=F",
+}
 
 CROP_TABLE_IDS = {
     "gp-table-corn": "Corn",
@@ -203,6 +224,93 @@ def fetch_mae_mart_html(url: str = MAE_MART_URL, timeout: int = 30) -> str:
     return response.text
 
 
-def fetch_mae_mart(url: str = MAE_MART_URL) -> dict[str, Any]:
-    """Fetch and parse Mae-Mart bids in one call."""
-    return parse_mae_mart_html(fetch_mae_mart_html(url))
+def parse_mae_mart_proxy_json(data: dict[str, Any]) -> dict[str, float]:
+    """Parse the /grain-proxy.php response into {commodity: futures $/bu}.
+
+    Contract (verified live 2026-11-19, Cycle 19): JSON keyed by
+    Yahoo-style symbol, each entry with a numeric ``price`` and a
+    ``currency``. ``currency == "USX"`` means the price is in cents,
+    so it is divided by 100 — the page's own rule. Any other
+    currency is taken as dollars as-is. Malformed or unknown-symbol
+    entries are ignored, never guessed.
+    """
+    symbol_to_commodity = {sym: crop for crop, sym in FUTURES_SYMBOLS.items()}
+    out: dict[str, float] = {}
+    if not isinstance(data, dict):
+        return out
+    for symbol, entry in data.items():
+        crop = symbol_to_commodity.get(symbol)
+        if crop is None or not isinstance(entry, dict):
+            continue
+        price = entry.get("price")
+        if not isinstance(price, (int, float)):
+            continue
+        if entry.get("currency") == "USX":
+            out[crop] = float(price) / 100.0
+        else:
+            out[crop] = float(price)
+    return out
+
+
+def fetch_mae_mart_futures(
+    symbols: dict[str, str] | None = None, timeout: int = 30
+) -> dict[str, float]:
+    """Fetch futures quotes from the site's own proxy, one GET per symbol.
+
+    Mirrors the page's client-side behaviour (one symbol per request).
+    A failed symbol is skipped, not fatal; returns {} when nothing
+    usable comes back. Callers treat an empty result as "no futures
+    data" and keep the static-only rows.
+    """
+    symbols = symbols or FUTURES_SYMBOLS
+    out: dict[str, float] = {}
+    for crop, symbol in symbols.items():
+        try:
+            response = requests.get(
+                MAE_MART_PROXY_URL,
+                params={"symbols": symbol},
+                headers={"User-Agent": CONTACT_USER_AGENT},
+                timeout=timeout,
+            )
+            response.raise_for_status()
+            out.update(parse_mae_mart_proxy_json(response.json()))
+        except (requests.RequestException, ValueError):
+            continue
+    return out
+
+
+def fetch_mae_mart(
+    url: str = MAE_MART_URL, include_futures: bool = True
+) -> dict[str, Any]:
+    """Fetch and parse Mae-Mart bids in one call.
+
+    The proxy call is an optional second step: when
+    ``include_futures`` is true it fills ``futures_price`` on the
+    corn/soybean/wheat rows from the site's futures proxy. Any proxy
+    failure degrades gracefully to the static-only rows (basis only,
+    ``futures_price=None``). ``cash_price`` is never computed from
+    futures + basis — that decision is left to Adam/the coordinator.
+    """
+    result = parse_mae_mart_html(fetch_mae_mart_html(url))
+    if not include_futures or result["status"] != "ok":
+        return result
+    try:
+        futures = fetch_mae_mart_futures()
+    except Exception:
+        futures = {}
+    if not futures:
+        result["notes"].append(
+            "futures proxy unavailable: rows carry basis only, "
+            "futures_price left empty"
+        )
+        return result
+    for row in result["rows"]:
+        price = futures.get(row["commodity"])
+        if price is not None:
+            row["futures_price"] = price
+    result["notes"].append(
+        "futures_price from the site's /grain-proxy.php relay "
+        "(USX cents converted to dollars per the page's own rule); "
+        "cash_price is NOT computed from futures + basis"
+    )
+    return result

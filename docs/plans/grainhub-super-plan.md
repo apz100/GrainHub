@@ -576,6 +576,11 @@ Merge order, gates, and conflicts are in `docs/plans/merge-plan.md`.
   only): early Bushel sites 9/9 exact matches; Mae-Mart still
   viable (page 171 bytes smaller, proxy shape unchanged);
   merge plan extended to Cycle 36 (91 commits, 0 merges).
+- **Cycle 38** (`overnight/grainhub-cycle-38`, 711 tests, docs
+  only): web build re-run passes (33/33 pages, first since
+  Cycle 17); config/registry drift audit clean (121 entries,
+  102 enabled, 119 adapters, 17 toggled off); merge plan
+  extended to Cycle 37 (93 commits, 0 merges).
 
 **Remaining blockers that need Adam:** NASS API key (free) and FAS /
 data.gov key (free); LLM provider + key for Advisor `/ask`; Barchart /

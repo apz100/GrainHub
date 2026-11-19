@@ -5014,3 +5014,201 @@ Mae-Mart cash-price decision; poller scheduling decision;
 currency decision. Subagent spawning is unavailable in this
 session — later cycles run coordinator-direct unless it comes
 back.
+
+## Cycle 38 (added Cycle 39)
+
+### 0x. Branch chain — Cycle 38, verified from git
+
+The chain is **still linear**: `git log --oneline
+master..overnight/grainhub-cycle-38` gives **95 commits** (93
+through Cycle 37 + 2 in Cycle 38), **0 merge commits**, no
+branch points. Cycle 38's first commit `21515be` has parent
+`55804ca` (the Cycle 37 tip), and merge-base(37, 38) is the
+Cycle 37 tip `55804ca`. Per-branch commit count for Cycle 38: 2
+(`21515be`, `340daa1`).
+
+That means the §2 procedure continues unchanged: merge Cycle 38
+after 37, one branch at a time with `--no-ff`, running the §3
+gates at each step. A single fast-forward of `master` to the
+`cycle-38` tip (`340daa1`) would give the same tree as
+thirty-eight sequential merges; prefer the sequential merges
+for the same reason as §0 (a review checkpoint and stop point
+per cycle).
+
+(The Cycle 37 section's "93 commits master..cycle-37" figure
+was re-verified in Cycle 39 and is correct — 93, 0 merge
+commits. `master` is still at `f2c3206` — no cycle work is on
+`master` yet.)
+
+### 1x. What the branch contains (Cycle 38)
+
+| Branch | Tip | Tests at tip | Web build at tip |
+|---|---|---|---|
+| Cycle 38 | `340daa1` | 711 passed, 0 failed | **Pass — re-run in Cycle 38 (33 pages)** |
+
+Tip commit hash (full): `340daa10559466c98d8c73cee3045ac162218b87`.
+4 files changed in Cycle 38 (387 insertions, 0 deletions —
+verified from the `cycle-37..cycle-38` diff): the super-plan §9,
+the merge plan (+225), the Cycle 38 report itself (+136), and
+the price-source catalogue (+22). No code changed and no new
+tests were added; the suite is unchanged from Cycle 37 at 711 —
+the coordinator ran it once to confirm.
+
+- **Cycle 38** (`overnight/grainhub-cycle-38`; commits `21515be`,
+  `340daa1`): **web build re-run — passes.** `npm run build
+  --workspace=grainbids-web` from `GrainBids/grainbids`: **✓
+  Compiled successfully, 33/33 static pages generated** — first
+  full re-run since Cycle 17. Workspaces caveat recorded: the
+  repo is an npm-workspaces monorepo, dependencies are hoisted
+  to the root `GrainBids/grainbids/node_modules/`, and plain
+  `npm install` inside `apps/web` is a no-op ("up to date"
+  without installing anything); the workspace-aware build
+  command is the correct one. The root
+  `GrainBids/grainbids/package-lock.json` stray file reappeared
+  during the build, as in earlier cycles — deleted, not
+  committed (the real lockfile is `apps/web/package-lock.json`,
+  already tracked).
+- **Config / registry drift audit — clean.** Verified directly
+  with `tomllib` + the real toggle loader: `us_elevators_urls.toml`
+  121 entries / 102 enabled (same as Cycle 18);
+  `config.toml` `[us]` 121 entries / 102 enabled, per-entry
+  name/url/type/enabled match; registry adapters 119; disabled
+  by toggle 17 (bunge, mapleview, 13 DTN, Heartland, Mulvane —
+  same set as Cycle 23); seedable 102. The AGP (Cycle 33) and
+  Alliance Grain (Cycle 34) comment edits introduced no drift.
+- **Merge plan extended to Cycle 37** (225 lines added, 0
+  removed — verified from the `cycle-37..cycle-38` diff). The
+  Cycle 36 section's "91 commits" figure re-verified correct
+  in Cycle 38. No discrepancies found between git and the
+  Cycle 37 report.
+- **Super-plan §9 extended to Cycle 37** (Cycle 37 bullet
+  added — early Bushel sites 9/9, Mae-Mart still viable; merge
+  plan extended to Cycle 36, 91 commits).
+- **Price-source catalogue — Cycle 38 section added** (web
+  build + drift audit).
+- **Boundary applied:** zero references in any new Cycle 38
+  code, tests, fixtures, or docs (verified by grep on the added
+  lines of the commit). No contact made.
+  Full detail: `docs/plans/overnight-cycle-38-report.md`.
+
+### 3x. Gates — updated expectations for Cycle 38
+
+§3 applies unchanged, with these per-cycle numbers:
+
+1. **Full API test suite** — expect Cycle 38: 711 — **0 failed**.
+   (Unchanged from Cycle 37 — no code changed, no new tests
+   added. The coordinator ran the suite once to confirm.)
+2. **Web build** — re-run once at the Cycle 38 step so the final
+   tree is verified as a whole. **It was re-run in Cycle 38
+   itself and passed (33/33 pages)** — the first full re-run
+   since Cycle 17. Note the workspaces caveat in §1x: run it
+   as `npm run build --workspace=grainbids-web` from
+   `GrainBids/grainbids`, not from inside `apps/web`.
+3. **Alembic chain** — head is **still `0019`**. Verified from
+   git: no migration file was added in Cycle 38 (`git log` on
+   the Alembic versions dir in `cycle-37..cycle-38` is empty,
+   and the file list at the Cycle 38 tip is `0001`–`0019`). The
+   only two commits ever touching that directory in
+   `master..cycle-38` are from Cycle 1 and Cycle 7 (which added
+   `0019`). Expect exactly one head, `0019`, at the Cycle 38 step.
+4. **Boundary spot-check** — the Cycle 38 report has its own
+   boundary section (zero new references, verified by grep on the
+   added lines). Re-check once at the Cycle 38 step as in §3.4.
+5. **No-secrets spot-check** — as §3.5; the report states none.
+
+### 4x. Known conflicts and overlaps — Cycle 38
+
+The chain is still linear, so a sequential merge still produces
+no conflicts. The §4 watch-list extends as follows:
+
+- **Price-source catalogue** (`docs/plans/price-source-catalogue.md`)
+  — edited in **Cycle 38** as well (22 lines changed; the web
+  build and the drift audit). Same rule as §4: later wins.
+- **Merge plan** (`docs/plans/merge-plan.md`) — extended in
+  Cycle 38 (225 lines added, 0 removed: the Cycle 37 section).
+  Additive; no earlier text touched.
+- **Super-plan §9** (`docs/plans/grainhub-super-plan.md`) —
+  updated in **Cycle 38** (progress to Cycle 37, test chain
+  179 → 711). Linear, no conflict expected.
+- **No collector, registry, orchestration, config, test, or web
+  file touched in Cycle 38** — the build only re-ran; the only
+  filesystem side effect (the root `package-lock.json` stray)
+  was deleted, not committed. Cycle 38 is docs + research only.
+- **Migration chain** — unchanged: `0015 → … → 0018` (Cycle 1)
+  then `0019` (Cycle 7), single head throughout Cycle 38.
+
+### 5x. What must NOT be merged as-is — update
+
+- **The CI workflow file is STILL not in any branch.** Verified
+  2026-11-19 (Cycle 39): `?? .github/` in `git status` on the
+  Cycle 39 checkout (`.github/workflows/api-tests.yml`).
+  Merging Cycle 38 as well as 1–37 will **not** bring it into
+  `master`. Same remedy as §5: Adam re-authenticates `gh` with
+  `workflow` scope, or adds the file via the GitHub web UI. Do
+  not hand-copy it into a merge commit.
+- **Nothing else new is held back in Cycle 38.** No new unpushed
+  files, secrets, or held-back work is reported in the Cycle 38
+  report. The §5 review-not-blocker list is unchanged and carried
+  forward: email-bid endpoint public by default, futures
+  endpoints still return prices `null` until a licensed feed is
+  wired (the Mae-Mart proxy now fills `futures_price` on
+  collector rows only — it does not feed the futures endpoints),
+  Advisor `/ask` is a 501 scaffold, eSign is a stub, normalized
+  price rows carry no currency (`currency: null`).
+- **Open decisions carried forward from Cycle 38 (not
+  blockers):** **nothing new needs Adam in Cycle 38.** The
+  staleness watch is still five widgets (Chadbourn, Hamer,
+  Hugoton 3370, Vilas-Walsh 3621, Almota — all exactly one day
+  behind, all on the exemption list for any future freshness
+  gate; no further re-checks needed beyond the regular sweeps).
+  Playwright render checks still pending (DTN family — Al-Corn
+  + Sunrise first — FMN filtered view (Winchester
+  `location_filter=2523`), Mapleview, StoneX family (Frontier,
+  CRC, UFC), The Andersons — closed for static collection,
+  browser-only — and Landus, Vercel checkpoint); DTN toggles
+  stay `false` until verified; scheduling the poller as a second
+  cron job (deployment decision, checklist §4 step 6); Mae-Mart
+  `cash_price` from futures + static basis (still open, gated on
+  the licensed-feed decision); at least one `Commodity` row must
+  exist before the first poller run. Still needs Adam (carried
+  from Cycles 1–37, nothing new in Cycle 38): NASS key,
+  FAS/data.gov key, LLM provider + key, Barchart/DTN licensed
+  feed decision (redistribution licence — now also gates the
+  CGB `cashbids-js.php` question and the Mae-Mart cash-price
+  decision), ERP choice (Agvance recommended), eSign provider,
+  pricing/hosting decisions, `gh` `workflow` scope, currency
+  column decision (four concrete choices in
+  `docs/plans/currency-design.md`), email-bid endpoint auth
+  decision (public vs admin-only).
+
+### 7x. After the merges — updated
+
+§7 applies with the Cycle 38 tip as the end state: Alembic head
+`0019` (unchanged since Cycle 7), test suite 711 passed / 0
+failed, web build last fully passed in **Cycle 38** (33/33
+pages, re-run — first full re-run since Cycle 17). The
+still-open decisions list in §7.4 is unchanged by Cycle 38
+except for the additions in §5x above. Open work carried
+forward: Playwright render checks (DTN family — Al-Corn +
+Sunrise first — FMN filtered view, Mapleview, StoneX including
+Frontier, The Andersons — closed for static collection,
+browser-only — and Landus, Vercel checkpoint); Heartland /
+Mulvane closed for now (no new hypothesis); Chadbourn + Hamer
++ Skyland 3370/3621 + Almota staleness watch (now five widgets,
+exemption list; no further re-checks needed beyond the regular
+sweeps); AGP's iframe target rotated its served default
+location once (Chester → Aberdeen) and Alliance Grain's page
+did the same (Gibson City → Anchor/Cropsey/Colfax) — if either
+rotates again, a later re-verification will catch it, no action
+needed now; Smithfield East Region sweep fully re-verified
+(Cycles 29–34, all 30 locations exact); embed family fully
+re-verified (Cycles 35–36, 13/13 exact); AgriCharts wrappers
+fully re-verified (Cycle 36, 11/11 exact); FMN, Five Star, and
+both USDA mirrors re-verified (Cycle 36, all exact); early
+Bushel sites re-verified (Cycle 37, 9/9 exact); Mae-Mart still
+viable (Cycle 37 — page 171 bytes smaller, proxy shape
+unchanged); config/registry drift audit clean (Cycle 38);
+Mae-Mart cash-price decision; poller scheduling decision;
+currency decision. Subagent spawning is unavailable in this
+session — later cycles run coordinator-direct unless it comes
+back.

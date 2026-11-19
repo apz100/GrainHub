@@ -313,12 +313,12 @@ No prices are recorded here — row counts and widget patterns only.
 | Company | URL | HTTP | Static bid rows? | Widget / pattern in static HTML | Collector pattern |
 |---|---|---|---|---|---|
 | Heartland Coop (config URL) | https://myaccount.heartlandcoop.com/bids.htm | proxy error | — | — (unreachable this sweep) | Moot — config already uses the verified `cash.php` AgriCharts URL |
-| Ag Partners | https://agpartners.net/cash-bids | 503 "Site is offline" | No | Offline page, no widget | Was DTN; now down — re-check later, do not assume dead |
+| Ag Partners | https://agpartners.net/cash-bids | 503 "Site is offline" | No | Offline page, no widget | Was DTN; now down — re-check later, do not assume dead. **Cycle 8:** back up — 200 (→ `/cash-bids/`), modern DTN widget (`content-services.dtn.com/ui-widgets/cash-bids-table-widget-1.0-latest.js`), no static bid rows. DTN Playwright. |
 | Agtegra | https://www.agtegra.com/cash-bids | 200 | No | AgriCharts `cashbids.php` embed (`sdwg.agricharts.com`, location 3135) + ATLAS DTN shell (`/dtncashbidwidget/bindlocation`) | **Resolved 2026-11-19 (Cycle 7):** static route proven — `cashbids-js.php` returns a `var bids` JSON payload, 8 Corn rows (Hecla). Generic collector `cashbids_embed_source.py` (`fetch_agtegra`). No Playwright needed. |
 | Allied Cooperative | https://www.allied.coop/grain/cash-bids | 200 | No | Modern DTN widget `content-services.dtn.com/ui-widgets/cash-bids-table-widget-1.0-latest.js` | DTN Playwright (`us_dtn_source.py`) — needs a render check: modern widget, not classic `CashBidTable` |
 | Aurora Coop | https://auroracoop.com/markets | 200 | No | Modern DTN widget JS (same as Allied) | DTN Playwright — render check needed |
 | CFS | https://www.cfscoop.com/products-services/grain | 200 | No | aghost DTN widget (`DtnCashbidDetailsScript.js` + location-cookie flow); the one `<table>` is a futures quotes table, not bids | DTN Playwright — render check needed |
-| Frontier Coop | https://www.frontiercooperative.com/grain/cash-bids | 200 | No | **StoneX** widget (`StonexCashbidScript.js`); inline JSON model is empty in static HTML (`LocationRecords: null`, default date) | NEW pattern — no existing collector; Playwright or StoneX investigation in a later cycle |
+| Frontier Coop | https://www.frontiercooperative.com/grain/cash-bids | 200 | No | **StoneX** widget (`StonexCashbidScript.js`); inline JSON model is empty in static HTML (`LocationRecords: null`, default date) | NEW pattern — no existing collector; Playwright or StoneX investigation in a later cycle. **Cycle 8:** StoneX iframe unchanged (same key), inline model still empty; the verbatim iframe target (`stonehedge.stonex.com/component/bids?...`) is a JS app shell with no static bid data — see "Cycle 8 re-checks". |
 | Green Plains | https://gpreinc.com/corn-bids/ | 200 | No | Modern DTN widget JS (same as Allied) | DTN Playwright — render check needed |
 | Heritage Cooperative | https://www.heritagecooperative.com/grain/cash-bids | 200 | No | AgriCharts `cashbids.php` embed (`heritagecoop.agricharts.com`, location 21608) + ATLAS DTN shell | **Resolved 2026-11-19 (Cycle 7):** static route proven — `cashbids-js.php` `var bids` JSON, 15 rows (Ada; Corn 7, Soybeans 7, Wheat SRW 1). Generic collector `cashbids_embed_source.py` (`fetch_heritage_coop`). No Playwright needed. |
 | Kanza Coop | https://www.kanzacoop.com/services/grain | 200 | No | ATLAS DTN shell (`/dtncashbidwidget/bindlocation`, `ATLAS_DTN_CASHBID` panel); no `cashbids.php` embed | DTN Playwright — render check needed |
@@ -327,15 +327,15 @@ No prices are recorded here — row counts and widget patterns only.
 | Ace Ethanol | https://www.aceethanol.com/cash-bids | 200 | **Yes — 11 rows, Corn, 7-col widget** | Bushel `.cbmod` widget in static HTML, dated header | Existing generic Bushel collector (`bushel_source.py`) — verified against saved HTML, status ok |
 | AGP | https://www.agp.com/grain/bids | 200 (→ `/bids/`) | No | **Bushel via iframe**: `<iframe src="https://agp.o.bushelsites.com/cash-bids">` inside a `dtn-page` shell | Reclassified dtn → bushel (iframe). **Verified 2026-11-19 (Cycle 7):** one polite GET of the iframe target — 200, standard 7-col Bushel `.cbmod` widget in static HTML, parsed by the generic `bushel_source.py` collector with no changes (status ok). Only 1 row on the page: Chester, NE, Soybeans, Nov 2026, USD/bu; widget header dated Nov 18, 2026 11:40 PM. Registry entry `agp` added (`fetch_agp()`); not yet wired into `source_registry.py` (coordinator decision). |
 | Ag State | https://www.agstate.org/grain | 200 (→ `agstate.org/grain/`) | No | AgriCharts `cashbids.php` embed (`agstate.agricharts.com`, location 84205); **zero `dtn` strings** — Cycle 1's DTN label was wrong | **Resolved 2026-11-19 (Cycle 7):** static route proven — `cashbids-js.php` `var bids` JSON, 11 rows (Corn 6, Soybeans 5; `groupby=ccommodity`, location label published as "A.C."). Generic collector `cashbids_embed_source.py` (`fetch_ag_state`). No Playwright needed. |
-| ALCIVIA | https://www.alcivia.com/cash-bids | read timeout (30 s) | — | — (unreachable this sweep) | Re-check later, no retry |
+| ALCIVIA | https://www.alcivia.com/cash-bids | read timeout (30 s) | — | — (unreachable this sweep) | Re-check later, no retry. **Cycle 8:** back up — 200 (→ `/wisconsin-grain-services/cash-bids-grain-wisconsin-grain/`), AgriCharts `cashbids.php` embed (`alciviacoop.agricharts.com`, `groupby=location`, `filter=all`) — same family as Cycle 7's six; `cashbids-js.php` static route to verify in a later cycle. |
 | Alliance Grain | https://www.alliance-grain.com/cash-bids | 200 | **Yes — 10 rows, Corn 5 + Soybeans 5, 7-col widget** | Bushel `.cbmod` widget in static HTML; location h2 "Gibson City - West"; compact delivery labels (`Nov26`) | Existing generic Bushel collector — verified against saved HTML, status ok |
-| Bunge | https://www.bungeag.com/cash-bids | read timeout (30 s) | — | — (unreachable this sweep) | Still do-not-add (Cycle 1: redirects to a locations archive); re-check later |
-| CRC | https://www.centralregioncoop.com/grain | read timeout (30 s) | — | — (unreachable this sweep) | Re-check later, no retry |
+| Bunge | https://www.bungeag.com/cash-bids | read timeout (30 s) | — | — (unreachable this sweep) | Still do-not-add (Cycle 1: redirects to a locations archive); re-check later. **Cycle 8:** 200 (→ `/locations/`), still the locations archive; "Cash Bids" is nav text only, no bid table. Still do-not-add. |
+| CRC | https://www.centralregioncoop.com/grain | read timeout (30 s) | — | — (unreachable this sweep) | Re-check later, no retry. **Cycle 8:** back up — 200 (→ `/grain/`), but a generic grain-services page with no widget and no bid table; its Cash Bids links point to the homepage anchor `/home/#cash-bids`. Follow-up: one GET of the homepage. Site now brands as "Central United Cooperative" (assets on `centralunitedcoop.com`). |
 | CGB | https://cgb.com/cgb-grain/ | 200 | No | Corporate grain page; no widget, no bid table | None at this URL; USDA SCL follow-up still open |
-| Five Star Coop | https://www.fivestarcoop.com/cash-bids | read timeout (30 s) | — | — (unreachable this sweep) | Was DTN-ref in Cycle 1; re-check later, no retry |
-| Gateway FS | https://www.gatewayfs.com/markets/cash.php | 200 (→ `fscooperatives.com/gatewayfs`) | No | Homepage; `dtn` hits are nav links only (DTN News → `dtnpf.com`); nav links a cash-bids sub-page (`/gatewayfs/agriculture/cash-bids`, not fetched) | Unconfirmed — was DTN-ref in Cycle 1 on nav links alone; one GET of the sub-page in a later cycle |
+| Five Star Coop | https://www.fivestarcoop.com/cash-bids | read timeout (30 s) | — | — (unreachable this sweep) | Was DTN-ref in Cycle 1; re-check later, no retry. **Cycle 8:** back up — 200 (→ `/grain-elevators-and-services/five-star-cash-bids/`), **static bid rows: 299 rows, 21 locations, Corn 197 + Soybeans 102** in a server-rendered wpDataTables table (Location / Commodity / Delivery Periods / Bids / Basis / Change). New static pattern — plain-HTML parser feasible; see "Cycle 8 re-checks". |
+| Gateway FS | https://www.gatewayfs.com/markets/cash.php | 200 (→ `fscooperatives.com/gatewayfs`) | No | Homepage; `dtn` hits are nav links only (DTN News → `dtnpf.com`); nav links a cash-bids sub-page (`/gatewayfs/agriculture/cash-bids`, not fetched) | Unconfirmed — was DTN-ref in Cycle 1 on nav links alone; one GET of the sub-page in a later cycle. **Cycle 8:** sub-page fetched — 200, Next.js app shell with `<div id="cash-bids-root" data-slug="gateway">` and DTN widget classes, no static bid rows. JS-only; DTN Playwright / render check. |
 | Superior Ag | https://www.superiorag.com | 200 | No | AgriCharts `cashbids.php` embed (`superiorag-cb-jsi.agricharts.com`, location 82244) + ATLAS DTN tab (`dtn-cashbid-tab`) | **Resolved 2026-11-19 (Cycle 7):** static route proven — `cashbids-js.php` `var bids` JSON, 12 rows (CORN 8, SOYBEANS 4; `groupby=ccommodity`, location "Princeton Central"). Generic collector `cashbids_embed_source.py` (`fetch_superior_ag`). No Playwright needed. |
-| TGM | https://www.totalgrainmarketing.com | 200 | No | Growmark DTN module JS (`/DesktopModules/Growmark/DTN/...`); nav links `/Cash-Bids` (not fetched) and a Barchart marketplace portal (out of scope — do not scrape Barchart) | DTN Playwright — render check needed; one GET of `/Cash-Bids` in a later cycle |
+| TGM | https://www.totalgrainmarketing.com | 200 | No | Growmark DTN module JS (`/DesktopModules/Growmark/DTN/...`); nav links `/Cash-Bids` (not fetched) and a Barchart marketplace portal (out of scope — do not scrape Barchart) | DTN Playwright — render check needed; one GET of `/Cash-Bids` in a later cycle. **Cycle 8:** `/Cash-Bids` fetched — 200, AgriCharts `cashbids.php` embed (`totalgrain.agricharts.com`, `groupby=ccommodity`) — same family as Cycle 7's six; `cashbids-js.php` static route to verify in a later cycle. The Barchart marketplace link was not fetched (out of scope). |
 | United Coop (`unitedcooperative.com`) | https://www.unitedcooperative.com | 200 | No | ATLAS DTN shell (`dtn-cashbid-tab` on homepage + bindlocation JS); no `cashbids.php` embed | DTN Playwright — render check needed. Still a different org from the Webster City, IA Bushel site (Cycle 5) |
 | Ursa Farmers Coop | https://www.ursacoop.com | 200 | No — skeleton only | aghost/DTN page: "Local Cash Bids loading..." with commodity + delivery labels but **empty Basis/Cash cells** in static HTML; footer "Copyright DTN"; futures tables are static (futures, not cash bids) | DTN Playwright (`us_dtn_source.py`, parses rendered tables) — render check needed |
 | Al-Corn | https://www.al-corn.com/cash-bids | 200 (→ `al-corn.com/cash-bids/`) | No | **Classic DTN**: `<div id="target">` + `tableOptions = { targetID: "target", companyID: 239483, … }; CashBidTable(tableOptions);` (+ CIHedging `CashBidWidget.js`/`ChartJS.js`) | DTN Playwright — **exact fit** for `us_dtn_source.py`. RESOLVED: was "uncertain"; no challenge page |
@@ -461,3 +461,90 @@ already mislabelled DTN in Cycle 1 — it has zero DTN strings).
   Octane, TGM + the two modern-widget unknowns); collector decision
   for the 1-site StoneX group (the 6-site cashbids.php group is
   resolved — collector built in Cycle 7).
+
+## United States — Cycle 8 re-checks (2026-11-19)
+
+Re-checked the 5 sites Cycle 6 left as timed-out/blocked (Ag Partners
+503, ALCIVIA / CRC / Five Star / Bunge read timeouts), fetched the
+two unfetched sub-pages (Gateway FS `/gatewayfs/agriculture/cash-bids`,
+TGM `/Cash-Bids`), and re-fetched Frontier Coop plus the verbatim
+StoneX iframe target from its saved Cycle 6 HTML. One polite GET per
+URL, contact User-Agent, ~2 s spacing, 30 s timeout, no retries.
+Raw HTML saved to `/tmp/cycle8/` scratch only, never the repo. No
+prices are recorded here — row counts and widget patterns only.
+
+### Counts
+
+| Status | Count | Meaning |
+|---|---|---|
+| HTTP 200 | 9 | Every URL probed, including all 5 Cycle 6 failures |
+| Static bid rows visible | **1** | Five Star Coop — 299 rows in a wpDataTables table (new pattern) |
+| JS-only (widget present, no bid rows in static HTML) | 5 | Ag Partners (modern DTN), ALCIVIA + TGM (AgriCharts embed), Gateway FS sub-page (Next.js + DTN classes), Frontier (StoneX iframe) |
+| No bid table at the probed URL | 2 | CRC (`/grain` is a generic services page; bids live on the homepage anchor), Bunge (still the locations archive) |
+| StoneX component app shell, no static data | 1 | `stonehedge.stonex.com/component/bids` — JS app, data fetched at runtime |
+
+### Per-site results
+
+| Company | URL probed | HTTP | Static bid rows? | Widget / pattern in static HTML | Collector pattern |
+|---|---|---|---|---|---|
+| Ag Partners | https://agpartners.net/cash-bids | 200 (→ `/cash-bids/`) | No | Modern DTN widget `content-services.dtn.com/ui-widgets/cash-bids-table-widget/cash-bids-table-widget-1.0-latest.js` | DTN Playwright — render check needed (same family as Allied / Aurora / Green Plains) |
+| ALCIVIA | https://www.alcivia.com/cash-bids | 200 (→ `/wisconsin-grain-services/cash-bids-grain-wisconsin-grain/`) | No | AgriCharts `cashbids.php` embed (`alciviacoop.agricharts.com`, `filter=all`, `groupby=location`) | Same family as Cycle 7's six — `cashbids-js.php` static route to verify in a later cycle (one GET of the loader-derived URL, verbatim, as in Cycle 7) |
+| CRC | https://www.centralregioncoop.com/grain | 200 (→ `/grain/`) | No | Generic grain-services page; no widget, no iframe, no bid table. Cash Bids links point to the homepage anchor `/home/#cash-bids`. Site now brands as "Central United Cooperative" (assets on `centralunitedcoop.com`) | None at this URL. Follow-up: one GET of the homepage to check the `#cash-bids` section |
+| Five Star Coop | https://www.fivestarcoop.com/cash-bids | 200 (→ `/grain-elevators-and-services/five-star-cash-bids/`) | **Yes — 299 rows, 21 locations, Corn 197 + Soybeans 102** | **wpDataTables** (new pattern): server-rendered `<table id="table_1">` in an Elementor wpdatatables widget; headers Location / Commodity / Delivery Periods / Bids / Basis / Change (+ hidden ID columns). Tables 2–4 on the same page are DTN futures (CBOT/CME/NYMEX), not cash bids. DTN futures widget also present; the "View Cash Bids Grid" button targets this table | **Plain-HTTP parser feasible — new collector needed** (`wpdatatables` shape). Parser notes: delivery labels are inconsistent (`Dec26` vs `Dec 27`, `Apr 27` vs `April 27`); locations include third-party delivery points (e.g. AGP Mason City, Valero Charles City, Shell Rock Soy Processing) as well as Five Star elevators |
+| Bunge | https://www.bungeag.com/cash-bids | 200 (→ `/locations/`) | No | Locations archive; "Cash Bids" is nav text only | Still do-not-add |
+| Gateway FS (sub-page) | https://fscooperatives.com/gatewayfs/agriculture/cash-bids | 200 | No | Next.js app shell: `<div id="cash-bids-root" data-slug="gateway">` + DTN widget classes (`dtn_showCommoditiesSelect`, `dtn_showLocationsSelect`, …). The relative href was resolved against the Cycle 6 redirect target (`fscooperatives.com/gatewayfs`) | DTN Playwright — render check needed |
+| TGM (`/Cash-Bids`) | https://www.totalgrainmarketing.com/Cash-Bids | 200 | No | AgriCharts `cashbids.php` embed (`totalgrain.agricharts.com`, `filter=all`, `groupby=ccommodity`) | Same family as Cycle 7's six — `cashbids-js.php` static route to verify in a later cycle. The Barchart marketplace link in TGM's nav was not fetched (out of scope) |
+| Frontier Coop | https://www.frontiercooperative.com/grain/cash-bids | 200 | No | StoneX iframe unchanged (same key as Cycle 6); inline JSON model still empty (`LocationRecords: null`, default date). ATLAS DTN shell (`/dtncashbidwidget/bindlocation`) also present on the page | See StoneX research below |
+
+### StoneX research (Frontier Coop)
+
+The StoneX widget is an `<iframe>` whose `src` is taken verbatim
+from Frontier's page HTML:
+
+`https://stonehedge.stonex.com/component/bids?key=RTD5A1BZ4L1339KAKG0STJT34WOKQEJ8&cols=name%2Cbasis%2Ccash%2Cchange&hideRows=false`
+
+One polite GET of that URL (Cycle 6 precedent: one extra GET of a
+distinct embedded endpoint taken verbatim from the page) returns
+HTTP 200, `text/html`, 5.9 KB — a **JS app shell ("StoneX Hedge")**,
+not data:
+
+- Single bundled script (`/assets/index-B3HX-M8I.js`) + jQuery CDN;
+  **zero `<table>` elements, zero bid rows, zero bid values** in
+  static HTML.
+- Content-Security-Policy `connect-src` lists
+  `https://api.stonehedge.stonex.com` (plus SignalR
+  `wss://stonehedge.service.signalr.net` and
+  `https://auth.stonex.com`) — the bids are fetched at runtime from
+  the StoneX API by the JS app, over a websocket-capable connection,
+  behind StoneX auth.
+- The widget key in the iframe URL is a public site key embedded in
+  Frontier's public page HTML, not a credential; it identifies the
+  widget instance, not a user.
+
+**Conclusion: no static-data route exists for StoneX.** A collector
+would need a browser render of the iframe, and the runtime API may
+be auth-gated — that needs a Playwright render check in a later
+cycle before any collector decision. Research only; no collector
+built. StoneX remains a 1-site group (Frontier Coop).
+
+### Follow-ups for a later cycle
+
+- **Five Star Coop wpDataTables collector:** new plain-HTTP pattern
+  (299 rows, 21 locations) — build a parser for the `table_1`
+  shape with synthetic fixtures + tests, same as the Bushel /
+  cashbids-embed collectors. Delivery-label normalisation needed.
+- **ALCIVIA + TGM `cashbids-js.php` static-route checks:** one GET
+  each of the loader-derived URL (verbatim, as in Cycle 7) to
+  confirm the `var bids` JSON payload serves rows; if proven, add
+  both to `cashbids_embed_source.py` (`fetch_alcivia`,
+  `fetch_tgm`) and reclassify `dtn → agricharts-embed` in
+  `us_elevators_urls.toml`.
+- **CRC homepage:** one GET of `https://www.centralregioncoop.com/`
+  (or `/home/`) to check the `#cash-bids` anchor section.
+- **StoneX render check:** Playwright render of Frontier's page /
+  the StoneX iframe to see whether rows load and whether the
+  runtime API is reachable without auth.
+- **Wiring still open (coordinator):** Five Star
+  `unknown → wpdatatables` (new type) once the collector exists;
+  Gateway FS `dtn → unconfirmed` stands (sub-page is DTN-widget
+  JS-only); Ag Partners stays DTN (modern widget).

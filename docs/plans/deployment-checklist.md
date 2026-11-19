@@ -103,7 +103,7 @@ directly; everything goes through the API.
 ## 3. Database migrations (Alembic)
 
 Migrations live in `GrainBids/grainbids/apps/api/alembic/versions/`.
-The chain was verified linear on 2026-11-19 (Cycle 6):
+The chain was verified linear on 2026-11-19 (Cycle 7, head `0019`):
 
 | Revision | Down-revision | Contents |
 |---|---|---|
@@ -111,20 +111,21 @@ The chain was verified linear on 2026-11-19 (Cycle 6):
 | `0016` | `0015` | Farm profiles (Advisor silo) |
 | `0017` | `0016` | Elevator Ops |
 | `0018` | `0017` | Research reports |
+| `0019` | `0018` | Basis-threshold alert fields |
 
-So the tail of the chain is `0014 → 0015 → 0016 → 0017 → 0018`, single
-head `0018`, no branches. **Verify this yourself before migrating**
+So the tail of the chain is `0014 → 0015 → 0016 → 0017 → 0018 → 0019`, single
+head `0019`, no branches. **Verify this yourself before migrating**
 (the chain can change when a new cycle lands):
 
 1. From `apps/api`, with `DATABASE_URL` pointing at the Supabase
    database, run `alembic current` — note the revision the database is
    on (a fresh database reports nothing applied).
-2. Run `alembic heads` — expect exactly one head, `0018`. If there are
+2. Run `alembic heads` — expect exactly one head, `0019`. If there are
    two heads, stop: the chain has branched and needs a merge revision
    before any deploy.
 3. Run `alembic upgrade head` — applies every unapplied migration in
-   order, ending at `0018`.
-4. Re-run `alembic current` — it must now report `0018`. If it does
+   order, ending at `0019`.
+4. Re-run `alembic current` — it must now report `0019`. If it does
    not, stop and read the migration error; do not deploy the API
    against a half-migrated database.
 5. Never run `alembic downgrade` on production unless Adam has

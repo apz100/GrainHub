@@ -329,12 +329,13 @@ branch to GitHub frequently.
 - Elevator Ops: which ERP first (Agris / Agvance / AgTrax)?
 - US scope: Corn Belt first, or Corn Belt + Gulf / PNW from day one?
 
-## 9. Progress — Cycles 1–4 (2026-11-18/19)
+## 9. Progress — Cycles 1–7 (2026-11-18/19)
 
-Four overnight autonomous cycles on branches `overnight/grainhub-cycle-1`
-through `overnight/grainhub-cycle-4`, none merged to master. Full API test
-suite grew **179 → 291 → 320 → 359 passed, 0 failed** across the four
-cycles. Full detail in `docs/plans/overnight-cycle-N-report.md`.
+Seven overnight autonomous cycles on branches `overnight/grainhub-cycle-1`
+through `overnight/grainhub-cycle-7`, none merged to master. Full API test
+suite grew **179 → 291 → 320 → 359 → 364 → 380 → 407 passed, 0 failed**
+across the seven cycles. Full detail in `docs/plans/overnight-cycle-N-report.md`.
+Merge order, gates, and conflicts are in `docs/plans/merge-plan.md`.
 
 - **Cycle 1** (`overnight/grainhub-cycle-1`, 179 tests): Phase 0 hardening,
   `GET /api/market-search` (commodity + location + radius + delivery month,
@@ -361,6 +362,23 @@ cycles. Full detail in `docs/plans/overnight-cycle-N-report.md`.
   collector (FAC verified live, 45 rows; Collwest cross-check 16/16),
   USDA-mirror collector (both hosts, Gulf + Pacific Ports), and the
   Crop Production value parser wired into ingest-file.
+- **Cycle 5** (`overnight/grainhub-cycle-5`, 364 tests): all 11 Bushel
+  sites verified live and registered (plus FAC/Collwest from Cycle 4);
+  United Coop same-org question resolved (two separate orgs — Beaver
+  Dam, WI vs Webster City, IA); parser fixes for fractional futures,
+  classless `<h2>` locations, and the Cash-Price header; `/today`
+  morning-view page (build passes, 33 pages).
+- **Cycle 6** (`overnight/grainhub-cycle-6`, 380 tests): DTN sweep of
+  28 sites (2 static-HTML, 20 JS-only, 6 unreachable); Ace Ethanol +
+  Alliance Grain verified Bushel and registered; deployment checklist
+  (Vercel/Render/Supabase); basis-alert helpers (standalone, not yet
+  wired). Also fixed a corrupted string literal in `bushel_source.py`
+  that had briefly broken test collection (see the Cycle 6 report).
+- **Cycle 7** (`overnight/grainhub-cycle-7`, 407 tests): AgriCharts
+  `cashbids.php` embed collector (6 sites, 105 rows, via the static
+  `cashbids-js.php` route — no Playwright needed); AGP iframe verified
+  Bushel (Chester, NE) and registered; basis thresholds wired into the
+  alert evaluator (migration `0019`, single Alembic head).
 
 **Remaining blockers that need Adam:** NASS API key (free) and FAS /
 data.gov key (free); LLM provider + key for Advisor `/ask`; Barchart /
@@ -369,9 +387,18 @@ a separate redistribution licence decides whether the Price Finder can
 use the feed at all; ERP choice (Agvance recommended first, Agris
 second, AgTrax third); eSign provider; `gh` re-authentication with
 `workflow` scope so the written CI workflow (`.github/workflows/
-api-tests.yml`) can be pushed; currency column or per-source currency
+api-tests.yml`) can be pushed — the file is in no branch, it sits
+untracked locally, and the `.github` directory must not be assumed
+present after merging; currency column or per-source currency
 mapping — normalized price rows carry no currency, so basis/best-bid
 responses report `currency: null`; email-bid endpoint is public by
 default (admin-only is a one-line change if wanted); pricing/hosting
-decisions. A Playwright render check of the FMN filtered view and of
-Mapleview's Grain Discovery shell needs a live browser session.
+decisions. **Newest findings:** the `cashbids.php` embed collector is
+done (6 sites, 105 rows, static route proven); AGP is verified Bushel
+and registered; basis alerts are now wired into the alert evaluator
+(migration `0019` — note the deployment checklist still says the
+Alembic head is `0018`); the DTN sweep found only 2 of 28 sites
+static-HTML, 20 JS-only, 6 unreachable, with Al-Corn the only classic
+inline `CashBidTable` fit for the DTN collector. A Playwright render
+check of the 12 DTN-family JS-only sites, the FMN filtered view, and
+Mapleview's Grain Discovery shell still needs a live browser session.

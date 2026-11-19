@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html><head><title>Five Star Cash Bids — synthetic fixture</title></head><body>
+<!-- Synthetic fixture for wpdatatables_source tests. All values are
+     invented test data, not live prices. Mirrors the real Five Star
+     page shape: table_1 is the cash-bids wpDataTables table (12
+     columns, six of them hidden bookkeeping IDs); table_2 is a DTN
+     futures table that must NEVER be parsed as bids. -->
+<table id="table_1" class="wpdt-has-grouping responsive display nowrap wpDataTable wpDataTableID-1">
+  <thead><tr>
+    <th>Location</th><th>Commodity</th><th>Delivery Periods</th><th>Bids</th>
+    <th>Basis</th><th>Change</th><th>LocationID</th><th>deliveryPeriodID</th>
+    <th>TradeDateTime</th><th>id</th><th>createdAt</th><th>updatedAt</th>
+  </tr></thead>
+  <tbody>
+    <tr>
+      <td>New Hampton</td><td>Corn</td><td>Nov 26</td><td>4.10</td>
+      <td>-0.40</td><td>-9.50</td><td>AAA</td><td>BBB</td>
+      <td>Nov 18, 2026, 1:15 PM CST</td><td>1</td><td>Wed Mar 11 2026</td><td>Wed Nov 18 2026</td>
+    </tr>
+    <tr>
+      <td>New Hampton</td><td>Soybeans</td><td>Dec26</td><td>11.05</td>
+      <td>-0.75</td><td>-8.25</td><td>AAA</td><td>CCC</td>
+      <td>Nov 18, 2026, 1:15 PM CST</td><td>2</td><td>Wed Mar 11 2026</td><td>Wed Nov 18 2026</td>
+    </tr>
+    <tr>
+      <td>AGP Mason City</td><td>Soybeans</td><td>Jan27</td><td>11.20</td>
+      <td>-0.60</td><td>-8.25</td><td>DDD</td><td>EEE</td>
+      <td>Nov 18, 2026, 1:15 PM CST</td><td>3</td><td>Wed Mar 11 2026</td><td>Wed Nov 18 2026</td>
+    </tr>
+    <tr>
+      <td>Ionia</td><td>Corn</td><td>April 27</td><td>4.30</td>
+      <td>-0.35</td><td>-10.50</td><td>FFF</td><td>GGG</td>
+      <td>Nov 18, 2026, 1:15 PM CST</td><td>4</td><td>Wed Mar 11 2026</td><td>Wed Nov 18 2026</td>
+    </tr>
+    <tr>
+      <td>Ionia</td><td>Soybeans</td><td>Oct 27.</td><td>11.40</td>
+      <td>-0.70</td><td>-12.00</td><td>FFF</td><td>HHH</td>
+      <td>Nov 18, 2026, 1:15 PM CST</td><td>5</td><td>Wed Mar 11 2026</td><td>Wed Nov 18 2026</td>
+    </tr>
+    <tr>
+      <!-- Fractional change (CBOT-style eighths) + decimal bid/basis. -->
+      <td>Ventura</td><td>Corn</td><td>Feb 27</td><td>4.15</td>
+      <td>-0.38</td><td>-9-2</td><td>III</td><td>JJJ</td>
+      <td>Nov 18, 2026, 1:15 PM CST</td><td>6</td><td>Wed Mar 11 2026</td><td>Wed Nov 18 2026</td>
+    </tr>
+    <tr>
+      <!-- Bid/basis blank but change present: kept, flagged in note. -->
+      <td>Ventura</td><td>Soybeans</td><td>Mar 27</td><td></td>
+      <td></td><td>-11.00</td><td>III</td><td>KKK</td>
+      <td>Nov 18, 2026, 1:15 PM CST</td><td>7</td><td>Wed Mar 11 2026</td><td>Wed Nov 18 2026</td>
+    </tr>
+    <tr>
+      <!-- All money cells blank/dash: skipped. -->
+      <td>Ventura</td><td>Corn</td><td>May 27</td><td>-</td>
+      <td>-</td><td>-</td><td>III</td><td>LLL</td>
+      <td>Nov 18, 2026, 1:15 PM CST</td><td>8</td><td>Wed Mar 11 2026</td><td>Wed Nov 18 2026</td>
+    </tr>
+    <tr>
+      <!-- Header repeated at the end of tbody (wpDataTables artifact). -->
+      <td>Location</td><td>Commodity</td><td>Delivery Periods</td><td></td>
+      <td></td><td></td><td></td><td></td>
+      <td></td><td></td><td></td><td></td>
+    </tr>
+  </tbody>
+</table>
+<table id="table_2" class="wpdt-has-grouping scroll responsive display nowrap wpDataTable wpDataTableID-2">
+  <thead><tr>
+    <th>description</th><th>marketName</th><th>symbol</th><th>tickerSymbol</th>
+    <th>Vendor</th><th>year</th><th>Delivery Period</th><th>expiration</th>
+    <th>Open</th><th>High</th><th>Low</th><th>Last</th><th>Change</th>
+    <th>Commodity</th><th>sortOrder</th><th>TradeDateTime</th><th>id</th>
+    <th>createdAt</th><th>updatedAt</th>
+  </tr></thead>
+  <tbody>
+    <tr>
+      <td>WHEAT December 2026</td><td>cbot</td><td>@W2026Z</td><td>@WZ26</td>
+      <td>DTN</td><td></td><td>Dec 26</td><td>12/14/2026</td>
+      <td>5.9525</td><td>5.965</td><td>5.69</td><td>5.7</td><td>-25.25</td>
+      <td>WHEAT</td><td>3</td><td>Nov 18, 2026, 1:19 PM CST</td><td>19</td>
+      <td>Wed Nov 12 2025</td><td>Wed Nov 18 2026</td>
+    </tr>
+  </tbody>
+</table>
+</body></html>

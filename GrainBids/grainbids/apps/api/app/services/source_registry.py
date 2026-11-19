@@ -55,6 +55,9 @@ ADAPTERS: dict[str, SourceAdapter] = {
     "midway_coop": SourceAdapter("midway_coop", "cashbids_embed_source", "fetch_midway_coop", "direct_dict", "scraper", 15, 90),
     "ag_state": SourceAdapter("ag_state", "cashbids_embed_source", "fetch_ag_state", "direct_dict", "scraper", 15, 90),
     "superior_ag": SourceAdapter("superior_ag", "cashbids_embed_source", "fetch_superior_ag", "direct_dict", "scraper", 15, 90),
+    "alcivia": SourceAdapter("alcivia", "cashbids_embed_source", "fetch_alcivia", "direct_dict", "scraper", 15, 90),
+    "tgm": SourceAdapter("tgm", "cashbids_embed_source", "fetch_tgm", "direct_dict", "scraper", 15, 90),
+    "five_star_coop": SourceAdapter("five_star_coop", "wpdatatables_source", "fetch_five_star_coop", "direct_dict", "scraper", 15, 90),
     "usda_mirror_jvg": SourceAdapter("usda_mirror_jvg", "usda_mirror_source", "fetch_usda_mirror", "direct_dict", "scraper", 15, 90),
     "usda_mirror_fsg": SourceAdapter("usda_mirror_fsg", "usda_mirror_source", "fetch_usda_mirror_fs_grain", "direct_dict", "scraper", 15, 90),
 }

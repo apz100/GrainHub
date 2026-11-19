@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html><head><title>Synthetic cashbids-js.php response — TGM, groupby=ccommodity, "Beans" label</title></head>
+<body>
+<!--
+  SYNTHETIC fixture for tests/test_cashbids_embed_collector.py.
+  Modeled on the TGM cashbids-js.php response shape (verified live
+  2026-11-19, Cycle 9): filter=all, groupby=ccommodity, 4 commodity
+  groups. Groups are named after the COMMODITY ("Corn" / "Beans" /
+  "Wheat" / "White Corn"), so the row location must come from each
+  cashbid's location_name, never from the group name. TGM labels
+  soybeans "Beans" (ZS symbols on the live rows) — the collector
+  maps that label to Soybeans. "White Corn" stays as published.
+  ALL values below are invented test data, not live prices.
+-->
+<script type="text/javascript" language="javascript" nonce="ac-sites-inline-js" id="cb-functions" is-independent="true">var bids = [{"id":"91001","customer":"999","name":"Corn","display_name":"Corn","short_name":"Corn","cashbids":[{"id":"31","commodity":"97230","symbol":"ZCZ26","delivery_start":"11/01/2026","delivery_end":"11/30/2026","basis":-28,"require_login":false,"active":true,"unitvalue":1,"unitweight":56,"sym_root":"ZC","basismonth":"Dec 2026","futures":"420-0","futureschange":"-0-6","timestamp":1795044628,"realtime":false,"cashpricebushel":"$3.92","price":"$3.92","pricetonne":"$144.50","change":"$-0.01","rawchange":-0.01,"cashprice":"$3.92","cashpricetonne":"$144.50","futuresprice":"420-0","name":"Corn","location_id":"91001","location_name":"Arcola","location":"91001"}]},{"id":"91002","customer":"999","name":"Beans","display_name":"Beans","short_name":"Beans","cashbids":[{"id":"32","commodity":"97231","symbol":"ZSF27","delivery_start":"01/01/2027","delivery_end":"01/31/2027","basis":-50,"require_login":false,"active":true,"unitvalue":1,"unitweight":60,"sym_root":"ZS","basismonth":"Jan 2027","futures":"1010-4","futureschange":"2-0","timestamp":1795044628,"realtime":false,"cashpricebushel":"$9.60","price":"$9.60","pricetonne":"$352.00","change":"$0.03","rawchange":0.03,"cashprice":"$9.60","cashpricetonne":"$352.00","futuresprice":"1010-4","name":"Beans","location_id":"91002","location_name":"Neoga","location":"91002"}]},{"id":"91003","customer":"999","name":"White Corn","display_name":"White Corn","short_name":"White Corn","cashbids":[{"id":"33","commodity":"97230","symbol":"ZCZ26","delivery_start":"12/01/2026","delivery_end":"12/31/2026","basis":-15,"require_login":false,"active":true,"unitvalue":1,"unitweight":56,"sym_root":"ZC","basismonth":"Dec 2026","futures":"420-0","futureschange":"-0-6","timestamp":1795044628,"realtime":false,"cashpricebushel":"$4.05","price":"$4.05","pricetonne":"$149.00","change":"$-0.01","rawchange":-0.01,"cashprice":"$4.05","cashpricetonne":"$149.00","futuresprice":"420-0","name":"White Corn","location_id":"91001","location_name":"Arcola","location":"91001"}]}];</script>
+</body>
+</html>

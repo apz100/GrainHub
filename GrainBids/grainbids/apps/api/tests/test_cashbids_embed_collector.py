@@ -1,12 +1,13 @@
 """Tests for the generic AgriCharts cashbids.php-embed collector.
 
-The six Cycle 6 embed sites (Agtegra, Heritage Coop, Linn Coop, Midway
-Coop, Ag State, Superior Ag) all serve their bids from a
-``cashbids-js.php`` endpoint whose response carries a ``var bids``
-JSON payload (verified live 2026-11-19, one polite GET per URL — see
-``cashbids_embed_source.py``). These tests lock the parser in with
-synthetic fixtures — no live fetching inside pytest, fixture values
-are invented test data, not live prices.
+The eight embed sites (Agtegra, Heritage Coop, Linn Coop, Midway
+Coop, Ag State, Superior Ag — Cycle 7 — plus ALCIVIA and TGM,
+Cycle 9) all serve their bids from a ``cashbids-js.php`` endpoint
+whose response carries a ``var bids`` JSON payload (verified live
+2026-11-19, one polite GET per URL — see ``cashbids_embed_source.py``).
+These tests lock the parser in with synthetic fixtures — no live
+fetching inside pytest, fixture values are invented test data, not
+live prices.
 """
 
 from __future__ import annotations
@@ -154,15 +155,75 @@ def test_empty_payload_is_empty():
     assert result["rows"] == []
 
 
-def test_registry_six_verified_sites_and_key_errors():
+def test_alcivia_groupby_location_rows_across_locations():
+    result = cashbids_embed_source.parse_cashbids_embed_html(
+        _read("cashbids_embed_alcivia_sample.html"),
+        company="ALCIVIA",
+        currency="USD",
+    )
+    assert result["status"] == "ok"
+    assert len(result["rows"]) == 3
+    assert result["location"] == "BALDWIN"
+    assert sorted({row["location"] for row in result["rows"]}) == [
+        "BALDWIN",
+        "EVANSVILLE",
+    ]
+    assert sorted({row["commodity"] for row in result["rows"]}) == [
+        "Corn",
+        "Soybeans",
+        "Wheat",
+    ]
+    corn = next(
+        row for row in result["rows"] if row["commodity"] == "Corn"
+    )
+    # futures "410-0" = 410.0 cents -> $4.10; basis -30 cents.
+    assert corn["futures_price"] == pytest.approx(4.10)
+    assert corn["basis"] == pytest.approx(-0.30)
+    assert corn["cash_price"] == pytest.approx(3.80)
+    assert corn["delivery_month"] == "Nov 2026"
+
+
+def test_tgm_groupby_commodity_beans_maps_to_soybeans():
+    result = cashbids_embed_source.parse_cashbids_embed_html(
+        _read("cashbids_embed_tgm_sample.html"),
+        company="TGM",
+        currency="USD",
+    )
+    assert result["status"] == "ok"
+    assert len(result["rows"]) == 3
+    # Group names are commodities ("Corn" / "Beans" / "White Corn") —
+    # they must never leak into the location field.
+    assert sorted({row["location"] for row in result["rows"]}) == [
+        "Arcola",
+        "Neoga",
+    ]
+    assert result["location"] == "Arcola"
+    # TGM labels soybeans "Beans" (ZS symbols on the live rows).
+    beans = next(
+        row for row in result["rows"] if row["location"] == "Neoga"
+    )
+    assert beans["commodity"] == "Soybeans"
+    assert beans["futures_symbol"] == "ZSF27"
+    assert beans["delivery_month"] == "Jan 2027"
+    # "White Corn" is a distinct published label — kept as-is.
+    white = next(
+        row for row in result["rows"] if row["commodity"] == "White Corn"
+    )
+    assert white["location"] == "Arcola"
+    assert white["futures_price"] == pytest.approx(4.20)
+
+
+def test_registry_eight_verified_sites_and_key_errors():
     sites = cashbids_embed_source.CASHBIDS_EMBED_SITES
     assert sorted(sites) == [
         "ag_state",
         "agtegra",
+        "alcivia",
         "heritage_coop",
         "linn_coop",
         "midway_coop",
         "superior_ag",
+        "tgm",
     ]
     for key, site in sites.items():
         assert site.verified is True
@@ -173,6 +234,46 @@ def test_registry_six_verified_sites_and_key_errors():
     with pytest.raises(KeyError):
         cashbids_embed_source.get_cashbids_embed_site("no_such_site")
     assert cashbids_embed_source.get_cashbids_embed_site("AgTeGra").key == "agtegra"
+
+
+def test_registry_new_sites_use_verified_live_js_urls():
+    alcivia = cashbids_embed_source.get_cashbids_embed_site("alcivia")
+    assert alcivia.company == "ALCIVIA"
+    assert alcivia.js_url.startswith(
+        "https://alciviacoop.agricharts.com/inc/cashbids/cashbids-js.php"
+        "?filter=all&location=&commodity=&groupby=location"
+    )
+    assert alcivia.js_url.endswith("&&acCnt=1")
+    assert alcivia.default_location is None  # 15 locations, filter=all
+    tgm = cashbids_embed_source.get_cashbids_embed_site("tgm")
+    assert tgm.company == "TGM"
+    assert tgm.js_url.startswith(
+        "https://totalgrain.agricharts.com/inc/cashbids/cashbids-js.php"
+        "?filter=all&location=&commodity=&groupby=ccommodity"
+    )
+    assert tgm.js_url.endswith("&&acCnt=1")
+    assert tgm.default_location is None  # 24 locations, filter=all
+
+
+def test_site_parse_path_uses_registry_defaults_for_new_sites():
+    alcivia = cashbids_embed_source.get_cashbids_embed_site("alcivia")
+    result = cashbids_embed_source.parse_cashbids_embed_html(
+        _read("cashbids_embed_alcivia_sample.html"), site=alcivia
+    )
+    assert result["company"] == "ALCIVIA"
+    assert result["status"] == "ok"
+    assert len(result["rows"]) == 3
+    tgm = cashbids_embed_source.get_cashbids_embed_site("tgm")
+    result = cashbids_embed_source.parse_cashbids_embed_html(
+        _read("cashbids_embed_tgm_sample.html"), site=tgm
+    )
+    assert result["company"] == "TGM"
+    assert result["status"] == "ok"
+    assert {row["commodity"] for row in result["rows"]} == {
+        "Corn",
+        "Soybeans",
+        "White Corn",
+    }
 
 
 def test_site_parse_path_uses_registry_defaults():

@@ -52,6 +52,9 @@ linn_coop  = true
 midway_coop = true
 ag_state   = true
 superior_ag = true
+alcivia    = true  # AgriCharts cashbids.php embed, verified live 2026-11-19 (Cycle 9)
+tgm        = true  # AgriCharts cashbids.php embed, verified live 2026-11-19 (Cycle 9)
+five_star_coop = true  # wpDataTables bid table, verified live 2026-11-19 (Cycle 9)
 usda_mirror_jvg = true  # USDA AMS cash-bid report mirror, verified live 2026-11-19 (Cycle 4)
 usda_mirror_fsg = true  # same report, second host (FS Grain)
 

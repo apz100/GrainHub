@@ -16,9 +16,9 @@ neither step needs a browser:
      parse target: it is present and complete on every site checked,
      while the rendered table is NOT reliable (Agtegra's table body
      is empty ``<tr class="odd/even">`` rows filled client-side from
-     the JSON; the other five sites server-render it).
+     the JSON; the other seven sites server-render it).
 
-Bid object fields used (all present on every row of all six sites
+Bid object fields used (all present on every row of all eight sites
 checked): ``name`` (commodity), ``symbol`` (e.g. ``ZCZ26``),
 ``delivery_start`` / ``delivery_end`` (``MM/DD/YYYY``), ``basismonth``
 (``Dec 2026``), ``basis`` (integer cents, e.g. -90), ``futures`` /
@@ -81,12 +81,17 @@ CONTACT_USER_AGENT = "GrainHub-Research/1.0 +https://github.com/apz100/GrainHub"
 #   Midway Coop    midwaycoop.agricharts.com      / 82270
 #   Ag State       agstate.agricharts.com         / 84205
 #   Superior Ag    superiorag-cb-jsi.agricharts.com / 82244
+#   ALCIVIA        alciviacoop.agricharts.com     / filter=all
+#   TGM            totalgrain.agricharts.com      / filter=all
 
 # Raw commodity label (lowercased, grade prefix stripped) -> canonical.
 COMMODITY_MAP = {
     "corn": "Corn",
     "soybeans": "Soybeans",
     "soybean": "Soybeans",
+    # TGM publishes soybeans under the label "Beans" (ZS symbols on
+    # all 120 rows, verified live 2026-11-19, Cycle 9).
+    "beans": "Soybeans",
     "wheat": "Wheat",
     "wheat srw": "Wheat — SRW",
     "wheat hrw": "Wheat — HRW",
@@ -261,6 +266,55 @@ CASHBIDS_EMBED_SITES: dict[str, CashbidsEmbedSite] = {
         "CORN / SOYBEANS, so the row location comes from "
         "location_name ('Princeton Central'). Embed at "
         "superiorag.com.",
+    ),
+    "alcivia": CashbidsEmbedSite(
+        key="alcivia",
+        company="ALCIVIA",
+        js_url=(
+            "https://alciviacoop.agricharts.com/inc/cashbids/cashbids-js.php"
+            "?filter=all&location=&commodity=&groupby=location&width=100%"
+            "&showtimestamp=1&showchart=1&format=table&fields=%0Aname%2C"
+            "%0Anotes%2C%0Abasismonth%2C%0Afutures%2C%0Aprice%2C%0Abasis"
+            "%2C%0Aprice%2C%0Afutureschange%0A&groupheading=table"
+            "&bidsort=commodity&dateformat=%25m%2F%25d%2F%25Y&months=11"
+            "&&acCnt=1"
+        ),
+        verified=True,
+        notes="Verified live 2026-11-19 (Cycle 9): 200, var-bids JSON, "
+        "15 locations (Baldwin, Belleville, Burlington, Cottage Grove, "
+        "Durand, Elmwood, Evansville, Fall Creek, Fall River, Four "
+        "Corners (New Richmond), Hager City, Kings Valley (Osseo), "
+        "Menomonie Feed Mill, Mondovi, Whitewater — all Wisconsin), "
+        "181 rows (Corn 90, Soybeans 75, Wheat 16). filter=all, "
+        "groupby=location, no single default location. Embed at "
+        "alcivia.com/cash-bids (redirects to "
+        "/wisconsin-grain-services/cash-bids-grain-wisconsin-grain/).",
+    ),
+    "tgm": CashbidsEmbedSite(
+        key="tgm",
+        company="TGM",
+        js_url=(
+            "https://totalgrain.agricharts.com/inc/cashbids/cashbids-js.php"
+            "?filter=all&location=&commodity=&groupby=ccommodity&width="
+            "&showtimestamp=1&format=table&fields=name%2Cprice"
+            "%2Cfutureschange%2Cbasismonth%2Cdelivery_start%2Cdelivery_end"
+            "%2Cbasis%2Cfutures&groupheading=table&bidsort=location"
+            "&dateformat=%25m%2F%25d%2F%25Y&months=10&locations="
+            "&commodities=&&acCnt=1"
+        ),
+        verified=True,
+        notes="Verified live 2026-11-19 (Cycle 9): 200, var-bids JSON, "
+        "24 locations (Arcola, Ashmore, Cadwell, Casey, Champaign, "
+        "Fairgrange, Greenup, Greenville, Hillsboro (IN), Ingraham, "
+        "Kansas, Lis, Louisville, Lovington, Middlesworth, Mulberry "
+        "Grove, Neoga, Rose Hill, Sandoval, Shelbyville, Stewardson, "
+        "Watson, Willow Hill, Windsor — Illinois / Indiana), 362 rows "
+        "(Corn 120, Beans 120, Wheat 120, White Corn 2). "
+        "groupby=ccommodity: groups are named Corn / Beans / Wheat / "
+        "White Corn, so the row location comes from location_name. "
+        "The feed labels soybeans 'Beans' (ZS symbols on all 120 "
+        "rows) — mapped to Soybeans in COMMODITY_MAP. Embed at "
+        "totalgrainmarketing.com/Cash-Bids.",
     ),
 }
 
@@ -622,3 +676,14 @@ def fetch_ag_state() -> dict[str, Any]:
 def fetch_superior_ag() -> dict[str, Any]:
     """Fetch Superior Ag. Verified live 2026-11-19."""
     return fetch_cashbids_embed_site("superior_ag")
+
+
+def fetch_alcivia() -> dict[str, Any]:
+    """Fetch ALCIVIA (Wisconsin). Verified live 2026-11-19 (Cycle 9)."""
+    return fetch_cashbids_embed_site("alcivia")
+
+
+def fetch_tgm() -> dict[str, Any]:
+    """Fetch TGM / Total Grain Marketing (Illinois / Indiana).
+    Verified live 2026-11-19 (Cycle 9)."""
+    return fetch_cashbids_embed_site("tgm")

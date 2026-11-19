@@ -179,8 +179,8 @@ name    = "Ag State"
 url     = "https://www.agstate.org/grain"
 
 [[us.elevators]]
-enabled = false
-type    = "unknown"
+enabled = true
+type    = "agricharts-embed"
 name    = "ALCIVIA"
 url     = "https://www.alcivia.com/cash-bids"
 
@@ -215,8 +215,8 @@ name    = "CGB"
 url     = "https://cgb.com/cgb-grain/"
 
 [[us.elevators]]
-enabled = false
-type    = "dtn"  # reclassified 2026-11-19: DTN refs in HTML
+enabled = true
+type    = "wpdatatables"  # reclassified 2026-11-19 (Cycle 9): static wpDataTables bid table, verified live
 name    = "Five Star Coop"
 url     = "https://www.fivestarcoop.com/cash-bids"
 
@@ -314,10 +314,10 @@ name    = "The Andersons"
 url     = "https://www.andersonsgrain.com"
 
 [[us.elevators]]
-enabled = false
-type    = "unknown"
+enabled = true
+type    = "agricharts-embed"
 name    = "TGM"
-url     = "https://www.totalgrainmarketing.com"
+url     = "https://www.totalgrainmarketing.com/Cash-Bids"
 
 [[us.elevators]]
 enabled = false

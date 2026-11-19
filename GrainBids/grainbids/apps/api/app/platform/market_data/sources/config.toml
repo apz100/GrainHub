@@ -29,6 +29,10 @@ dg_global  = true
 bunge      = false  # URLs no longer valid — needs investigation before re-enabling
 wanstead   = true
 ganaraska  = true
+collwest   = true
+mae_mart   = true
+north_gower = true
+mapleview  = false  # stub only — bids are JS-rendered; needs Playwright in a later cycle
 
 [posted_bid]
 # Discount band applied to trimmed market average (CAD/MT)

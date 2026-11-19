@@ -32,6 +32,10 @@ ADAPTERS: dict[str, SourceAdapter] = {
     "lac": SourceAdapter("lac", "lac_source", "fetch_lac_all", "playwright", "scraper", 15, 90),
     "snobelen": SourceAdapter("snobelen", "snobelen_source", "fetch_snobelen_all", "playwright", "scraper", 15, 90),
     "wanstead": SourceAdapter("wanstead", "wanstead_source", "fetch_wanstead_all", "playwright", "scraper", 15, 90),
+    "collwest": SourceAdapter("collwest", "collwest_source", "fetch_collwest", "direct_dict", "scraper", 15, 90),
+    "mae_mart": SourceAdapter("mae_mart", "mae_mart_source", "fetch_mae_mart", "direct_dict", "scraper", 15, 90),
+    "north_gower": SourceAdapter("north_gower", "north_gower_source", "fetch_north_gower_latest", "direct_dict", "scraper", 15, 90),
+    "mapleview": SourceAdapter("mapleview", "mapleview_source", "fetch_mapleview", "direct_dict", "scraper", 15, 90),
 }
 PILOT_ADAPTER_KEYS = ("agricharts", "glg", "hensall", "snobelen", "andersons")
 
@@ -74,6 +78,22 @@ def _load_fetch_fn(adapter: SourceAdapter) -> Callable[[], pd.DataFrame]:
 
     if adapter.mode == "direct":
         return target
+
+    if adapter.mode == "direct_dict":
+        # Cycle 3 plain-HTML collectors return {"rows": [...], "status": ...}
+        # instead of a DataFrame; convert rows to a DataFrame here.
+        def _dict_runner() -> pd.DataFrame:
+            result = target()
+            if result is None:
+                return pd.DataFrame()
+            if isinstance(result, pd.DataFrame):
+                return result
+            if isinstance(result, dict):
+                rows = result.get("rows") or []
+                return pd.DataFrame(rows)
+            raise TypeError(f"Unexpected adapter output type for {adapter.key}: {type(result)!r}")
+
+        return _dict_runner
 
     if adapter.mode == "playwright":
         def _runner() -> pd.DataFrame:

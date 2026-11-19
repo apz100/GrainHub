@@ -55,17 +55,20 @@ locations, crops, and structure only.
   Dropdown-only entries include Winchester, Sarnia, Goderich, Durham,
   Wellington, Chatham, Kintore, Maxville, and others, plus duplicates
   (Delhi ×4, Glencoe ×4, Hensall Thompson ×4, Sarnia ×4).
-- **Location-filter mechanism (repo evidence, not yet live-tested
-  against the dropdown):** existing collectors already build
-  `cash.php?location_filter={loc_id}` URLs
-  (`app/platform/market_data/sources/cash_bids_dynamic.py:91`) and the
-  legacy list uses numeric location IDs (e.g. Brinston Corn 3614).
-  **Cycle 3 task:** confirm the dropdown option values map to
-  `location_filter` IDs and fetch a dropdown-only location
-  (e.g. Winchester) to verify its table loads — that would unlock the
-  full 335-point FMN Ontario set from one collector pattern.
+- **Location-filter mechanism (verified 2026-11-19, Cycle 3 — see
+  `docs/plans/fmn-location-filter.md`):** dropdown option values
+  ARE numeric `location_filter` IDs (336 options; e.g. Winchester
+  `2523`, Winchester Corn `1965`, Winchester Soybeans `1992`).
+  `cash.php?location_filter=2523` returns HTTP 200 with Winchester
+  selected and the bid-table scaffolding — BUT the static HTML
+  contains zero inline `writeBidRow(...)` invocations (vs 454 on the
+  default view) and an empty `jsquote.php symbols=` parameter, so
+  the filtered rows are JS-rendered, not embedded. **Still to prove:**
+  a Playwright render check that Winchester rows actually load.
+  If confirmed, the FMN collector covers up to 335 Ontario points
+  from one URL pattern.
 | Great Lakes Grain | 36 locations incl. Embrun, MacEwen Farms | https://cashbids.greatlakesgrain.com/index.cfm | DTN index.cfm (Playwright) | corn, soy, wheat, IP soy | not stated | Verified live 200. Keep. |
-| London Agricultural Commodities | 18 elevators incl. Charwen (Thornton) | https://www.londonag-dtn.com/index.cfm?show=11 | DTN index.cfm (Playwright) | corn, soy, wheat | not stated | **URL updated 2026-11-19**: old `dtn.londonag.com` is dead (404); new domain verified live 200 with "Cash Bid" content. `lac_source.py` base URL still needs updating. |
+| London Agricultural Commodities | 18 elevators incl. Charwen (Thornton) | https://www.londonag-dtn.com/index.cfm?show=11 | DTN index.cfm (Playwright) | corn, soy, wheat | not stated | **Fixed 2026-11-19 (Cycle 3):** `lac_source.py` base URL updated from dead `dtn.londonag.com` to `www.londonag-dtn.com`; re-verified live 200 with "Cash Bid" content and Location dropdown (options/tables are JS-rendered, as the Playwright collector expects). New pytest: `tests/test_lac_source.py`. |
 | The Andersons Canada | 14 locations (Blacks Lane, Blenheim, Granton, Hensall, Kent Bridge, Mitchell, Norwich, Pain Court, Pontypool, Port Albert, Claybanks, IGPC Ethanol, Kintore, Rannoch) | https://dtn-api.andersonscanada.com/cash-bids/blacks-lane | DTN HTML tables, plain requests | corn, soy, white/SRW wheat | basis daily ~5:10 pm EST | Verified live 200 (1 of 14 slugs probed). Keep. |
 | Snobelen Farms | Brantford + northern group (Ripley, Lucknow, Amberley, Dungannon, Palmerston, Benmiller, Tiverton) | https://snobelenfarms.com/wp-content/plugins/mv_blocks/blocks/dtn/feed.php?commodity=all&location=Brantford | DTN feed.php, plain HTTP | corn, soy, HRW/SRW/soft white/HRS wheat | not stated | Verified live 200. Keep. |
 | Hensall District Co-operative | Hensall, Ailsa Craig + others | https://hensallco-op.ca/Cash-Bids.htm | DTN widget (Playwright) | corn, soy, SRW/HRW/HRS/soft white wheat | not stated | Verified live 200. Keep. |
@@ -80,10 +83,10 @@ locations, crops, and structure only.
 
 | Company | Location | URL | Type | Crops | Frequency | Status |
 |---|---|---|---|---|---|---|
-| North Gower Grains | North Gower | https://northgowergrains.com/ (#cash-bids) | Plain HTML daily post + homepage widget | corn, soy, SRW/HRW/HRS wheat (incl. protein) | daily ~7:00 am | **Verified** — 2026-11-17 post read in full; dated table, spot + Harvest 2026/2027. Ordinary source; no special treatment. |
-| Collwest Grain | Collingwood | https://www.collwestgrain.com/ | Bushel-powered site | corn, soy, wheat, canola, barley, oats | daily | **Verified 2026-11-19** — direct fetch 200, "Cash Bid" content in HTML. Add after collector pass. |
-| Mae-Mart Farms | Norfolk County | http://www.mae-martfarms.com/ | Plain HTML | corn, soy, wheat, rye | continuous in market hours | **Verified 2026-11-19** — direct fetch 200, "Cash Price" content in HTML. Add after collector pass. |
-| Mapleview Grain | London | https://www.mapleviewgrain.ca/ | Plain HTML | corn, soy, wheat (old + new crop) | not stated | **Verified 2026-11-19** — direct fetch 200, "Cash bid" content in HTML. Add after collector pass. |
+| North Gower Grains | North Gower | https://northgowergrains.com/ (daily blog post, e.g. /wednesday-november-18-2026-820-am/) | Plain HTML daily post table | corn, soy, SRW/HRW/HRS wheat (incl. protein) | daily ~7:00 am | **Collector added 2026-11-19 (Cycle 3):** `north_gower_source.py` parses the daily-post table (Name/Notes/Basis Month/Futures/Basis/Cash Price/Cash Price tonne); homepage `#cash-bids` is a CTA with no prices — collector follows the latest daily-post link. Ordinary source; no special treatment. |
+| Collwest Grain | Collingwood | https://www.collwestgrain.com/ | Homepage cash-bid widget (.cbmod) | corn, soy, SRW/HRW/HRS wheat, canola, barley, oats | daily | **Collector added 2026-11-19 (Cycle 3):** `collwest_source.py` parses the homepage widget (Delivery/Bid/Basis/Futures per crop-year). Verified live 200. |
+| Mae-Mart Farms | Norfolk County | http://www.mae-martfarms.com/grain-pricing | Plain HTML tables (gp-table-*) | corn, soy, wheat, rye | continuous in market hours | **Collector added 2026-11-19 (Cycle 3):** `mae_mart_source.py` parses the tables. Basis is static; corn/soy/wheat cash prices are JS-filled from the site's futures proxy, so those rows carry basis with cash price empty + reason (never guessed). Rye has a static manualPrice, so its cash price is parsed. Homepage cards are "—" placeholders only. |
+| Mapleview Grain | London | https://www.mapleviewgrain.ca/ → https://mapleview.graindiscovery.com/ | Grain Discovery JS app | corn, soy, wheat (old + new crop) | not stated | **No plain-HTML collector possible (Cycle 3):** homepage `#bids` is marketing copy; the bids page is a Next.js app shell with no bid content in static HTML. `mapleview_source.py` is a stub returning an explicit unsupported reason. Needs a Playwright render or a public Grain Discovery feed (later cycle). |
 | Charwen Farms | Thornton (Simcoe County) | https://charwenfarms.ca/ | Plain HTML | corn, soy, wheat | not stated | Partially verified — homepage live, cash-bids page exists per homepage but not yet fetched. Investigate: may duplicate LAC feed (Charwen is an LAC location). |
 | Addis Grain | Simcoe County area | https://www.addisgrain.com/ | Unknown | corn, soy, wheat (old + new crop) | not stated | Partially verified — homepage live only; bids page not yet located. Investigate. |
 
@@ -105,15 +108,26 @@ Peterborough-Norwood), Homeland Grain (Norwich), GFO SellSmart
 - Existing base URLs probed: 13 — 11 live, 2 dead (LAC old domain, Bunge Hamilton).
 - New candidates: 7 — 4 fully verified (North Gower Grains, Collwest,
   Mae-Mart, Mapleview), 2 partially verified (Charwen, Addis),
-  1 replacement URL verified (LAC new domain).
-- **Action items:** update `lac_source.py` base URL to
-  `londonag-dtn.com` and re-verify the cash-bids view; add North Gower
-  Grains, Collwest, Mae-Mart, Mapleview to the config-driven collector
-  lists; keep Bunge disabled; confirm Greenfield/Barchart handling
-  with Adam. **Cycle 3:** verify the FMN dropdown `location_filter`
-  mapping (see "Farm Market News cash page" section) — if it loads
-  dropdown-only locations, the FMN collector covers up to 335
-  Ontario points from one URL pattern.
+  1 replacement URL verified (LAC new domain). **Cycle 3 update:**
+  collectors added for North Gower Grains, Collwest, Mae-Mart
+  (Mapleview: stub only — JS app, no plain-HTML structure); LAC base
+  URL fixed in code.
+- **Action items (done in Cycle 3):** `lac_source.py` base URL
+  updated to `londonag-dtn.com` and re-verified; collectors added for North Gower Grains, Collwest,
+  Mae-Mart (`app/platform/market_data/sources/{north_gower,collwest,
+  mae_mart,mapleview}_source.py`, pytest in
+  `tests/test_ontario_collectors.py` + `tests/test_lac_source.py`,
+  fixtures in `tests/fixtures/`). Mapleview has no plain-HTML
+  structure — stub only. **Still to wire (not done here — new files
+  only, no shared-file edits in this cycle):** register the four new
+  collectors in `app/services/source_registry.py` (SourceAdapter
+  entries) and add `north_gower / collwest / mae_mart / mapleview`
+  toggles to the `[sources]` section of `config.toml`; confirm
+  Greenfield/Barchart handling with Adam. **Still to prove:** FMN
+  `location_filter` rows rendering in a browser (Playwright check
+  of `cash.php?location_filter=2523` — see
+  `docs/plans/fmn-location-filter.md`); if it loads, the FMN
+  collector covers up to 335 Ontario points from one URL pattern.
 
 ## United States — existing list (verified 2026-11-19)
 

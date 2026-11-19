@@ -3697,3 +3697,30 @@ Last re-verified Cycle 26, all exact then — and still exact now.
 | USDA mirror — FS Grain | 197 | 197 | Same report id 7730, dated Nov 18, 2026 |
 
 **Coverage note:** with Cycles 35–36, every live-verified collector family has now been re-checked this morning with zero drift: Bushel per-location sweeps (Cycles 29–34), the full 13-site embed family (Cycle 35 + TGM here), all 11 working AgriCharts wrappers, FMN, Five Star, and both USDA mirrors.
+
+## Cycle 37 — Early Bushel sites + Mae-Mart: 9/9 exact; Mae-Mart page 171 bytes smaller, proxy shape unchanged (2026-11-19)
+
+One call per site, no retries. Counts/structure only, no values recorded. Executed directly by the coordinator (subagent spawning still unavailable).
+
+### Early Bushel sites (9 calls, 102 rows)
+
+Last re-verified Cycles 26 (FAC) / 31 (Chandler, Cameron, CGS, Almota, Williams Gin, Rugby) / 32 (Lake Norden, United Coop). All 9 exact again; 8 of 9 headers fresh Nov 19.
+
+| Site | Rows now | Prior | Header date | Verdict |
+|---|---|---|---|---|
+| FAC | 45 | 45 (Cycle 26) | Nov 19 | Exact match |
+| Chandler Feed | 17 | 17 (Cycle 31) | Nov 19 | Exact match |
+| Cameron Coop | 4 | 4 | Nov 19 | Exact match |
+| CGS | 4 | 4 | Nov 19 | Exact match |
+| Almota | 12 | 12 | **Nov 18** | Exact match (count); still one day stale |
+| Williams Gin | 2 | 2 | Nov 19 | Exact match |
+| Rugby | 12 | 12 | Nov 19 | Exact match |
+| Lake Norden | 2 | 2 | Nov 19 | Exact match |
+| United Cooperative (Webster City) | 12 | 12 (Cycle 32) | Nov 19 | Exact match |
+
+**Almota:** header still dated Nov 18 — the same one-day lag found in Cycle 31. Count unchanged at 12, so the collector parses it fine; the page is serving yesterday's board. It stays on the staleness watch list (five widgets); no further re-checks needed beyond the regular sweeps.
+
+### Mae-Mart (2 logical probes)
+
+- **Pricing page** (`fetch_mae_mart_html`, 1 GET): **35,781 bytes** — 171 bytes smaller than Cycles 18/29 (35,952). Structure unchanged: all three futures symbols present (`ZCZ26=F`, `ZSF27=F`, `ZWN27=F`), `grain-proxy` referenced, 4 tables, parse status ok, **4 rows** (Corn, Soybeans, Wheat, Rye — basis present on all; futures/cash empty without the proxy step, Rye carrying its static manual cash price as in Cycle 18). The byte difference is not diagnosed further — no saved Cycle 29 copy exists to diff against, and the pricing content is intact.
+- **Proxy** (1 GET, `grain-proxy?symbols=ZCZ26=F`, redirects followed): HTTP 200, `application/json; charset=utf-8`, **88 bytes** (was 89 in Cycles 19/29 — the 1-byte difference is the price value itself changing length, which is expected). JSON shape unchanged: keyed by symbol, numeric `price`, `currency` `"USX"`, integer `timestamp` and `fetched`. The extensionless canonical URL is served directly. Collector still viable as-is; no code change needed.

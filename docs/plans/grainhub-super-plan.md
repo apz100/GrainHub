@@ -567,6 +567,11 @@ Merge order, gates, and conflicts are in `docs/plans/merge-plan.md`.
   rows); subagent spawning became unavailable — Cycle 35 run
   coordinator-direct; merge plan extended to Cycle 34
   (87 commits, 0 merges).
+- **Cycle 36** (`overnight/grainhub-cycle-36`, 711 tests, docs
+  only): AgriCharts wrappers 11/11 + key collectors 5/5 exact
+  matches (16/16 overall); every live-verified collector
+  family now re-checked this morning with zero drift; merge
+  plan extended to Cycle 35 (89 commits, 0 merges).
 
 **Remaining blockers that need Adam:** NASS API key (free) and FAS /
 data.gov key (free); LLM provider + key for Advisor `/ask`; Barchart /

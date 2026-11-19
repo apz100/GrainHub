@@ -4568,3 +4568,224 @@ Mae-Mart cash-price decision; poller scheduling decision;
 currency decision. Subagent spawning is unavailable in this
 session — later cycles run coordinator-direct unless it comes
 back.
+
+## Cycle 36 (added Cycle 37)
+
+### 0v. Branch chain — Cycle 36, verified from git
+
+The chain is **still linear**: `git log --oneline
+master..overnight/grainhub-cycle-36` gives **91 commits** (89
+through Cycle 35 + 2 in Cycle 36), **0 merge commits**, no
+branch points. Cycle 36's first commit `a03b382` has parent
+`95f5515` (the Cycle 35 tip), and merge-base(35, 36) is the
+Cycle 35 tip `95f5515`. Per-branch commit count for Cycle 36: 2
+(`a03b382`, `f273da4`).
+
+That means the §2 procedure continues unchanged: merge Cycle 36
+after 35, one branch at a time with `--no-ff`, running the §3
+gates at each step. A single fast-forward of `master` to the
+`cycle-36` tip (`f273da4`) would give the same tree as
+thirty-six sequential merges; prefer the sequential merges
+for the same reason as §0 (a review checkpoint and stop point
+per cycle).
+
+(The Cycle 35 section's "89 commits master..cycle-35" figure
+was re-verified in Cycle 37 and is correct — 89, 0 merge
+commits. `master` is still at `f2c3206` — no cycle work is on
+`master` yet.)
+
+### 1v. What the branch contains (Cycle 36)
+
+| Branch | Tip | Tests at tip | Web build at tip |
+|---|---|---|---|
+| Cycle 36 | `f273da4` | 711 passed, 0 failed | Not re-run (no web files changed; last full pass Cycle 17) |
+
+Tip commit hash (full): `f273da44b7da90b715a19df902dd2e171924d2b6`.
+No web files changed in Cycle 36, so there is no fresh
+web-build evidence in this range. 4 files changed in Cycle 36
+(399 insertions, 0 deletions — verified from the
+`cycle-35..cycle-36` diff): the super-plan §9, the merge plan
+(+220), the Cycle 36 report itself (+138), and the
+price-source catalogue (+36). No code changed and no new tests
+were added; the suite is unchanged from Cycle 35 at 711 — the
+coordinator ran it once to confirm.
+
+- **Cycle 36** (`overnight/grainhub-cycle-36`; commits `a03b382`,
+  `f273da4`): AgriCharts wrappers re-verification — **11/11
+  exact matches (one call per wrapper, no retries)** via the
+  module's own `us_agricharts_source.py` wrappers. Last
+  re-verified Cycle 27 (10 wrappers, 639 rows — Heritage
+  excluded there). All 11 now exact, including Heritage at 14
+  rows (confirmed Cycle 23). 653 rows total. Counts only, no
+  values recorded.
+
+  | Wrapper | Rows now | Prior | Locations | Verdict |
+  |---|---|---|---|---|
+  | Ag Plus | 36 | 36 (Cycle 27) | 6 | Exact match |
+  | Farmers Win Coop | 171 | 171 | 18 | Exact match |
+  | Heritage Grain Cooperative | 14 | 14 (Cycle 23) | 1 | Exact match |
+  | Keller | 14 | 14 | 1 | Exact match |
+  | Kokomo Grain | 63 | 63 | 8 | Exact match |
+  | Legacy Farmers | 66 | 66 | 10 | Exact match |
+  | Pro Ag | 78 | 78 | 6 | Exact match |
+  | West-Con | 84 | 84 | 1 (fallback location) | Exact match |
+  | Wheaton Dumont | 43 | 43 | 8 | Exact match |
+  | Central Farmers Coop | 75 | 75 | 11 | Exact match |
+  | Anthony Farmers Co-op | 9 | 9 | 3 | Exact match |
+
+- **Key collectors re-verification — 5/5 exact matches (one
+  call each, no retries).** Last re-verified Cycle 26, all
+  exact then — and still exact now.
+
+  | Collector | Rows now | Prior | Notes |
+  |---|---|---|---|
+  | FMN (`fetch_fmn_cash`, page + jsquote feed) | 453 | 453 (Cycle 26) | 204 tables, 87 delivery points; 449/449 futures-linked rows filled from the feed |
+  | Five Star Coop | 299 | 299 | 21 locations; page trade date Nov 18 |
+  | TGM | 362 | 362 | 24 locations (completes the embed family: 13/13 now re-verified across Cycles 35–36) |
+  | USDA mirror — James Valley | 197 | 197 | Report id 7730, dated Nov 18, 2026 |
+  | USDA mirror — FS Grain | 197 | 197 | Same report id 7730, dated Nov 18, 2026 |
+
+  **Coverage note:** with Cycles 35–36, every live-verified
+  collector family has now been re-checked this morning with
+  zero drift: Bushel per-location sweeps (Cycles 29–34), the
+  full 13-site embed family (Cycle 35 + TGM here), all 11
+  working AgriCharts wrappers, FMN, Five Star, and both USDA
+  mirrors.
+- **Merge plan extended to Cycle 35** (220 lines added, 0
+  removed — verified from the `cycle-35..cycle-36` diff). The
+  Cycle 34 section's "87 commits" figure re-verified correct
+  in Cycle 36. No discrepancies found between git and the
+  Cycle 35 report.
+- **Super-plan §9 extended to Cycle 35** (Cycle 35 bullet
+  added — embed family 12/12, subagent spawning unavailable,
+  merge plan extended to Cycle 34, 87 commits).
+- **Price-source catalogue — Cycle 36 section added**
+  (AgriCharts wrappers 11/11 + key collectors 5/5 + the
+  coverage note).
+- **Boundary applied:** zero references in any new Cycle 36
+  code, tests, fixtures, or docs (verified by grep on the added
+  lines of the commit). No contact made.
+  Full detail: `docs/plans/overnight-cycle-36-report.md`.
+
+### 3v. Gates — updated expectations for Cycle 36
+
+§3 applies unchanged, with these per-cycle numbers:
+
+1. **Full API test suite** — expect Cycle 36: 711 — **0 failed**.
+   (Unchanged from Cycle 35 — no code changed, no new tests
+   added. The coordinator ran the suite once to confirm.)
+2. **Web build** — re-run once at the Cycle 36 step so the final
+   tree is verified as a whole. No web files changed in Cycle 36,
+   so a build failure at this step would point at an earlier
+   cycle, not the branch being merged. Last full pass was
+   Cycle 17.
+3. **Alembic chain** — head is **still `0019`**. Verified from
+   git: no migration file was added in Cycle 36 (`git log` on
+   the Alembic versions dir in `cycle-35..cycle-36` is empty,
+   and the file list at the Cycle 36 tip is `0001`–`0019`). The
+   only two commits ever touching that directory in
+   `master..cycle-36` are from Cycle 1 and Cycle 7 (which added
+   `0019`). Expect exactly one head, `0019`, at the Cycle 36 step.
+4. **Boundary spot-check** — the Cycle 36 report has its own
+   boundary section (zero new references, verified by grep on the
+   added lines). Re-check once at the Cycle 36 step as in §3.4.
+5. **No-secrets spot-check** — as §3.5; the report states none.
+
+### 4v. Known conflicts and overlaps — Cycle 36
+
+The chain is still linear, so a sequential merge still produces
+no conflicts. The §4 watch-list extends as follows:
+
+- **Price-source catalogue** (`docs/plans/price-source-catalogue.md`)
+  — edited in **Cycle 36** as well (36 lines changed; the
+  AgriCharts wrappers, the key collectors, and the coverage
+  note). Same rule as §4: later wins.
+- **Merge plan** (`docs/plans/merge-plan.md`) — extended in
+  Cycle 36 (220 lines added, 0 removed: the Cycle 35 section).
+  Additive; no earlier text touched.
+- **Super-plan §9** (`docs/plans/grainhub-super-plan.md`) —
+  updated in **Cycle 36** (progress to Cycle 35, test chain
+  179 → 711). Linear, no conflict expected.
+- **No collector, registry, orchestration, config, or test file
+  touched in Cycle 36** — `bushel_source.py`,
+  `cashbids_embed_source.py`, `us_agricharts_source.py`,
+  `fmn_source.py`, `wpdatatables_source.py`,
+  `usda_mirror_source.py`, `config.toml`,
+  `us_elevators_urls.toml`, `app/services/source_registry.py`,
+  `app/services/source_orchestration.py`, and `app/main.py`
+  were not touched this cycle. Cycle 36 is docs + research
+  only.
+- **Migration chain** — unchanged: `0015 → … → 0018` (Cycle 1)
+  then `0019` (Cycle 7), single head throughout Cycle 36.
+
+### 5v. What must NOT be merged as-is — update
+
+- **The CI workflow file is STILL not in any branch.** Verified
+  2026-11-19 (Cycle 37): `?? .github/` in `git status` on the
+  Cycle 37 checkout (`.github/workflows/api-tests.yml`).
+  Merging Cycle 36 as well as 1–35 will **not** bring it into
+  `master`. Same remedy as §5: Adam re-authenticates `gh` with
+  `workflow` scope, or adds the file via the GitHub web UI. Do
+  not hand-copy it into a merge commit.
+- **Nothing else new is held back in Cycle 36.** No new unpushed
+  files, secrets, or held-back work is reported in the Cycle 36
+  report. The §5 review-not-blocker list is unchanged and carried
+  forward: email-bid endpoint public by default, futures
+  endpoints still return prices `null` until a licensed feed is
+  wired (the Mae-Mart proxy now fills `futures_price` on
+  collector rows only — it does not feed the futures endpoints),
+  Advisor `/ask` is a 501 scaffold, eSign is a stub, normalized
+  price rows carry no currency (`currency: null`).
+- **Open decisions carried forward from Cycle 36 (not
+  blockers):** **nothing new needs Adam in Cycle 36.** The
+  staleness watch is still five widgets (Chadbourn, Hamer,
+  Hugoton 3370, Vilas-Walsh 3621, Almota — all exactly one day
+  behind, all on the exemption list for any future freshness
+  gate; no further re-checks needed). Playwright render checks
+  still pending (DTN family — Al-Corn + Sunrise first — FMN
+  filtered view (Winchester `location_filter=2523`), Mapleview,
+  StoneX family (Frontier, CRC, UFC), The Andersons — closed
+  for static collection, browser-only — and Landus, Vercel
+  checkpoint); DTN toggles stay `false` until verified;
+  scheduling the poller as a second cron job (deployment
+  decision, checklist §4 step 6); Mae-Mart `cash_price` from
+  futures + static basis (still open, gated on the
+  licensed-feed decision); at least one `Commodity` row must
+  exist before the first poller run. Still needs Adam (carried
+  from Cycles 1–35, nothing new in Cycle 36): NASS key,
+  FAS/data.gov key, LLM provider + key, Barchart/DTN licensed
+  feed decision (redistribution licence — now also gates the
+  CGB `cashbids-js.php` question and the Mae-Mart cash-price
+  decision), ERP choice (Agvance recommended), eSign provider,
+  pricing/hosting decisions, `gh` `workflow` scope, currency
+  column decision (four concrete choices in
+  `docs/plans/currency-design.md`), email-bid endpoint auth
+  decision (public vs admin-only).
+
+### 7v. After the merges — updated
+
+§7 applies with the Cycle 36 tip as the end state: Alembic head
+`0019` (unchanged since Cycle 7), test suite 711 passed / 0
+failed, web build last fully passed in Cycle 17 (re-run at the
+Cycle 36 merge step). The still-open decisions list in §7.4 is
+unchanged by Cycle 36 except for the additions in §5v above.
+Open work carried forward: Playwright render checks (DTN family
+— Al-Corn + Sunrise first — FMN filtered view, Mapleview,
+StoneX including Frontier, The Andersons — closed for static
+collection, browser-only — and Landus, Vercel checkpoint);
+Heartland / Mulvane closed for now (no new hypothesis);
+Chadbourn + Hamer + Skyland 3370/3621 + Almota staleness watch
+(now five widgets, exemption list; no further re-checks
+needed); AGP's iframe target rotated its served default
+location once (Chester → Aberdeen) and Alliance Grain's page
+did the same (Gibson City → Anchor/Cropsey/Colfax) — if either
+rotates again, a later re-verification will catch it, no action
+needed now; Smithfield East Region sweep fully re-verified
+(Cycles 29–34, all 30 locations exact); embed family fully
+re-verified (Cycles 35–36, 13/13 exact); AgriCharts wrappers
+fully re-verified (Cycle 36, 11/11 exact); FMN, Five Star, and
+both USDA mirrors re-verified (Cycle 36, all exact);
+Mae-Mart cash-price decision; poller scheduling decision;
+currency decision. Subagent spawning is unavailable in this
+session — later cycles run coordinator-direct unless it comes
+back.

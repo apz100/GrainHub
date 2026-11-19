@@ -1621,3 +1621,233 @@ Mulvane decision; Chadbourn + Hamer + Skyland 3370/3621
 staleness watch; agricharts User-Agent decision; Mae-Mart
 cash-price decision; poller scheduling decision; currency
 decision.
+
+## Cycle 23 (added Cycle 24)
+
+### 0i. Branch chain — Cycle 23, verified from git
+
+The chain is **still linear**: `git log --oneline
+master..overnight/grainhub-cycle-23` gives **65 commits** (63
+through Cycle 22 + 2 in Cycle 23), **0 merge commits**, no
+branch points. Cycle 23's first commit `c9c9c2e` has parent
+`7704d02` (the Cycle 22 tip), and merge-base(22, 23) is the
+Cycle 22 tip `7704d02`. Per-branch commit count for Cycle 23: 2
+(`c9c9c2e`, `9f534e6`).
+
+That means the §2 procedure continues unchanged: merge Cycle 23
+after 22, one branch at a time with `--no-ff`, running the §3
+gates at each step. A single fast-forward of `master` to the
+`cycle-23` tip (`9f534e6`) would give the same tree as
+twenty-three sequential merges; prefer the sequential merges for
+the same reason as §0 (a review checkpoint and stop point per
+cycle).
+
+(The Cycle 22 section's "63 commits master..cycle-22" figure
+was re-verified in Cycle 24 and is correct — no correction
+needed.)
+
+### 1i. What the branch contains (Cycle 23)
+
+| Branch | Tip | Tests at tip | Web build at tip |
+|---|---|---|---|
+| Cycle 23 | `9f534e6` | 697 passed, 0 failed | Not re-run (no web files changed; last full pass Cycle 17) |
+
+Tip commit hash (full): `9f534e6be9c3c03d172dfa7b14149dfcf065c079`.
+No web files changed in Cycle 23, so there is no fresh
+web-build evidence in this range. 8 files changed in Cycle 23
+(756 insertions, 39 deletions): the toggle flip, its tests, the
+price-source catalogue, the new futures-fallback design note,
+the merge plan, the super-plan §9, and the Cycle 23 report
+itself.
+
+- **Cycle 23** (`overnight/grainhub-cycle-23`; commits `c9c9c2e`,
+  `9f534e6`): Heritage Grain Cooperative live confirmation —
+  one live wrapper call, `fetch_heritage_grain_cooperative()`,
+  returned **14 rows** (CORN 6, BEANS 6, WHEAT 2; deliveries Oct
+  2026–Nov 2027), all with the company fallback location
+  `Heritage Grain Cooperative - Heritage Grain Cooperative`,
+  exactly as the Cycle 22 parser fix predicted. The Cycle 22
+  follow-up is closed. No live price/basis/bid recorded
+  anywhere — counts and structure only.
+- **Heartland + Mulvane toggles flipped to `false`** (coordinator
+  decision): `heartland_coop` and `mulvane_coop` in `config.toml`
+  `[sources]`, each with a Cycle 23 comment (two consecutive
+  0-row probes, Cycles 21–22; `jsquote.php` tag missing; poller
+  would fetch daily for nothing; reversible;
+  `us_elevators_urls.toml` entries stay enabled — the toggle is
+  the gate). Not re-probed this cycle, per the decision.
+  Wrappers/registry rows unchanged, so re-enabling is a one-line
+  flip. **Seed count 104 → 102** (119 adapters − 17 toggled off:
+  bunge, mapleview, 13 DTN, Heartland, Mulvane). **1 new test**
+  (`test_cycle23_zero_row_agricharts_adapters_toggled_off` in
+  `tests/test_source_toggle_gating.py`: both toggles false, both
+  in the derived disabled set, siblings
+  `heritage_grain_cooperative`/`keller` still on, explicit-key
+  seed of both + `keller` creates only `keller` and records both
+  in `skipped_disabled`, pre-existing rows for both stay out of
+  the due list) plus an update to
+  `test_config_toggles_exist_for_all_new_adapters` (now expects
+  `false` for exactly `heartland_coop`/`mulvane_coop`, all other
+  AgriCharts toggles still `true`). No hardcoded seeded count
+  anywhere — the gating/orchestration tests derive the disabled
+  set from the real toggles. Self-inflicted break, fixed by the
+  worker before commit: an edit dropped the newline after a test
+  function definition, producing an `IndentationError` caught on
+  the first suite run (collection error, 0 tests ran); fixed the
+  line, re-ran, suite green at 697.
+- **AgriCharts futures-fallback design note** (design only, 0
+  GETs): new `docs/plans/agricharts-futures-fallback-design.md`
+  (170 lines). Field analysis verified against the code:
+  `writeBidRow` args carry, with no jsquote feed needed, Name
+  (arg 0), **Basis in ¢/bu (arg 1, signed — in the row itself)**,
+  Delivery/Delivery End (args 6–7), Location (surrounding
+  `<h4>`, company fallback), futures symbol (arg 14).
+  Feed-dependent: Futures Price (`last`) and Bushel/MT Cash
+  Price (computed as futures + basis). Either: Futures Month —
+  taken from the feed's `month` field today, but decodable from
+  the symbol (FMN does exactly this). Neither: Change is
+  hardcoded `""` — the collector never fills it, feed or no
+  feed. Current behaviour: missing tag → warning + empty
+  DataFrame before any row parsing. FMN degrades instead
+  (parses the page, leaves futures/change/cash `None` with a
+  note, decodes month from the symbol). **Recommendation: (a)
+  parse rows with futures/cash `None` (FMN precedent), with the
+  (b) probe run first on Heartland only.** (b) (derive the feed
+  URL from row symbols, `varname=quotes`) is worth a 2-GET
+  Heartland probe first since full rows would be strictly better
+  if the feed still answers, but (b) alone leaves the collector
+  brittle the next time a tag disappears. (c) (leave as-is,
+  toggles off) and (d) (futures from another feed — parked,
+  month-matching risk) are documented with pros/cons. **Decision
+  needed from Adam/coordinator:** approve (a) for implementation
+  in a later cycle, including two sub-decisions: (i) whether
+  basis-only rows may flow into the pipeline or should be
+  flagged/quarantined until proven; (ii) whether Futures Month
+  may be decoded from the symbol. Toggles stay off until (a) is
+  implemented and at least one site is probe-confirmed returning
+  rows; re-enabling is a separate step. (Cycle 24 note: the
+  coordinator approved (a) — basis-only rows may flow with
+  explicit `None`, no quarantine; month decoding approved. See
+  the Cycle 24 report.)
+- **Coordinator decision recorded: agricharts UA stays Chrome.**
+  The Cycle 21 finding (the collector sends a Chrome
+  `Mozilla/5.0` UA, not `GrainHub-Research/1.0`) is kept as-is:
+  pre-existing Cycle 1 behaviour, it works, changing it risks
+  fetches being blocked as non-browser traffic. Research probes
+  continue to use `GrainHub-Research/1.0`.
+- **Price-source catalogue edited:** the Heritage live
+  confirmation, the Heartland/Mulvane toggle-off (split to note:
+  toml `enabled` stays `true`, the `[sources]` toggle is the
+  gate), and the design-note summary.
+- **Merge plan extended to Cycle 22** (226 lines added, 0
+  removed). The Cycle 21 section's "61 commits" figure
+  re-verified correct in Cycle 23.
+- **Super-plan §9 extended to Cycle 22** (heading/intro now
+  cover Cycles 1–22, test chain 179 → 696; Cycle 22 bullet
+  added; blockers updated).
+- **Boundary applied:** zero references to the excluded
+  elevator in any new Cycle 23 code, tests, fixtures, or docs
+  (verified by grep on the added lines).
+  Full detail: `docs/plans/overnight-cycle-23-report.md`.
+
+### 3i. Gates — updated expectations for Cycle 23
+
+§3 applies unchanged, with these per-cycle numbers:
+
+1. **Full API test suite** — expect Cycle 23: 697 — **0 failed**.
+   (Cycle 22 ended at 696; Cycle 23 adds 1 toggle-gating test.)
+2. **Web build** — re-run once at the Cycle 23 step so the final
+   tree is verified as a whole. No web files changed in Cycle 23,
+   so a re-run is a no-op confirmation; last full pass remains
+   Cycle 17.
+3. **Alembic heads** — expect exactly one head, `0019`
+   (unchanged since Cycle 7). Cycle 23 adds no migration.
+4. **Boundary spot-check** — grep the Cycle 23 range diff for
+   the excluded elevator name; expect zero new references in
+   code, tests, fixtures, or docs.
+5. **No-secrets spot-check** — no new credentials, keys, or
+   tokens in the Cycle 23 diff (none are reported).
+
+### 4i. Known conflicts and overlaps — Cycle 23
+
+- **Files also touched by earlier cycles:** the price-source
+  catalogue (edited in every cycle — Cycle 23's additions are
+  the Heritage confirmation, the toggle-off, and the design-note
+  summary; no earlier text was rewritten), the merge plan
+  (pure append of the Cycle 22 section), the super-plan §9
+  (Cycle 22 bullet + blockers update; no earlier bullet was
+  rewritten). `config.toml` `[sources]` was last touched in
+  Cycle 20 (26 new toggles) — Cycle 23 flips two values in place
+  and adds a comment per key; no structural conflict.
+  `test_source_toggle_gating.py` was created in Cycle 20 and
+  extended in Cycle 23 (one new test appended; the
+  `test_seed_skips_toggled_off_adapters_and_records_them`
+  function was not edited — the worker's `IndentationError`
+  came from a dropped newline after that function's def line
+  and was fixed in place before commit, with no change to the
+  function's body or semantics).
+- **No new collector, registry, or adapter code in Cycle 23.**
+  `us_agricharts_source.py`, `source_registry.py`, and
+  `app/main.py` were not touched this cycle (`git log` on them
+  in `cycle-22..cycle-23` is empty); no adapter, toggle-shape,
+  or registration change to carry beyond the two value flips.
+- **Migration chain** — unchanged: `0015 → … → 0018` (Cycle 1)
+  then `0019` (Cycle 7), single head throughout Cycle 23.
+
+### 5i. What must NOT be merged as-is — update
+
+- **The CI workflow file is STILL not in any branch.** Verified
+  2026-11-19 (Cycle 24): `?? .github/` in `git status` on the
+  Cycle 24 checkout (`.github/workflows/api-tests.yml`).
+  Merging Cycle 23 as well as 1–22 will **not** bring it into
+  `master`. Same remedy as §5: Adam re-authenticates `gh` with
+  `workflow` scope, or adds the file via the GitHub web UI. Do
+  not hand-copy it into a merge commit.
+- **Nothing else new is held back in Cycle 23.** No new unpushed
+  files, secrets, or held-back work is reported in the Cycle 23
+  report. The §5 review-not-blocker list is unchanged and carried
+  forward: email-bid endpoint public by default, futures
+  endpoints still return prices `null` until a licensed feed is
+  wired (the Mae-Mart proxy now fills `futures_price` on
+  collector rows only — it does not feed the futures endpoints),
+  Advisor `/ask` is a 501 scaffold, eSign is a stub, normalized
+  price rows carry no currency (`currency: null`).
+- **Open decisions carried forward from Cycle 23 (not
+  blockers):** AgriCharts fallback (a) implementation approval
+  (approved by the coordinator in Cycle 24 — basis-only rows may
+  flow, month decoded from symbol; implementation in Cycle 24);
+  Heartland filtered-view probe (`cash.php?location_filter=<id>`,
+  1 GET, later cycle — rows may appear only under a selected
+  location); staleness watch (Chadbourn 4th consecutive stale
+  probe, Hamer + Skyland 3370/3621 3rd each after the Cycle 24
+  daytime re-check, all exactly one day behind; the
+  refresh-later-in-the-day hypothesis is now answered — no — so
+  no further daytime re-checks are needed; the four stay on the
+  exemption list for any future freshness gate); agricharts
+  User-Agent decision (resolved in Cycle 23 — Chrome UA kept);
+  Playwright render checks still pending (DTN family — Al-Corn
+  + Sunrise first — FMN filtered view, Mapleview, StoneX
+  including Frontier, The Andersons — closed for static
+  collection, browser-only — and Landus, Vercel checkpoint);
+  DTN toggles stay `false` until verified; scheduling the
+  poller as a second cron job (deployment decision, checklist
+  §4 step 6); Mae-Mart `cash_price` from futures + static basis
+  (still open, gated on the licensed-feed decision); at least
+  one `Commodity` row must exist before the first poller run.
+
+### 7i. After the merges — updated
+
+§7 applies with the Cycle 23 tip as the end state: Alembic head
+`0019` (unchanged since Cycle 7), test suite 697 passed / 0
+failed, web build last fully passed in Cycle 17 (re-run at the
+Cycle 23 merge step). The still-open decisions list in §7.4 is
+unchanged by Cycle 23 except for the additions in §5i above.
+Open work carried forward: Playwright render checks (DTN family
+— Al-Corn + Sunrise first — FMN filtered view, Mapleview,
+StoneX including Frontier, The Andersons — closed for static
+collection, browser-only — and Landus, Vercel checkpoint);
+AgriCharts fallback (a) implementation (approved, in Cycle 24);
+Heartland filtered-view probe; Chadbourn + Hamer + Skyland
+3370/3621 staleness watch (exemption list); Mae-Mart
+cash-price decision; poller scheduling decision; currency
+decision.

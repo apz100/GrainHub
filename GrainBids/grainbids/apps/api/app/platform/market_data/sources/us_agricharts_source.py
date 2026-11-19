@@ -34,6 +34,15 @@ the row's commodity name, or that starts with a commodity word, is
 treated as a commodity heading and the row falls back to the company
 name as its location.
 
+Cycle 24, option (a) (FMN precedent): when the page carries no
+jsquote.php script tag, the collector no longer returns empty
+before parsing. It parses the writeBidRow rows as basis-only
+rows — Basis / Delivery / Location / Name / Symbol filled,
+Futures Month decoded from the contract symbol, Futures Price /
+Change / Bushel and MT Cash Price None with a Note saying the
+values come from the missing feed, never invented. A page WITH
+the tag behaves exactly as before.
+
 Usage (called by GrainBidder.py via the [[us.elevators]] config):
     fetch_us_agricharts(url, company_name) -> pd.DataFrame
 
@@ -156,6 +165,50 @@ _JSQUOTE_SCRIPT_RX = re.compile(
 )
 
 
+# ─── Futures-month decoding (FMN precedent, fmn_source.py) ──────────────────
+# A contract symbol decodes to its month without the quotes feed:
+# 'ZCZ26' -> 'Dec 2026'. This decodes the symbol the page itself
+# references — it is not a quote-feed reading. Unrecognised symbols
+# return None. Used when the jsquote tag is missing (Cycle 24,
+# option (a)): the month column survives even though the futures
+# price does not.
+
+_MONTH_CODES = {
+    "F": "Jan", "G": "Feb", "H": "Mar", "J": "Apr", "K": "May",
+    "M": "Jun", "N": "Jul", "Q": "Aug", "U": "Sep", "V": "Oct",
+    "X": "Nov", "Z": "Dec",
+}
+_SYMBOL_RE = re.compile(r"^([A-Z]+)([FGHJKMNQUVXZ])(\d{2})$")
+
+# Note attached to basis-only rows (FMN pattern: feed-dependent values
+# are None with a note saying so, never invented).
+_NO_QUOTES_NOTE = (
+    "Basis as published; futures price, change and cash price come "
+    "from the page's external quotes feed (jsquote.php) and are not "
+    "in the static HTML — left as None, never invented; futures "
+    "month decoded from the contract symbol"
+)
+
+
+def futures_month_from_symbol(symbol: str | None) -> str | None:
+    """Decode a futures contract symbol to its month label.
+
+    'ZCZ26' -> 'Dec 2026'; 'ZSF27' -> 'Jan 2027'. Same decoder as
+    ``fmn_source.futures_month_from_symbol``. An unrecognised symbol
+    returns None.
+    """
+    if not symbol:
+        return None
+    match = _SYMBOL_RE.match(symbol.strip().upper())
+    if not match:
+        return None
+    _root, month_code, year2 = match.groups()
+    month = _MONTH_CODES.get(month_code)
+    if month is None:
+        return None
+    return f"{month} 20{year2}"
+
+
 # ─── jsquote helpers (shared logic with ganaraska_source) ────────────────────
 
 def _js_obj_to_dict(js_text: str) -> dict:
@@ -211,19 +264,31 @@ def fetch_us_agricharts(url: str, company_name: str, playwright=None) -> pd.Data
         html = r.text
 
         # 1. Find jsquote.php script tag → varname + symbols
+        # Cycle 24, option (a): when the tag is missing, do NOT bail
+        # before parsing. The writeBidRow rows still carry the basis,
+        # delivery, location, name and futures symbol — only the
+        # futures price (and the cash prices derived from it) need
+        # the feed. Parse the rows as basis-only: futures price /
+        # change / cash are None with a note (FMN precedent), and
+        # Futures Month is decoded from the contract symbol.
         jm = _JSQUOTE_SCRIPT_RX.search(html)
+        quotes: dict = {}
+        degraded = False
         if not jm:
-            print(f"[US-AG WARN] {company_name}: jsquote script tag not found in page")
-            return pd.DataFrame()
+            print(
+                f"[US-AG WARN] {company_name}: jsquote script tag not "
+                "found in page — parsing basis-only rows"
+            )
+            degraded = True
+        else:
+            varname = jm.group(1)
+            symbols = jm.group(2).split(",")
 
-        varname = jm.group(1)
-        symbols = jm.group(2).split(",")
-
-        # 2. Fetch futures prices from jsquote API
-        quotes = _fetch_jsquote(varname, symbols)
-        if not quotes:
-            print(f"[US-AG ERR] {company_name}: jsquote returned no data")
-            return pd.DataFrame()
+            # 2. Fetch futures prices from jsquote API
+            quotes = _fetch_jsquote(varname, symbols)
+            if not quotes:
+                print(f"[US-AG ERR] {company_name}: jsquote returned no data")
+                return pd.DataFrame()
 
         # 3. Walk HTML in document order, tracking current <h4> location name
         events: list = []
@@ -250,21 +315,34 @@ def fetch_us_agricharts(url: str, company_name: str, playwright=None) -> pd.Data
             # group(6) = chartsym
             symbol      = m.group(7)
 
-            q             = quotes.get(symbol, {})
-            futures_raw   = q.get("last", "")
-            futures_month = q.get("month", "")
+            q = quotes.get(symbol, {}) if not degraded else {}
+            if degraded:
+                # Basis-only row: no feed, so no futures price, no
+                # change, no cash price — None with a note, never
+                # invented. Futures Month comes from the symbol.
+                futures_raw: object = None
+                futures_month: object = futures_month_from_symbol(symbol)
+                bushel_cash: object = None
+                mt_cash: object = None
+                change: object = None
+                note = _NO_QUOTES_NOTE
+            else:
+                futures_raw = q.get("last", "")
+                futures_month = q.get("month", "")
+                change = ""
 
-            bushel_cash = mt_cash = ""
-            if futures_raw:
-                try:
-                    # futures_raw is decimal cents/bu (e.g. "439", "449.5")
-                    cash_cents = float(futures_raw) + basis_cents
-                    cash_bu    = cash_cents / 100.0
-                    bushel_cash = f"${cash_bu:.2f}"
-                    bpu = _BU_PER_MT.get(name.lower(), 39.3683)
-                    mt_cash = str(round(cash_bu * bpu, 2))
-                except Exception:
-                    pass
+                bushel_cash = mt_cash = ""
+                if futures_raw:
+                    try:
+                        # futures_raw is decimal cents/bu (e.g. "439", "449.5")
+                        cash_cents = float(futures_raw) + basis_cents
+                        cash_bu    = cash_cents / 100.0
+                        bushel_cash = f"${cash_bu:.2f}"
+                        bpu = _BU_PER_MT.get(name.lower(), 39.3683)
+                        mt_cash = str(round(cash_bu * bpu, 2))
+                    except Exception:
+                        pass
+                note = ""
 
             # Basis as ¢/bu for display  (e.g. 5 → "+5¢", -40 → "-40¢")
             basis_disp = (
@@ -284,10 +362,13 @@ def fetch_us_agricharts(url: str, company_name: str, playwright=None) -> pd.Data
                 "Delivery End":      del_end,
                 "Futures Month":     futures_month,
                 "Futures Price":     futures_raw,
-                "Change":            "",
+                "Change":            change,
                 "Basis":             basis_disp,
                 "Bushel Cash Price": bushel_cash,
                 "MT Cash Price":     mt_cash,
+                # "" on feed-backed rows (schema-stable); the
+                # basis-only note on degraded rows (Cycle 24).
+                "Note":              note,
             })
 
         if not rows:

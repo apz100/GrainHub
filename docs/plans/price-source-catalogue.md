@@ -3355,3 +3355,36 @@ With both toggles off, the open question is what the generic collector should do
    re-probe them routinely while the toggles are off.
 2. **Heritage — no follow-up.** Live-confirmed at 14 rows; nothing
    open.
+
+## Cycle 24 — AgriCharts fallback (a) implemented; (b) probe fails; staleness watch 4th consecutive (2026-11-19)
+
+### AgriCharts futures fallback, option (a) — implemented + tested (2 GETs live verification)
+
+Coordinator decision (Cycle 24): option (a) from the Cycle 23 design note is APPROVED — (i) basis-only rows may flow into the pipeline (futures/cash explicitly `None` with a note, never invented; no quarantine, same as FMN), (ii) Futures Month may be decoded from the symbol. `fetch_us_agricharts` no longer returns empty when the jsquote tag is absent/unmatched: it parses rows as basis-only (Basis / Delivery / Location / Name / Symbol filled, Futures Month decoded from the contract symbol via a new `futures_month_from_symbol()`, Futures Price / Change / both cash prices `None` with a `Note` column). Tag-present behaviour unchanged; Chrome UA unchanged. 5 new tests (synthetic fixtures, neutral names); full suite 702 passed.
+
+**Live verification: Heartland 0 rows, Mulvane 0 rows.** Both pages' `writeBidRow` rows are no longer matched in the static HTML at all — the design doc's §3 assumption (rows still in the HTML) does not hold live. So (a) is proven by mocked tests but recovers neither site today. **Toggles stay `false`.** Scope note: degrading the same way when the tag IS present but the feed fetch fails was NOT implemented (tag-present behaviour kept exactly unchanged); it is a one-line follow-up.
+
+### Option (b) probe — Heartland: fails (2 GETs)
+
+**Correction to Cycles 21–23:** Heartland's jsquote tag is **not missing** — it is present but with an empty symbols list (`symbols=&fields=name,month,last...`). The collector regex requires `[A-Z0-9,]+` after `symbols=`, so it does not match and the collector reports "tag not found". The derived feed URL (exact design-doc pattern) returned HTTP 200, 20 bytes, body exactly `var quotes = null;` — the endpoint is alive and the URL shape is confirmed, but with an empty symbol list there is nothing to query: 0 symbols, nothing usable. (b) fails because there is nothing to query, not because of a 404 or wrong shape.
+
+**Deeper finding:** Heartland's default "All Locations" view carries **zero `writeBidRow` data rows** in the static HTML (the single occurrence is the function definition; no `<h4>` headings, no quoteboard tables). The bid area is empty. Open hypothesis (untested, needs a further GET): rows may appear only when a `location_filter` value is selected — the page lists a Location filter with 106 named points. Follow-up probe (1 GET, later cycle): `cash.php?location_filter=<one id>`. Mulvane was not probed for (b) (gated on Heartland's feed answering — it did not) and its page structure was not inspected this cycle.
+
+### Staleness daytime re-check — still Nov 18, all four (4 GETs)
+
+Daytime re-check (Thu, Nov 19) of the four one-day-stale Bushel widgets: **none refreshed to Nov 19**. All four still carry the header "Cash bids for Wednesday, November 18, 2026", zero Nov 19 date strings anywhere in any page. The widgets do not refresh later in the day, at least not by the morning check.
+
+| Site | Header | Rows | Streak |
+|---|---|---|---|
+| Smithfield Chadbourn 2294 | Nov 18 | 1 Soybeans | Cycles 13, 14, 22, 24 |
+| Smithfield Hamer, SC 2179 | Nov 18 | 1 Soybeans | Cycles 16, 22, 24 |
+| Skyland Hugoton, KS 3370 | Nov 18 | 6 (Corn/Milo/Red Wheat) | Cycles 14, 22, 24 |
+| Skyland Vilas-Walsh 3621 | Nov 18 | 5 (Corn/Milo/Red Wheat) | Cycles 14, 22, 24 |
+
+All still exactly one day stale — no worse. Standing note stands: a same-day freshness gate would fail these four daily, so they need an exemption/lag tolerance if such a gate is ever added.
+
+### Follow-ups
+
+1. **Heartland filtered-view probe (1 GET):** `cash.php?location_filter=<one id>` — tests whether rows appear only under a selected location. Same probe could be run for Mulvane.
+2. **Feed-down degradation (one-line follow-up):** treat empty quotes from a present tag like the no-tag path.
+3. **Staleness watch:** no further daytime re-checks needed — the refresh-later-in-the-day hypothesis is now answered (no). Keep the four on the exemption list for any future freshness gate.

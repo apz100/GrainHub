@@ -168,3 +168,64 @@ confirm Futures Month may be decoded from the symbol rather
 than left `None`. Toggles stay off until (a) is implemented
 and at least one site is probe-confirmed returning rows;
 re-enabling is a separate step, not part of this design.
+
+## 9. Cycle 24 findings — (a) implemented, (b) fails, both sites still dark
+
+**Decision (coordinator, Cycle 24): option (a) APPROVED.** (i) Basis-only
+rows MAY flow into the pipeline — futures/cash are explicitly `None`
+with a note, never invented; no quarantine (same as FMN today). (ii)
+YES, decode Futures Month from the symbol.
+
+### Correction to §1 — the tag is present, its symbols are empty
+
+The Cycle 24 (b) probe (1 GET of Heartland's cash page) found the
+jsquote tag is **not missing** — it is present but with an empty
+symbols list (`symbols=&fields=name,month,last...`). The collector's
+`_JSQUOTE_SCRIPT_RX` requires `[A-Z0-9,]+` after `symbols=`, so it
+does not match and the collector bails with "tag not found". §1's
+wording ("stopped carrying the jsquote.php script tag") is inaccurate
+for the current page; the accurate statement is "the page's jsquote
+tag carries no symbols". The same correction applies to the Cycle
+21/22/23 reports' "tag missing" phrasing for Heartland. (Mulvane's
+tag state was not re-checked this cycle.)
+
+### (b) fails for Heartland (2 GETs)
+
+With zero symbols on the page, the §5(b) derivation degenerates to
+an empty `symbols=` list. The derived feed URL (exact §5 pattern)
+returned HTTP 200, 20 bytes, body exactly `var quotes = null;` —
+the endpoint is alive and the URL shape is confirmed correct, but
+there is nothing to query: 0 symbols, nothing usable. **(b) fails
+not with a 404 or a wrong shape, but because there is nothing to
+query.**
+
+### (a) implemented (Cycle 24) — but recovers neither site live
+
+`fetch_us_agricharts` no longer returns empty when the tag is
+absent/unmatched: it parses rows as basis-only (Basis / Delivery /
+Location / Name / Symbol filled, Futures Month decoded from the
+symbol via `futures_month_from_symbol()`, Futures Price / Change /
+both cash prices `None` with a `Note` column saying the values come
+from the missing feed, never invented). Tag-present behaviour is
+unchanged. 5 new tests (synthetic fixtures), full suite 702 passed.
+**Live verification (2 GETs): Heartland 0 rows, Mulvane 0 rows.**
+Both pages' `writeBidRow` rows are no longer matched in the static
+HTML at all — the §3 assumption (rows still in the HTML) does not
+hold live as of this probe, so (a) is proven by mocked tests but
+recovers neither site today. **Toggles stay `false`.**
+
+### Open hypothesis (untested)
+
+Heartland's page carries a Location filter with 106 named points;
+rows may appear only when a `location_filter` value is selected, or
+the default view may be genuinely empty/broken. Follow-up probe (1
+GET, later cycle): `cash.php?location_filter=<one id>`. Do not
+re-probe routinely without that plan. Mulvane's page structure was
+not inspected this cycle — same probe applies if pursued.
+
+### Scope note
+
+§5(a) also suggested degrading the same way when the tag IS present
+but the feed fetch fails; that was NOT implemented in Cycle 24 (the
+task kept tag-present behaviour exactly unchanged). It is a one-line
+follow-up: treat empty quotes like the no-tag path.

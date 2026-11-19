@@ -329,12 +329,12 @@ branch to GitHub frequently.
 - Elevator Ops: which ERP first (Agris / Agvance / AgTrax)?
 - US scope: Corn Belt first, or Corn Belt + Gulf / PNW from day one?
 
-## 9. Progress — Cycles 1–22 (2026-11-18/19)
+## 9. Progress — Cycles 1–23 (2026-11-18/19)
 
-Twenty-two overnight autonomous cycles on branches `overnight/grainhub-cycle-1`
-through `overnight/grainhub-cycle-22`, none merged to master. Full API test
-suite grew **179 → 291 → 320 → 359 → 364 → 380 → 407 → 407 → 454 → 488 → 536 → 558 → 590 → 617 → 629 → 638 → 643 → 646 → 656 → 692 → 692 → 696 passed, 0 failed**
-across the twenty-two cycles. Full detail in `docs/plans/overnight-cycle-N-report.md`.
+Twenty-three overnight autonomous cycles on branches `overnight/grainhub-cycle-1`
+through `overnight/grainhub-cycle-23`, none merged to master. Full API test
+suite grew **179 → 291 → 320 → 359 → 364 → 380 → 407 → 407 → 454 → 488 → 536 → 558 → 590 → 617 → 629 → 638 → 643 → 646 → 656 → 692 → 692 → 696 → 697 passed, 0 failed**
+across the twenty-three cycles. Full detail in `docs/plans/overnight-cycle-N-report.md`.
 Merge order, gates, and conflicts are in `docs/plans/merge-plan.md`.
 
 - **Cycle 1** (`overnight/grainhub-cycle-1`, 179 tests): Phase 0 hardening,
@@ -490,6 +490,15 @@ Merge order, gates, and conflicts are in `docs/plans/merge-plan.md`.
   Mulvane still 0 rows on re-probe (2nd consecutive failure each);
   staleness watch unchanged (all four still exactly one day
   behind); merge plan extended to Cycle 21 (61 commits, 0 merges).
+- **Cycle 23** (`overnight/grainhub-cycle-23`, 697 tests): Heritage
+  parser fix confirmed live — 14 rows (CORN 6, BEANS 6, WHEAT 2),
+  company fallback location; Heartland + Mulvane toggles flipped to
+  `false` (two consecutive 0-row probes each; seed count 104 → 102);
+  AgriCharts futures-fallback design note written (key finding:
+  basis is in the `writeBidRow` row itself, not the feed;
+  recommends parsing rows with futures/cash `None`, FMN precedent);
+  agricharts Chrome UA kept (coordinator decision); merge plan
+  extended to Cycle 22 (63 commits, 0 merges).
 
 **Remaining blockers that need Adam:** NASS API key (free) and FAS /
 data.gov key (free); LLM provider + key for Advisor `/ask`; Barchart /
@@ -526,4 +535,11 @@ JS-only, 6 unreachable, with Al-Corn the only classic inline
 `CashBidTable` fit for the DTN collector (Sunrise is a second
 classic-DTN fit, enabled in Cycle 10). A Playwright render check of
 the DTN-family JS-only sites, the FMN filtered view, and Mapleview's
-Grain Discovery shell still needs a live browser session.
+Grain Discovery shell still needs a live browser session. **Cycle
+23 additions:** Heritage confirmed live at 14 rows (parser fix
+closed); Heartland + Mulvane toggled off in `config.toml`
+(`heartland_coop`/`mulvane_coop = false`, reversible; seed count
+104 → 102); AgriCharts futures-fallback design note written
+(`docs/plans/agricharts-futures-fallback-design.md`) — basis is in
+the row, not the feed; coordinator decision recorded to keep the
+collector's Chrome UA.

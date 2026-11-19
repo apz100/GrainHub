@@ -173,7 +173,148 @@ def test_wdcoop_saved_html_row_count() -> None:
     }
 
 
-# ─── Cycle 22 — Heritage: escaped-quote notes + commodity <h4> headings ───
+# ─── Cycle 24 — basis-only fallback when the jsquote tag is missing ───
+# Option (a), FMN precedent: a page with no jsquote.php script tag no
+# longer returns empty before parsing. Rows parse as basis-only:
+# Basis / Delivery / Location / Name / Symbol filled, Futures Month
+# decoded from the contract symbol, Futures Price / Change / cash
+# None with a Note, never invented. A page WITH the tag is unchanged.
+
+_NO_TAG_NOTE_FRAGMENT = "jsquote.php"
+
+
+def _strip_jsquote_tag(html: str) -> str:
+    """Remove the jsquote <script src> line, keeping the writeBidRow rows."""
+    lines = [ln for ln in html.splitlines() if "jsquote.php" not in ln]
+    return "\n".join(lines)
+
+
+class _Resp24:
+    def __init__(self, text: str) -> None:
+        self.text = text
+
+    def raise_for_status(self) -> None:
+        return None
+
+
+def test_no_jsquote_tag_returns_basis_only_rows() -> None:
+    """Cycle 24 (a): no jsquote tag → rows still parse, basis filled.
+
+    Futures Price / Change / both cash prices are None with a Note
+    (never invented), and no jsquote feed fetch is attempted at all
+    — exactly one GET, for the page itself.
+    """
+    page = (FIXTURES / "us_agricharts_mixed_sample.html").read_text(encoding="utf-8")
+    page_no_tag = _strip_jsquote_tag(page)
+    assert "jsquote.php" not in page_no_tag
+    assert page_no_tag.count("writeBidRow('") == 4
+
+    called_urls: list[str] = []
+
+    def _fake_get(url, params=None, headers=None, timeout=None):
+        called_urls.append(url)
+        return _Resp24(page_no_tag)
+
+    with patch.object(ag.requests, "get", side_effect=_fake_get):
+        df = ag.fetch_us_agricharts(
+            "https://example.invalid/markets/cash.php", "Test Elevator"
+        )
+
+    assert len(df) == 4
+    assert called_urls == ["https://example.invalid/markets/cash.php"]
+    # Basis (the per-elevator signal) survives, as published.
+    assert df["Basis"].tolist() == ["-25", "-20", "+10", "+12"]
+    assert df["Name"].tolist() == ["CORN", "CORN", "SOYBEANS", "SOYBEANS"]
+    assert df["Delivery"].tolist() == [
+        "12/01/2026", "Dec 2026", "January 2027", "Nov 26",
+    ]
+    assert set(df["Location"].tolist()) == {"Test Elevator - Riverside"}
+    # Feed-dependent values are missing, not zero and not invented.
+    for col in ("Futures Price", "Change", "Bushel Cash Price", "MT Cash Price"):
+        assert df[col].map(lambda v: v is None).all(), col
+        assert not (df[col] == "").any()
+        assert not (df[col] == 0).any()
+    # FMN-pattern note on every row.
+    assert all(_NO_TAG_NOTE_FRAGMENT in (n or "") for n in df["Note"].tolist())
+    assert all("never invented" in (n or "") for n in df["Note"].tolist())
+
+
+def test_no_jsquote_tag_decodes_futures_month_from_symbol() -> None:
+    """Cycle 24 (ii): Futures Month is decoded from the symbol, not None.
+
+    ZCZ26 -> Dec 2026, ZSF27 -> Jan 2027, ZSN27 -> Jul 2027 — the
+    same decoder as fmn_source.futures_month_from_symbol. (The
+    feed's month for ZSN27 in the tagged fixture is 'Nov 26', a
+    delivery label; the decoder returns the contract month.)
+    """
+    page = (FIXTURES / "us_agricharts_mixed_sample.html").read_text(encoding="utf-8")
+    page_no_tag = _strip_jsquote_tag(page)
+
+    with patch.object(ag.requests, "get", return_value=_Resp24(page_no_tag)):
+        df = ag.fetch_us_agricharts(
+            "https://example.invalid/markets/cash.php", "Test Elevator"
+        )
+
+    assert df["Futures Month"].tolist() == [
+        "Dec 2026", "Dec 2026", "Jan 2027", "Jul 2027",
+    ]
+
+
+def test_futures_month_from_symbol_decoder() -> None:
+    """Cycle 24: the symbol->month decoder itself (FMN decoder, reused)."""
+    assert ag.futures_month_from_symbol("ZCZ26") == "Dec 2026"
+    assert ag.futures_month_from_symbol("ZSF27") == "Jan 2027"
+    assert ag.futures_month_from_symbol("ZSN27") == "Jul 2027"
+    assert ag.futures_month_from_symbol("ZCH27") == "Mar 2027"
+    assert ag.futures_month_from_symbol("MWU27") == "Sep 2027"
+    assert ag.futures_month_from_symbol(None) is None
+    assert ag.futures_month_from_symbol("") is None
+    assert ag.futures_month_from_symbol("NOTASYMBOL") is None
+
+
+def test_tagged_page_behaves_exactly_as_before() -> None:
+    """Cycle 24 (c): regression guard — a page WITH the tag is unchanged.
+
+    Futures + cash come from the mocked feed, Futures Month is the
+    feed's month verbatim, and the Note column is empty (no
+    degradation note). Same values as the Cycle 12 tagged test.
+    """
+    page = (FIXTURES / "us_agricharts_mixed_sample.html").read_text(encoding="utf-8")
+    jsquote = (
+        "var quotes={'ZCZ26':{name:'Corn',month:'Dec 26',last:'450'},"
+        "'ZSF27':{name:'Soybeans',month:'Jan 27',last:'1100'},"
+        "'ZSN27':{name:'Soybeans',month:'Nov 26',last:'1050'}};"
+    )
+
+    def _fake_get(url, params=None, headers=None, timeout=None):
+        if "jsquote" in url:
+            return _Resp24(jsquote)
+        return _Resp24(page)
+
+    with patch.object(ag.requests, "get", side_effect=_fake_get):
+        df = ag.fetch_us_agricharts(
+            "https://example.invalid/markets/cash.php", "Test Elevator"
+        )
+
+    assert len(df) == 4
+    assert df["Futures Price"].tolist() == ["450", "450", "1100", "1050"]
+    assert df["Futures Month"].tolist() == ["Dec 26", "Dec 26", "Jan 27", "Nov 26"]
+    assert df["Bushel Cash Price"].tolist()[0] == "$4.25"
+    assert df["Bushel Cash Price"].tolist()[2] == "$11.10"
+    assert df["Note"].tolist() == ["", "", "", ""]
+    assert df["Basis"].tolist() == ["-25", "-20", "+10", "+12"]
+
+
+def test_no_tag_page_with_no_rows_still_empty() -> None:
+    """Cycle 24: no tag AND no writeBidRow rows → empty, not a crash."""
+    page = "<html><body><h4>Testville</h4><p>No bids today.</p></body></html>"
+
+    with patch.object(ag.requests, "get", return_value=_Resp24(page)):
+        df = ag.fetch_us_agricharts(
+            "https://example.invalid/markets/cash.php", "Test Elevator"
+        )
+
+    assert df.empty
 
 HERITAGE_FIXTURE = FIXTURES / "us_agricharts_heritage_sample.html"
 HERITAGE_SAVED = Path("/tmp/cycle22/heritage_cash.html")

@@ -20,7 +20,16 @@ from app.models.source import Source
 from app.services.alert_evaluator import evaluate_alert_rules_for_snapshot
 from app.services.source_health import minutes_since, record_source_health_snapshot, update_source_health_state
 from app.services.source_registry import fetch_with_adapter, get_adapter, list_adapters, list_pilot_adapter_keys
+from app.services.source_toggles import disabled_adapter_keys, is_adapter_enabled
 from app.services.upload_csv import process_csv_upload
+
+
+@dataclass
+class SeedSourcesResult:
+    created: int
+    # Adapter keys in the requested scope whose [sources] toggle is off.
+    # They were not seeded; the admin can see them in the seed response.
+    skipped_disabled: list[str]
 
 
 @dataclass
@@ -321,7 +330,7 @@ def list_due_sources(db: Session, *, now: datetime | None = None) -> list[Source
     # seeds scope=all. Before this change, poll_due_sources could only
     # ever reach the 5 pilot adapters while the registry held 93.
     current = now or datetime.now(timezone.utc)
-    return db.execute(
+    rows = db.execute(
         select(Source).where(
             and_(
                 Source.is_active.is_(True),
@@ -330,6 +339,16 @@ def list_due_sources(db: Session, *, now: datetime | None = None) -> list[Source
             )
         )
     ).scalars().all()
+    # Cycle 20: defence in depth — a Source row seeded before its
+    # [sources] toggle was turned off must not keep polling. The toggle
+    # check lives here (where the due list is built), not inside the
+    # per-source fetch subprocess, so a disabled adapter never reaches
+    # run_source_refresh at all. Missing toggle = enabled.
+    return [
+        row
+        for row in rows
+        if is_adapter_enabled(row.adapter_key or row.name.strip().lower())
+    ]
 
 
 def poll_due_sources(
@@ -413,15 +432,22 @@ def seed_sources_from_registry(
     *,
     org_id: uuid.UUID,
     adapter_keys: list[str] | None = None,
-) -> int:
+) -> SeedSourcesResult:
     existing_names = {
         (source.adapter_key or source.name.strip().lower())
         for source in db.execute(select(Source).where(Source.org_id == org_id)).scalars().all()
     }
     allowed = set(adapter_keys or [adapter.key for adapter in list_adapters()])
+    # Cycle 20: seeding honours the config.toml [sources] toggles. A
+    # toggled-off adapter is not seeded and is reported in
+    # skipped_disabled so the admin can see it. Missing toggle =
+    # enabled, so adapters without a config entry keep working.
+    skipped_disabled = disabled_adapter_keys(sorted(allowed))
     created = 0
     for adapter in list_adapters():
         if adapter.key not in allowed:
+            continue
+        if adapter.key in skipped_disabled:
             continue
         if adapter.key in existing_names:
             continue
@@ -439,7 +465,7 @@ def seed_sources_from_registry(
         created += 1
     if created:
         db.commit()
-    return created
+    return SeedSourcesResult(created=created, skipped_disabled=skipped_disabled)
 
 
 def _load_latest_run_by_source_name(db: Session, *, org_id: uuid.UUID | None = None) -> dict[str, IngestionRun]:

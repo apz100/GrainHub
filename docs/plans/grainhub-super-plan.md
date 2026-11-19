@@ -329,12 +329,12 @@ branch to GitHub frequently.
 - Elevator Ops: which ERP first (Agris / Agvance / AgTrax)?
 - US scope: Corn Belt first, or Corn Belt + Gulf / PNW from day one?
 
-## 9. Progress — Cycles 1–18 (2026-11-18/19)
+## 9. Progress — Cycles 1–19 (2026-11-18/19)
 
-Eighteen overnight autonomous cycles on branches `overnight/grainhub-cycle-1`
-through `overnight/grainhub-cycle-18`, none merged to master. Full API test
-suite grew **179 → 291 → 320 → 359 → 364 → 380 → 407 → 407 → 454 → 488 → 536 → 558 → 590 → 617 → 629 → 638 → 643 → 646 passed, 0 failed**
-across the eighteen cycles. Full detail in `docs/plans/overnight-cycle-N-report.md`.
+Nineteen overnight autonomous cycles on branches `overnight/grainhub-cycle-1`
+through `overnight/grainhub-cycle-19`, none merged to master. Full API test
+suite grew **179 → 291 → 320 → 359 → 364 → 380 → 407 → 407 → 454 → 488 → 536 → 558 → 590 → 617 → 629 → 638 → 643 → 646 → 656 passed, 0 failed**
+across the nineteen cycles. Full detail in `docs/plans/overnight-cycle-N-report.md`.
 Merge order, gates, and conflicts are in `docs/plans/merge-plan.md`.
 
 - **Cycle 1** (`overnight/grainhub-cycle-1`, 179 tests): Phase 0 hardening,
@@ -459,6 +459,15 @@ Merge order, gates, and conflicts are in `docs/plans/merge-plan.md`.
   Yahoo-style `=F` symbols, futures only); CGB cash-bid page found
   (AgriCharts embed — licensed, not fetched); unreachable trio
   (CVA, Landus, Mercer) still blocked on re-check.
+- **Cycle 19** (`overnight/grainhub-cycle-19`, 656 tests): Mae-Mart
+  proxy probed live (200, JSON, contract matches) and the collector
+  now fills `futures_price` (cash NOT computed — open decision);
+  ingestion audit found the scheduled poller only reached 5 pilot
+  adapters — pilot-allowlist removed, all 93 adapters reachable;
+  documented gaps: deployed cron runs the file job not the poller,
+  US agricharts/DTN entries have no registry adapter, toggled-off
+  bunge/mapleview still seedable; merge plan extended to Cycles
+  16–18 (55 commits, 0 merges).
 
 **Remaining blockers that need Adam:** NASS API key (free) and FAS /
 data.gov key (free); LLM provider + key for Advisor `/ask`; Barchart /
@@ -481,8 +490,11 @@ East Region sweep is complete (30 of 31 locations; Raeford posts no
 public bids); the Andersons is fully closed for static collection
 (the Maumee facility tables are Barchart-licensed); CGB's cash-bid
 page is an AgriCharts embed (licensed, not fetched); Mae-Mart's
-futures proxy is identified (Yahoo-style symbols, futures only —
-probe pending); the FMN collector is complete for the default view
+futures proxy is live and the collector now fills `futures_price`
+(cash NOT computed — open decision); the scheduled poller now
+reaches all 93 registry adapters (pilot-allowlist removed in Cycle
+19) but the deployed cron still runs the file-ingestion job, not
+the poller; the FMN collector is complete for the default view
 (453 rows, all 449 futures-linked rows filled via the `jsquote.php`
 feed); Five Star's wpDataTables collector is built (299 rows); the
 DTN sweep found only 2 of 28 sites static-HTML, 20 JS-only, 6

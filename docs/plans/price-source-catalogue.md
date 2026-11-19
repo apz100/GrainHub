@@ -2730,3 +2730,203 @@ after it. Full API suite: **656 passed, 0 failed** (646 baseline +
    `united_coop`, `andersons`, `smithfield_*` are enabled — worth
    confirming whether those rows are the same entities or stale
    duplicates before any toggle is trusted.)
+
+## Cycle 20 — seeding + polling honour the `[sources]` toggles (2026-11-19)
+
+Fixes Cycle 19 gap 3 (coordinator decision: seeding SHOULD honour the
+toggles). No deployment config or cron was changed; the poller
+scheduling gap (Cycle 19 gap 1) is documented, not fixed — see the
+deployment checklist §4 step 6.
+
+### What changed (code, 0 GETs)
+
+- New `app/services/source_toggles.py`: single place the FastAPI side
+  consults the toggles. It reuses the existing loader
+  (`app.platform.market_data.sources.grain_bids.config.config.source_enabled()`),
+  which already implements "missing toggle = enabled". Only an
+  explicit `false` disables an adapter; a missing/unreadable config
+  fails open (everything enabled) rather than breaking seed/poll.
+- `seed_sources_from_registry()` now returns a `SeedSourcesResult`
+  (`created`, `skipped_disabled`) instead of a plain int, and skips
+  any adapter whose toggle is off. `POST /api/sources/seed` returns
+  the skipped keys in the response (`skipped_disabled`) so the admin
+  can see them.
+- `list_due_sources()` filters out rows whose adapter toggle is off,
+  even if the `Source` row already exists (defence in depth — a row
+  seeded before the toggle was turned off must not keep polling).
+  The check is where the due list is built, not inside the
+  per-source fetch subprocess.
+
+### Effect today
+
+`config.toml` `[sources]` has exactly the 93 registry keys, 2 off:
+`bunge = false` (URLs no longer valid) and `mapleview = false` (stub
+only, JS-rendered). `seed scope=all` now creates 91 rows and reports
+`skipped_disabled: ["bunge", "mapleview"]`; a pre-existing `bunge` /
+`mapleview` row is excluded from the scheduled poll. Re-enabling
+either adapter is a one-line config change (`= true`) — no code
+change, no re-seed of the other 91 needed (re-run seed; already-seeded
+rows are skipped as duplicates).
+
+### Tests
+
+`tests/test_source_toggle_gating.py` (6 tests): seeding skips
+bunge/mapleview and records them; seeding includes a toggled-on
+adapter; explicit-key seeding still skips a disabled key;
+`list_due_sources` excludes a pre-existing toggled-off row; missing
+toggle defaults to enabled (helper + due list, synthetic key);
+toggle flipped off after seeding drops the row from the due list
+(monkeypatched). The Cycle 19 due-source tests were updated to the
+new expected counts (91 seeded / due, not 93).
+
+### Still open (not fixed here)
+
+- Poller scheduling: the deployed 08:00/15:00 cron still runs only
+  the file-ingestion job; see deployment checklist §4 step 6 for the
+  exact change (`python -m app.jobs.poll_sources` alongside it).
+- US `us_elevators_urls.toml` toggle mismatch (Cycle 19 gap 2/3
+  note): `Bunge`, `Collwest Grain`, `United Coop`, `The Andersons`,
+  `Smithfield` are `enabled = false` there while the registry keys
+  are enabled — still unconfirmed whether those are the same
+  entities or stale duplicates.
+
+## Cycle 20 — US AgriCharts + DTN registry adapters (code only, 0 GETs)
+
+Closes Cycle 19 gap 2 at the adapter level: the 13 enabled
+`agricharts` + 13 enabled `dtn` entries in
+`us_elevators_urls.toml` (verified from the file this cycle — 13 + 13,
+not trusted from the audit note) now each have a zero-argument
+`fetch_<slug>()` wrapper bound to the entry's URL and name, so the
+registry — which calls `fetch_fn()` with no arguments — can drive
+them. No page was fetched in this cycle (0 GETs); no price, basis,
+or bid was invented.
+
+### What was added
+
+- `us_agricharts_source.py`: `US_AGRICHARTS_SITES` map (key →
+  company, URL) + 13 `fetch_<slug>()` wrappers calling
+  `fetch_us_agricharts(url, name)`. Mode for the coordinator's
+  `SourceAdapter` rows: `"direct"` (returns a DataFrame).
+- `us_dtn_source.py`: `US_DTN_SITES` map + 13 `fetch_<slug>()`
+  wrappers calling `fetch_us_dtn(url, name, None)`, plus an explicit
+  guard at the top of `fetch_us_dtn`: with `playwright=None` it
+  returns an empty DataFrame before touching Playwright or the
+  network, because the DTN widget renders via JavaScript and there
+  is nothing to parse without a render. No Playwright is launched
+  from the adapter path, ever; no fake row is ever returned.
+- `config.toml` `[sources]`: 26 new toggles, none pre-existing, no
+  existing value touched. AgriCharts 13 are `true` (static pages);
+  DTN 13 are `false` (JS-only, not collectable without a render —
+  same precedent as `bunge = false` / `mapleview = false`).
+- Tests: `tests/test_us_agricharts_dtn_adapters.py` — 30 tests,
+  synthetic fixtures only (invented values, Testville / Test
+  Elevator Co.), generic fetch mocked, no network. One test per
+  adapter asserting the wrapper is zero-argument and passes the
+  correct URL/name; one asserting the adapter maps match the
+  enabled toml entries exactly; one asserting the real
+  `fetch_us_dtn(url, name, None)` returns empty with no I/O; one
+  asserting the 26 `[sources]` toggles exist with the expected
+  values.
+- Registry wiring is the coordinator's step (this worker may not
+  edit `source_registry.py`). Exact lines to add to `ADAPTERS`:
+
+```python
+"ag_plus": SourceAdapter("ag_plus", "us_agricharts_source", "fetch_ag_plus", "direct", "scraper", 15, 90),
+"farmers_win_coop": SourceAdapter("farmers_win_coop", "us_agricharts_source", "fetch_farmers_win_coop", "direct", "scraper", 15, 90),
+"heartland_coop": SourceAdapter("heartland_coop", "us_agricharts_source", "fetch_heartland_coop", "direct", "scraper", 15, 90),
+"heritage_grain_cooperative": SourceAdapter("heritage_grain_cooperative", "us_agricharts_source", "fetch_heritage_grain_cooperative", "direct", "scraper", 15, 90),
+"keller": SourceAdapter("keller", "us_agricharts_source", "fetch_keller", "direct", "scraper", 15, 90),
+"kokomo_grain": SourceAdapter("kokomo_grain", "us_agricharts_source", "fetch_kokomo_grain", "direct", "scraper", 15, 90),
+"legacy_farmers": SourceAdapter("legacy_farmers", "us_agricharts_source", "fetch_legacy_farmers", "direct", "scraper", 15, 90),
+"pro_ag": SourceAdapter("pro_ag", "us_agricharts_source", "fetch_pro_ag", "direct", "scraper", 15, 90),
+"west_con": SourceAdapter("west_con", "us_agricharts_source", "fetch_west_con", "direct", "scraper", 15, 90),
+"wheaton_dumont": SourceAdapter("wheaton_dumont", "us_agricharts_source", "fetch_wheaton_dumont", "direct", "scraper", 15, 90),
+"central_farmers_coop": SourceAdapter("central_farmers_coop", "us_agricharts_source", "fetch_central_farmers_coop", "direct", "scraper", 15, 90),
+"anthony_farmers_coop": SourceAdapter("anthony_farmers_coop", "us_agricharts_source", "fetch_anthony_farmers_coop", "direct", "scraper", 15, 90),
+"mulvane_coop": SourceAdapter("mulvane_coop", "us_agricharts_source", "fetch_mulvane_coop", "direct", "scraper", 15, 90),
+"ag_partners": SourceAdapter("ag_partners", "us_dtn_source", "fetch_ag_partners", "direct", "scraper", 15, 90),
+"al_corn": SourceAdapter("al_corn", "us_dtn_source", "fetch_al_corn", "direct", "scraper", 15, 90),
+"allied_cooperative": SourceAdapter("allied_cooperative", "us_dtn_source", "fetch_allied_cooperative", "direct", "scraper", 15, 90),
+"aurora_coop": SourceAdapter("aurora_coop", "us_dtn_source", "fetch_aurora_coop", "direct", "scraper", 15, 90),
+"cfs": SourceAdapter("cfs", "us_dtn_source", "fetch_cfs", "direct", "scraper", 15, 90),
+"elite_octane": SourceAdapter("elite_octane", "us_dtn_source", "fetch_elite_octane", "direct", "scraper", 15, 90),
+"frontier_coop": SourceAdapter("frontier_coop", "us_dtn_source", "fetch_frontier_coop", "direct", "scraper", 15, 90),
+"green_plains": SourceAdapter("green_plains", "us_dtn_source", "fetch_green_plains", "direct", "scraper", 15, 90),
+"kanza_coop": SourceAdapter("kanza_coop", "us_dtn_source", "fetch_kanza_coop", "direct", "scraper", 15, 90),
+"sunrise": SourceAdapter("sunrise", "us_dtn_source", "fetch_sunrise", "direct", "scraper", 15, 90),
+"brubaker_grain": SourceAdapter("brubaker_grain", "us_dtn_source", "fetch_brubaker_grain", "direct", "scraper", 15, 90),
+"hoffman_ag": SourceAdapter("hoffman_ag", "us_dtn_source", "fetch_hoffman_ag", "direct", "scraper", 15, 90),
+"wilton_farmers_union_elevator": SourceAdapter("wilton_farmers_union_elevator", "us_dtn_source", "fetch_wilton_farmers_union_elevator", "direct", "scraper", 15, 90),
+```
+
+### Per-entry table — enabled AgriCharts (13, all static-capable)
+
+| Entry | URL | Status | Adapter key | Toggle |
+| --- | --- | --- | --- | --- |
+| Ag Plus | https://www.agplusinc.com/markets/cash.php | static-capable — writeBidRow confirmed, Cycle 1 discovery | `ag_plus` | true |
+| Farmers Win Coop | https://www.farmerswin.com/markets/cash.php | static-capable — writeBidRow confirmed, Cycle 1 discovery | `farmers_win_coop` | true |
+| Heartland Coop | https://www.heartlandcoop.com/markets/cash.php | static-capable — writeBidRow confirmed, Cycle 1 discovery | `heartland_coop` | true |
+| Heritage Grain Cooperative | https://www.heritagegrain.com/markets/cash.php | static-capable — writeBidRow confirmed, Cycle 1 discovery; distinct from `heritage_coop` (Heritage Cooperative, agricharts-embed) | `heritage_grain_cooperative` | true |
+| Keller | https://www.kellergrain.com/markets/cash.php | static-capable — writeBidRow confirmed, Cycle 1 discovery | `keller` | true |
+| Kokomo Grain | https://www.kokomograin.com/markets/cash.php?location_filter= | static-capable — writeBidRow confirmed, Cycle 1 discovery | `kokomo_grain` | true |
+| Legacy Farmers | https://www.legacyfarmers.com/markets/cash.php | static-capable — writeBidRow confirmed, Cycle 1 discovery | `legacy_farmers` | true |
+| Pro Ag | https://www.proagfarmers.com/markets/cash.php | static-capable — verified live Cycle 11: 78 static writeBidRow rows (Corn / Soybeans / Wheat, 6 h4 locations) | `pro_ag` | true |
+| West-Con | https://www.west-con.com/markets/cash.php | static-capable — verified live Cycles 11–12: 84 static writeBidRow rows; month-name delivery labels ('Dec 2026'), kept verbatim | `west_con` | true |
+| Wheaton Dumont | https://www.wdcoop.com/markets/cash.php | static-capable — verified live Cycle 12: 43 static writeBidRow rows; short month labels ('Nov 26', 'Jan 27'), kept verbatim | `wheaton_dumont` | true |
+| Central Farmers Coop | https://www.cenfarmcoop.com/markets/cash.php | static-capable — writeBidRow confirmed in fetched HTML, Cycle 1 ("enable immediately") | `central_farmers_coop` | true |
+| Anthony Farmers Co-op | https://www.anthonycoop.com/markets/cash.php | static-capable — writeBidRow confirmed in fetched HTML, Cycle 1 ("enable immediately") | `anthony_farmers_coop` | true |
+| Mulvane Coop | https://www.mulvanecoop.com/markets/cash.php | static-capable — writeBidRow confirmed in fetched HTML, Cycle 1 ("enable immediately") | `mulvane_coop` | true |
+
+### Per-entry table — enabled DTN (13, all JS-only)
+
+| Entry | URL | Status | Adapter key | Toggle |
+| --- | --- | --- | --- | --- |
+| Ag Partners | https://agpartners.net/cash-bids | JS-only — modern DTN widget (content-services), no static bid rows (Cycles 6/8; was 503 "Site is offline" in Cycle 6, back up 200 in Cycle 8) | `ag_partners` | false |
+| Al-Corn | https://www.al-corn.com/cash-bids | JS-only — classic DTN, exact fit for `us_dtn_source.py`: `<div id="target">` + `CashBidTable`, companyID 239483 (Cycle 6) | `al_corn` | false |
+| Allied Cooperative | https://www.allied.coop/grain/cash-bids | JS-only — modern DTN widget (content-services), no static bid rows (Cycle 6) | `allied_cooperative` | false |
+| Aurora Coop | https://auroracoop.com/markets | JS-only — modern DTN widget (content-services), no static bid rows (Cycle 6) | `aurora_coop` | false |
+| CFS | https://www.cfscoop.com/products-services/grain | JS-only — aghost DTN widget (`DtnCashbidDetailsScript.js`) + location-cookie flow; only static table is a futures quotes table (Cycle 6) | `cfs` | false |
+| Elite Octane | https://www.eliteoctane.net/cash-bids | JS-only — `<div id="target">` + CIHedging `CashBidWidget.js` loader, no inline `tableOptions` (Cycle 6) | `elite_octane` | false |
+| Frontier Coop | https://www.frontiercooperative.com/grain/cash-bids | JS-only — **not DTN at all**: StoneX widget (`StonexCashbidScript.js`), inline JSON model empty in static HTML (Cycles 6/8/9). The DTN adapter returns empty for it; a StoneX collector is a separate later-cycle item | `frontier_coop` | false |
+| Green Plains | https://gpreinc.com/corn-bids/ | JS-only — modern DTN widget (content-services), no static bid rows (Cycle 6) | `green_plains` | false |
+| Kanza Coop | https://www.kanzacoop.com/services/grain | JS-only — ATLAS DTN shell (`/dtncashbidwidget/bindlocation`), no static bid rows (Cycle 6) | `kanza_coop` | false |
+| Sunrise | https://www.sunriseco-op.com | JS-only — classic DTN, exact fit for `us_dtn_source.py`: `<div id="target">` + `CashBidTable`, companyID 23043, CIHedging `CashBidWidget.js`, ATLAS DTN shell (Cycle 10) | `sunrise` | false |
+| Brubaker Grain | https://dtn.brubakergrain.com/ | JS-only — DTN-subdomain host; widget ref confirmed in HTML, live bid rows visible only in search index (Cycle 1); rows still to confirm in Playwright | `brubaker_grain` | false |
+| Hoffman Ag | https://dtn.hoffmanag.com/ | JS-only — DTN-subdomain host; same as Brubaker (Cycle 1); rows still to confirm in Playwright | `hoffman_ag` | false |
+| Wilton Farmers Union Elevator | https://www.wiltonfarmerselevator.com/index.cfm?show=11&mid=5&theLocation=1&cmid=all&layout=19 | JS-only — DTN index.cfm page; widget ref confirmed, rows visible only in search index (Cycle 1); rows still to confirm in Playwright | `wilton_farmers_union_elevator` | false |
+
+No entry in either table is "unknown": every agricharts entry has
+writeBidRow confirmed in fetched HTML or verified live, and every
+DTN entry has its widget family identified in the Cycle 6 sweep
+(or Cycles 1/10 for the subdomain/classic entries) with no static
+bid rows. What is unknown is only whether each DTN page renders
+collectable rows in Playwright — that is probe work, not a
+classification gap.
+
+### Follow-up — live verification is a later cycle's GET-probe work
+
+1. **AgriCharts adapters (13):** one polite GET each of the
+   `/markets/cash.php` pages through the new zero-arg wrappers;
+   confirm each returns rows via `fetch_us_agricharts` (the three
+   Cycle 11–12 entries — Pro Ag, West-Con, Wheaton Dumont — were
+   verified live against the generic, but not through these
+   wrappers; the other ten were confirmed from fetched HTML in
+   Cycle 1, not through a wrapper call).
+2. **DTN adapters (13):** Playwright render check, one per page —
+   confirm the widget renders rows and that `_parse_cash_table`
+   parses them. Until then every DTN adapter honestly returns
+   empty, its toggle stays `false`, and it must not be seeded as
+   collectable. Al-Corn and Sunrise (classic `CashBidTable`) are
+   the best first candidates — the generic was written for exactly
+   that shape.
+3. **Frontier Coop / StoneX:** not a DTN render check — needs the
+   StoneX investigation already open from Cycles 6/8/9 (same family
+   as CRC / UFC). Do not flip its toggle on the DTN adapter.
+4. **Coordinator step:** add the 26 `SourceAdapter` lines above to
+   `app/services/source_registry.py`; seeding `scope=all` will then
+   include the 13 agricharts adapters (toggles on) while the 13 DTN
+   adapters remain toggle-off until item 2 proves them. Note Cycle
+   19 gap 3 still applies: the FastAPI orchestrator does not read
+   `[sources]` toggles, so the toggle-off state alone does not gate
+   seeding — the coordinator should confirm the intended gate
+   before seeding the DTN keys.

@@ -112,6 +112,37 @@ five_star_coop = true  # wpDataTables bid table, verified live 2026-11-19 (Cycle
 fmn        = true  # AgriCharts writeBidRow cash page, verified live 2026-11-19 (Cycle 10)
 usda_mirror_jvg = true  # USDA AMS cash-bid report mirror, verified live 2026-11-19 (Cycle 4)
 usda_mirror_fsg = true  # same report, second host (FS Grain)
+# Cycle 20 — US AgriCharts writeBidRow adapters (us_agricharts_source.py):
+# static pages, no browser needed; registry wiring is the coordinator's step.
+ag_plus = true  # US AgriCharts writeBidRow, Cycle 20 adapter
+farmers_win_coop = true  # US AgriCharts writeBidRow, Cycle 20 adapter
+heartland_coop = true  # US AgriCharts writeBidRow, Cycle 20 adapter
+heritage_grain_cooperative = true  # US AgriCharts writeBidRow, Cycle 20 adapter (distinct from heritage_coop, an agricharts-embed site)
+keller = true  # US AgriCharts writeBidRow, Cycle 20 adapter
+kokomo_grain = true  # US AgriCharts writeBidRow, Cycle 20 adapter
+legacy_farmers = true  # US AgriCharts writeBidRow, Cycle 20 adapter
+pro_ag = true  # US AgriCharts writeBidRow, verified live 2026-11-19 (Cycle 11; 78 rows)
+west_con = true  # US AgriCharts writeBidRow, verified live 2026-11-19 (Cycles 11-12; 84 rows, month-name delivery labels)
+wheaton_dumont = true  # US AgriCharts writeBidRow, verified live 2026-11-19 (Cycle 12; 43 rows, short month labels)
+central_farmers_coop = true  # US AgriCharts writeBidRow, Cycle 20 adapter
+anthony_farmers_coop = true  # US AgriCharts writeBidRow, Cycle 20 adapter
+mulvane_coop = true  # US AgriCharts writeBidRow, Cycle 20 adapter
+# Cycle 20 — US DTN adapters (us_dtn_source.py): all JS-only, no static bid
+# rows — the adapter returns empty until a Playwright render check in a
+# later cycle proves a page collectable, so all stay OFF here.
+ag_partners = false  # DTN modern widget, JS-only — render check open (Cycle 20 adapter)
+al_corn = false  # DTN classic CashBidTable, JS-only — render check open (Cycle 20 adapter)
+allied_cooperative = false  # DTN modern widget, JS-only — render check open (Cycle 20 adapter)
+aurora_coop = false  # DTN modern widget, JS-only — render check open (Cycle 20 adapter)
+cfs = false  # DTN aghost widget + location-cookie flow, JS-only — render check open (Cycle 20 adapter)
+elite_octane = false  # DTN CIHedging loader, JS-only — render check open (Cycle 20 adapter)
+frontier_coop = false  # StoneX widget, not DTN — no collector yet (Cycle 20 adapter returns empty)
+green_plains = false  # DTN modern widget, JS-only — render check open (Cycle 20 adapter)
+kanza_coop = false  # DTN ATLAS shell, JS-only — render check open (Cycle 20 adapter)
+sunrise = false  # DTN classic CashBidTable (companyID 23043), JS-only — render check open (Cycle 20 adapter)
+brubaker_grain = false  # DTN subdomain, JS-only — rows to confirm in Playwright (Cycle 20 adapter)
+hoffman_ag = false  # DTN subdomain, JS-only — rows to confirm in Playwright (Cycle 20 adapter)
+wilton_farmers_union_elevator = false  # DTN index.cfm, JS-only — rows to confirm in Playwright (Cycle 20 adapter)
 
 [posted_bid]
 # Discount band applied to trimmed market average (CAD/MT)

@@ -61,8 +61,13 @@ def seed_sources(
     db: Session = Depends(get_db),
 ):
     adapter_keys = list_pilot_adapter_keys() if scope == "pilot" else None
-    created = seed_sources_from_registry(db, org_id=context.org_id, adapter_keys=adapter_keys)
-    return {"created": created, "scope": scope, "adapter_keys": adapter_keys or "all"}
+    result = seed_sources_from_registry(db, org_id=context.org_id, adapter_keys=adapter_keys)
+    return {
+        "created": result.created,
+        "skipped_disabled": result.skipped_disabled,
+        "scope": scope,
+        "adapter_keys": adapter_keys or "all",
+    }
 
 
 @router.post("/{source_id}/refresh")

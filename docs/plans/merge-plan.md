@@ -792,3 +792,179 @@ Andersons — closed for static collection, browser-only — and now
 Landus, Vercel checkpoint); Chadbourn + Hamer + Skyland 3370/3621
 staleness watch; Mae-Mart proxy probe; CGB licensed-feed
 decision.
+
+## Cycle 19 (added Cycle 20)
+
+### 0e. Branch chain — Cycle 19, verified from git
+
+The chain is **still linear**: `git log --oneline
+master..overnight/grainhub-cycle-19` gives **57 commits** (55
+through Cycle 18 + 2 in Cycle 19), **0 merge commits**, no
+branch points. Cycle 19's first commit `9c96e5c` has parent
+`722dd8f` (the Cycle 18 tip), and merge-base(18, 19) is the
+Cycle 18 tip `722dd8f`. Per-branch commit count for Cycle 19: 2
+(`9c96e5c`, `b47d638`).
+
+That means the §2 procedure continues unchanged: merge Cycle 19
+after 18, one branch at a time with `--no-ff`, running the §3
+gates at each step. A single fast-forward of `master` to the
+`cycle-19` tip (`b47d638`) would give the same tree as nineteen
+sequential merges; prefer the sequential merges for the same
+reason as §0 (a review checkpoint and stop point per cycle).
+
+(The Cycles 16–18 section's "55 commits master..cycle-18"
+figure was re-verified in Cycle 20 and is correct — no
+correction needed.)
+
+### 1e. What the branch contains (Cycle 19)
+
+| Branch | Tip | Tests at tip | Web build at tip |
+|---|---|---|---|
+| Cycle 19 | `b47d638` | 656 passed, 0 failed | Not re-run (no web files changed; last full pass Cycle 17) |
+
+Tip commit hash (full): `b47d6381fdc2441b1a5bb40c553d5b6fa39039ee`.
+No web files changed in Cycle 19, so there is no fresh
+web-build evidence in this range.
+
+- **Cycle 19** (`overnight/grainhub-cycle-19`; commits `9c96e5c`,
+  `b47d638`): Mae-Mart futures proxy probed **live** — `GET
+  http://www.mae-martfarms.com/grain-proxy.php?symbols=ZCZ26=F`
+  answered 301 (http → https), then HTTP 200 JSON matching the
+  page JS's documented contract exactly (object keyed by symbol;
+  numeric `price`, string `currency` `"USX"`, numeric
+  `timestamp` and `fetched`). `fetch_mae_mart()` now fills
+  `futures_price` on corn/soy/wheat rows as an optional second
+  step (`include_futures=True`, one GET per symbol: `ZCZ26=F`,
+  `ZSF27=F`, `ZWN27=F`; `USX` cents ÷ 100, other currencies taken
+  as dollars as-is). New helpers `parse_mae_mart_proxy_json()`
+  (pure parser; ignores malformed/unknown-symbol entries) and
+  `fetch_mae_mart_futures()` (per-symbol failure skipped, never
+  fatal); any proxy failure degrades gracefully to the static-only
+  rows. Deliberately NOT done: `cash_price` is never computed
+  from futures + basis — that remains an open decision. Rye
+  untouched. 7 new tests (synthetic fixtures only).
+- **Ingestion-orchestrator coverage audit — real gap found and
+  fixed:** the scheduled poller (`list_due_sources()` in
+  `app/services/source_orchestration.py`) reached only the 5 pilot
+  keys (`agricharts`, `glg`, `hensall`, `snobelen`, `andersons`);
+  the other 88 of 93 registry adapters were unreachable on
+  schedule. The pilot-allowlist clause was removed (9 lines
+  changed, comment explains); all 93 adapters are now reachable.
+  Remaining gates unchanged; the pilot set still governs
+  promotion status and remains the default seed scope. 3
+  regression tests in `tests/test_source_orchestration_due_sources.py`
+  (verified to fail on pre-fix code via temporary stash, pass
+  after). Gaps documented, not fixed: the deployed 08:00/15:00
+  cron runs the file-ingestion job, not the poller (scheduling
+  decision); US agricharts/DTN urls-toml entries have no registry
+  adapter (adapter-shape change needed — registry calls
+  `fetch_fn()` with no args, these require a URL); toggled-off
+  `bunge` and `mapleview` are still seedable and fetchable (should
+  seeding honor `[sources]` toggles? — coordinator to decide).
+  10 new tests in total this cycle, suite 646 → 656.
+- **Merge plan extended to Cycles 16–18** (184 lines added, 0
+  removed). The Cycles 13–15 section's "49 commits" figure
+  re-verified correct. One correction recorded: the Cycle 17
+  report's "122 entries" was a grep artifact — true count is
+  **121 entries, 102 enabled**.
+- **Super-plan §9 extended to Cycle 18** (heading/intro now cover
+  Cycles 1–18, test chain 179 → 646; Cycle 17 + 18 bullets added;
+  blockers updated).
+  Full detail: `docs/plans/overnight-cycle-19-report.md`.
+
+### 3e. Gates — updated expectations for Cycle 19
+
+§3 applies unchanged, with these per-cycle numbers:
+
+1. **Full API test suite** — expect Cycle 19: 656 — **0 failed**.
+   (646 at Cycle 18 + 10 new: Mae-Mart 7, orchestration 3.)
+2. **Web build** — re-run once at the Cycle 19 step so the final
+   tree is verified as a whole. No web files changed in Cycle 19,
+   so a build failure at this step would point at an earlier
+   cycle, not the branch being merged. Last full pass was
+   Cycle 17.
+3. **Alembic chain** — head is **still `0019`**. Verified from
+   git: no migration file was added in Cycle 19 (`git log` on
+   the Alembic versions dir in `cycle-18..cycle-19` is empty, and
+   the file list at the Cycle 19 tip is `0001`–`0019`). The only
+   two commits ever touching that directory in
+   `master..cycle-19` are from Cycle 1 and Cycle 7 (which added
+   `0019`). Expect exactly one head, `0019`, at the Cycle 19 step.
+4. **Boundary spot-check** — the Cycle 19 report has its own
+   boundary section (zero new references, verified by grep on the
+   added lines). Re-check once at the Cycle 19 step as in §3.4.
+5. **No-secrets spot-check** — as §3.5; the report states none.
+   Note the Mae-Mart proxy probe used one live GET and the
+   response's price value was deliberately not copied into any
+   doc or the report.
+
+### 4e. Known conflicts and overlaps — Cycle 19
+
+The chain is still linear, so a sequential merge still produces
+no conflicts. The §4 watch-list extends as follows:
+
+- **Price-source catalogue** (`docs/plans/price-source-catalogue.md`)
+  — edited in **Cycle 19** as well (145 lines changed; the
+  catalogue note documents the orchestrator gaps found this
+  cycle). Same rule as §4: later wins.
+- **Source orchestration** (`app/services/source_orchestration.py`)
+  — touched in **Cycle 19 only** in this range (pilot-allowlist
+  clause removed from `list_due_sources()`, 9 lines). Small,
+  coordinator-verified; no other cycle touches this file, so no
+  overlap. The behaviour change is real but gated: pilot-only
+  deployments are unaffected until an admin seeds `scope=all`.
+- **Mae-Mart source** (`app/platform/market_data/sources/mae_mart_source.py`)
+  — touched in **Cycle 19 only** in this range (futures-proxy
+  fill, 122 lines). Additive optional step; the static-only path
+  is unchanged and remains the fallback. No other cycle touches
+  this file.
+- **Source registry** (`app/services/source_registry.py`) —
+  **not** touched in Cycle 19. No new adapters were registered;
+  the 93-adapter set is unchanged — the fix only changes which
+  seeded sources the scheduled poller reaches.
+- **Super-plan §9** (`docs/plans/grainhub-super-plan.md`) —
+  updated in **Cycle 19** (progress to Cycle 18, test chain
+  179 → 646). Linear, no conflict expected.
+- **Migration chain** — unchanged: `0015 → … → 0018` (Cycle 1)
+  then `0019` (Cycle 7), single head throughout Cycle 19.
+
+### 5e. What must NOT be merged as-is — update
+
+- **The CI workflow file is STILL not in any branch.** Verified
+  2026-11-19 (Cycle 20): `?? .github/` in `git status` on the
+  Cycle 20 checkout (`.github/workflows/api-tests.yml`).
+  Merging Cycle 19 as well as 1–18 will **not** bring it into
+  `master`. Same remedy as §5: Adam re-authenticates `gh` with
+  `workflow` scope, or adds the file via the GitHub web UI. Do
+  not hand-copy it into a merge commit.
+- **Nothing else new is held back in Cycle 19.** No new unpushed
+  files, secrets, or held-back work is reported in the Cycle 19
+  report. The §5 review-not-blocker list is unchanged and carried
+  forward: email-bid endpoint public by default, futures
+  endpoints still return prices `null` until a licensed feed is
+  wired (the Mae-Mart proxy now fills `futures_price` on
+  collector rows only — it does not feed the futures endpoints),
+  Advisor `/ask` is a 501 scaffold, eSign is a stub, normalized
+  price rows carry no currency (`currency: null`).
+- **Open decisions carried forward from Cycle 19 (not
+  blockers):** computing Mae-Mart `cash_price` from futures +
+  static basis (open decision for Adam/the coordinator, gated on
+  the licensed-feed decision); scheduling `poll_sources` instead
+  of the file-ingestion job in the deployed 08:00/15:00 cron
+  (deployment decision); the US agricharts/DTN adapter-shape
+  change; whether seeding should honor the `[sources]` toggles
+  for `bunge`/`mapleview`.
+
+### 7e. After the merges — updated
+
+§7 applies with the Cycle 19 tip as the end state: Alembic head
+`0019` (unchanged since Cycle 7), test suite 656 passed / 0
+failed, web build last fully passed in Cycle 17 (re-run at the
+Cycle 19 merge step). The still-open decisions list in §7.4 is
+unchanged by Cycle 19 except for the additions in §5e above.
+Open work carried forward: Playwright render checks (DTN family,
+FMN filtered view, Mapleview, StoneX, The Andersons — closed for
+static collection, browser-only — and Landus, Vercel checkpoint);
+Chadbourn + Hamer + Skyland 3370/3621 staleness watch; Mae-Mart
+cash-price decision; poller scheduling decision; US agricharts/DTN
+adapter gap; `bunge`/`mapleview` toggle question.

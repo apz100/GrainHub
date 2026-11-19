@@ -255,3 +255,130 @@ def fetch_us_agricharts(url: str, company_name: str, playwright=None) -> pd.Data
     except Exception as e:
         print(f"[US-AG ERR] {company_name}: {e}")
         return pd.DataFrame()
+
+
+# ─── URL-bound registry adapters (Cycle 20) ────────────────────────────────
+# Zero-argument wrappers over fetch_us_agricharts() for the enabled
+# `agricharts` entries in us_elevators_urls.toml. The platform registry
+# (app/services/source_registry.py) calls fetch_fn() with no arguments,
+# so each entry gets its own bound wrapper; the coordinator wires them
+# as SourceAdapter rows (mode "direct" — these return a DataFrame).
+#
+# All 13 entries are static writeBidRow() pages — confirmed in Cycle 1
+# discovery or verified live in Cycles 11–12 — so no browser is needed.
+# Live verification of the wrappers themselves is a later cycle's
+# GET-probe work; nothing here fetches a page.
+
+US_AGRICHARTS_SITES: dict[str, tuple[str, str]] = {
+    # key: (company_name, url) — mirrors the enabled `agricharts`
+    # entries in us_elevators_urls.toml.
+    "ag_plus": ("Ag Plus", "https://www.agplusinc.com/markets/cash.php"),
+    "farmers_win_coop": ("Farmers Win Coop", "https://www.farmerswin.com/markets/cash.php"),
+    "heartland_coop": ("Heartland Coop", "https://www.heartlandcoop.com/markets/cash.php"),
+    "heritage_grain_cooperative": ("Heritage Grain Cooperative", "https://www.heritagegrain.com/markets/cash.php"),
+    "keller": ("Keller", "https://www.kellergrain.com/markets/cash.php"),
+    "kokomo_grain": ("Kokomo Grain", "https://www.kokomograin.com/markets/cash.php?location_filter="),
+    "legacy_farmers": ("Legacy Farmers", "https://www.legacyfarmers.com/markets/cash.php"),
+    "pro_ag": ("Pro Ag", "https://www.proagfarmers.com/markets/cash.php"),
+    "west_con": ("West-Con", "https://www.west-con.com/markets/cash.php"),
+    "wheaton_dumont": ("Wheaton Dumont", "https://www.wdcoop.com/markets/cash.php"),
+    "central_farmers_coop": ("Central Farmers Coop", "https://www.cenfarmcoop.com/markets/cash.php"),
+    "anthony_farmers_coop": ("Anthony Farmers Co-op", "https://www.anthonycoop.com/markets/cash.php"),
+    "mulvane_coop": ("Mulvane Coop", "https://www.mulvanecoop.com/markets/cash.php"),
+}
+
+
+def fetch_ag_plus() -> pd.DataFrame:
+    """Fetch Ag Plus (static writeBidRow cash page) via the generic collector."""
+    name, url = US_AGRICHARTS_SITES["ag_plus"]
+    return fetch_us_agricharts(url, name)
+
+
+def fetch_farmers_win_coop() -> pd.DataFrame:
+    """Fetch Farmers Win Coop (static writeBidRow cash page) via the generic collector."""
+    name, url = US_AGRICHARTS_SITES["farmers_win_coop"]
+    return fetch_us_agricharts(url, name)
+
+
+def fetch_heartland_coop() -> pd.DataFrame:
+    """Fetch Heartland Coop (static writeBidRow cash page) via the generic collector."""
+    name, url = US_AGRICHARTS_SITES["heartland_coop"]
+    return fetch_us_agricharts(url, name)
+
+
+def fetch_heritage_grain_cooperative() -> pd.DataFrame:
+    """Fetch Heritage Grain Cooperative (static writeBidRow cash page) via the generic collector.
+
+    Distinct from ``heritage_coop`` (Heritage Cooperative, an
+    agricharts-embed site) — different company, different URL.
+    """
+    name, url = US_AGRICHARTS_SITES["heritage_grain_cooperative"]
+    return fetch_us_agricharts(url, name)
+
+
+def fetch_keller() -> pd.DataFrame:
+    """Fetch Keller (static writeBidRow cash page) via the generic collector."""
+    name, url = US_AGRICHARTS_SITES["keller"]
+    return fetch_us_agricharts(url, name)
+
+
+def fetch_kokomo_grain() -> pd.DataFrame:
+    """Fetch Kokomo Grain (static writeBidRow cash page) via the generic collector."""
+    name, url = US_AGRICHARTS_SITES["kokomo_grain"]
+    return fetch_us_agricharts(url, name)
+
+
+def fetch_legacy_farmers() -> pd.DataFrame:
+    """Fetch Legacy Farmers (static writeBidRow cash page) via the generic collector."""
+    name, url = US_AGRICHARTS_SITES["legacy_farmers"]
+    return fetch_us_agricharts(url, name)
+
+
+def fetch_pro_ag() -> pd.DataFrame:
+    """Fetch Pro Ag (static writeBidRow cash page) via the generic collector.
+
+    Verified live Cycle 11: 78 static writeBidRow rows at
+    /markets/cash.php (Corn / Soybeans / Wheat, 6 h4 locations).
+    """
+    name, url = US_AGRICHARTS_SITES["pro_ag"]
+    return fetch_us_agricharts(url, name)
+
+
+def fetch_west_con() -> pd.DataFrame:
+    """Fetch West-Con (static writeBidRow cash page) via the generic collector.
+
+    Verified live Cycles 11–12: 84 static writeBidRow rows at
+    /markets/cash.php; delivery labels are month names ('Dec 2026'),
+    kept verbatim by the parser (Cycle 12).
+    """
+    name, url = US_AGRICHARTS_SITES["west_con"]
+    return fetch_us_agricharts(url, name)
+
+
+def fetch_wheaton_dumont() -> pd.DataFrame:
+    """Fetch Wheaton Dumont (static writeBidRow cash page) via the generic collector.
+
+    Verified live Cycle 12: 43 static writeBidRow rows at
+    /markets/cash.php; delivery labels are the short month form
+    ('Nov 26', 'Jan 27'), kept verbatim by the parser.
+    """
+    name, url = US_AGRICHARTS_SITES["wheaton_dumont"]
+    return fetch_us_agricharts(url, name)
+
+
+def fetch_central_farmers_coop() -> pd.DataFrame:
+    """Fetch Central Farmers Coop (static writeBidRow cash page) via the generic collector."""
+    name, url = US_AGRICHARTS_SITES["central_farmers_coop"]
+    return fetch_us_agricharts(url, name)
+
+
+def fetch_anthony_farmers_coop() -> pd.DataFrame:
+    """Fetch Anthony Farmers Co-op (static writeBidRow cash page) via the generic collector."""
+    name, url = US_AGRICHARTS_SITES["anthony_farmers_coop"]
+    return fetch_us_agricharts(url, name)
+
+
+def fetch_mulvane_coop() -> pd.DataFrame:
+    """Fetch Mulvane Coop (static writeBidRow cash page) via the generic collector."""
+    name, url = US_AGRICHARTS_SITES["mulvane_coop"]
+    return fetch_us_agricharts(url, name)

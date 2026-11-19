@@ -159,6 +159,23 @@ appear after deploy.
    subscriber count; sends nothing). Delivery only when
    `MARKET_REPORT_EMAIL_ENABLED=true` and the `--send` flag is passed;
    schedule it once weekly after a successful ingestion cycle.
+6. **Schedule the registry poller too — the file job above does not
+   poll any registry adapter (Cycle 19 audit, Cycle 20 note).** The
+   08:00/15:00 cron in step 2 runs `python -m
+   app.jobs.daily_source_ingestion`, which ingests file sources only:
+   it reaches **0 of the 93 registry adapters**. To poll the seeded
+   adapters on schedule, add a second cron job (same times, same
+   `America/Toronto` timezone, same working directory `apps/api` and
+   env) with the command `python -m app.jobs.poll_sources`. That runs
+   one pass over every due, active, automated `Source` row
+   (`app/jobs/poll_sources.py` → `poll_due_sources`, one-shot by
+   default; `--loop --sleep-seconds 60` runs it continuously instead).
+   Without this second job, seeded adapters are never polled and
+   their prices never refresh, no matter how often the file job runs.
+   Before the first poller run, confirm at least one `Commodity` row
+   exists — the poller exits with an error if the commodity table is
+   empty. This is a deployment decision, not a code change: no cron
+   or deployment config was changed in Cycle 20, only this note.
 
 ## 5. Post-deploy health checks
 
@@ -235,7 +252,7 @@ status) instead of failing silently:
 - [ ] §1: Supabase project confirmed; `DATABASE_URL` set in Render only.
 - [ ] §2: Render + Vercel env vars set; no secrets in git.
 - [ ] §3: `alembic heads` = single head `0019`; `alembic current` = `0019` after upgrade.
-- [ ] §4: Ingestion scheduled 08:00 + 15:00 America/Toronto; first run verified in source health.
+- [ ] §4: Ingestion scheduled 08:00 + 15:00 America/Toronto; first run verified in source health. Poller job (`python -m app.jobs.poll_sources`) scheduled alongside the file job (§4 step 6), or the decision not to schedule it recorded.
 - [ ] §5: Health checks 1–11 pass (or each failure recorded with its cause).
 - [ ] §6: Previous known-good Render + Vercel deploys identified for rollback.
 - Deployed by: ______  Date/time (America/Toronto): ______  Master commit: ______

@@ -556,6 +556,12 @@ Merge order, gates, and conflicts are in `docs/plans/merge-plan.md`.
   changed site-side Chester → Aberdeen, registry updated);
   Bentonville gap from Cycle 32 closed; merge plan extended to
   Cycle 32 (83 commits, 0 merges).
+- **Cycle 34** (`overnight/grainhub-cycle-34`, 711 tests): Bushel
+  samples #6 + Smithfield/Alliance re-verified 11/12 exact
+  matches (Alliance changed site-side Gibson City →
+  Anchor/Cropsey/Colfax, registry updated); Smithfield East
+  Region sweep fully re-verified (all 30 locations, Cycles
+  29–34); merge plan extended to Cycle 33 (85 commits, 0 merges).
 
 **Remaining blockers that need Adam:** NASS API key (free) and FAS /
 data.gov key (free); LLM provider + key for Advisor `/ask`; Barchart /

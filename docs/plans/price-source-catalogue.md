@@ -3640,3 +3640,24 @@ One call per site, no retries. **5 of 6 exact matches**, all headers fresh (Nov 
 **Alliance Grain — site-side change, same pattern as AGP (Cycle 33):** the page still returns 10 rows (Corn 5 + Soybeans 5), fresh header, status ok, but the live h2 is now **`Anchor/Cropsey/Colfax`** instead of `Gibson City - West` (Cycle 6). The registry entry has no `location_labels` mapping, so the parsed location is the raw live h2 — a genuine site-side change, not a parser issue. Coordinator decision (same as AGP): update the existing `alliance_grain` entry rather than register a second one. `default_location` updated Gibson City → Anchor/Cropsey/Colfax in `bushel_source.py` (notes + `fetch_alliance_grain` docstring, and the `config.toml` / `us_elevators_urls.toml` comments updated the same way); new registry test `test_alliance_grain_registry_entry_updated_cycle34` asserts it. The saved Cycle 6 Gibson City fixture in `test_bushel_cycle6_shapes.py` is kept as a parse test (its location comes from the fixture's own h2).
 
 **Milestone — Smithfield East Region sweep fully re-verified:** with samples #5 (Cycle 33) and #6 plus this batch, all **30 verified Smithfield locations** have now been re-fetched at least once across Cycles 29–34, every one an exact row-count match (Raeford 1675 posts no public bids and is not registered). Likewise every Skyland per-location ID except 2730 has been re-fetched at least once (2730 duplicates the default Cunningham Area page, re-verified in Cycle 32).
+
+## Cycle 35 — Embed family re-verification: 12/12 exact (2026-11-19)
+
+One call per site, no retries, via the module's own `cashbids_embed_source.py` wrappers. **All 12 returned `status: ok` with exact row-count matches** to the Cycle 28 baselines (TGM, re-verified in Cycle 26, was not re-probed this cycle, so the family stands at 12/12 here rather than 13/13). 454 rows total. Counts only, no values recorded. Structure unchanged everywhere: same location sets, commodity splits, and groupby behaviour (Ag State / Superior Ag still group by commodity with `location_name` authoritative; Midway still publishes the single "All Locations" label; StateLine still 12 rows per location except Emmetsburg-AGP, Soybeans-only with 6; the two PRO 21302 embeds still serve the same Manson view).
+
+| Site | Rows now | Prior | Locations | Verdict |
+|---|---|---|---|---|
+| Agtegra | 8 | 8 (Cycle 28) | 1 (Hecla) | Exact match |
+| Heritage (embed) | 15 | 15 | 1 (Ada) | Exact match |
+| Linn | 51 | 51 | 5 (ADM, Alburnett & Springville, Cargill Beans, Cargill Starch, Ingredion) | Exact match |
+| Midway | 8 | 8 | 1 ("All Locations") | Exact match |
+| Ag State | 11 | 11 | 1 (A.C.) | Exact match |
+| Superior Ag | 12 | 12 | 1 (Princeton Central) | Exact match |
+| ALCIVIA | 181 | 181 | 15 Wisconsin locations | Exact match |
+| Hull Coop | 12 | 12 | 1 (Hull) | Exact match |
+| StateLine Coop | 126 | 126 | 11 (Armstrong, Blue Earth, Cylinder, Emmetsburg-AGP, Fenton, Lakota, Ledyard, Marna, North Burt, Ringsted, Swea City) | Exact match |
+| PRO Coop 21297 (Ayrshire) | 6 | 6 | 1 (AYRSHIRE.IA) | Exact match |
+| PRO Coop 21302 (Manson) | 12 | 12 | 1 (MANSON.IA) | Exact match |
+| PRO Coop 21302b (Manson) | 12 | 12 | 1 (MANSON.IA) | Exact match |
+
+**Process note:** subagent spawning became unavailable in this session ("subagent bootstrap is no longer authorized"), so Cycle 35 was executed directly by the coordinator — same method, same one-GET-per-site rule, no change to the results.

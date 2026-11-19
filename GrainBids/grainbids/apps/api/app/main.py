@@ -9,6 +9,7 @@ from app.api.routes.basis import router as basis_router
 from app.api.routes.best_bids import router as best_bids_router
 from app.api.routes.bids import router as bids_router
 from app.api.routes.daily_newsletter import router as daily_newsletter_router
+from app.api.routes.email_bids import router as email_bids_router
 from app.api.routes.elevator_ops import router as elevator_ops_router
 from app.api.routes.futures import router as futures_router
 from app.api.routes.ingestion import router as ingestion_router
@@ -74,6 +75,7 @@ def create_app() -> FastAPI:
 
     app.include_router(advisor_router)
     app.include_router(daily_newsletter_router)
+    app.include_router(email_bids_router)
     app.include_router(elevator_ops_router)
     app.include_router(reference_router)
     app.include_router(report_calendar_router)

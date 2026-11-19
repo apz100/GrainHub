@@ -85,10 +85,13 @@ function ReportTable({ reports }: { reports: ResearchReport[] }) {
 }
 
 export default async function ResearchIndexPage() {
-  const [status, wasde, cropProgress] = await Promise.all([
+  const [status, wasde, cropProgress, grainStocks, exportSales, commitments] = await Promise.all([
     fetchStatus(),
     fetchReports("wasde"),
     fetchReports("crop_progress"),
+    fetchReports("grain_stocks"),
+    fetchReports("export_sales"),
+    fetchReports("commitments_of_traders"),
   ]);
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
@@ -111,6 +114,21 @@ export default async function ResearchIndexPage() {
           <h2 className="text-lg font-semibold">Crop Progress</h2>
           <p className="mt-1 text-sm text-black/65">Weekly, Mondays 4pm ET. Planting / harvest progress and conditions.</p>
           <p className="mt-2 text-sm">{cropProgress.count} report(s) ingested</p>
+        </Link>
+        <Link href="/research/grain-stocks" className="rounded-lg border border-black/10 bg-white/65 p-5 backdrop-blur hover:border-black/40">
+          <h2 className="text-lg font-semibold">Grain Stocks</h2>
+          <p className="mt-1 text-sm text-black/65">Quarterly, from USDA NASS. Actual grain in bins — the physical count.</p>
+          <p className="mt-2 text-sm">{grainStocks.count} report(s) ingested · value parser not built yet</p>
+        </Link>
+        <Link href="/research/export-sales" className="rounded-lg border border-black/10 bg-white/65 p-5 backdrop-blur hover:border-black/40">
+          <h2 className="text-lg font-semibold">Export Sales</h2>
+          <p className="mt-1 text-sm text-black/65">Weekly, Thursdays 8:30am ET, USDA FAS. Sales and shipments by destination.</p>
+          <p className="mt-2 text-sm">{exportSales.count} report(s) ingested · value parser not built yet</p>
+        </Link>
+        <Link href="/research/commitments-of-traders" className="rounded-lg border border-black/10 bg-white/65 p-5 backdrop-blur hover:border-black/40">
+          <h2 className="text-lg font-semibold">Commitments of Traders</h2>
+          <p className="mt-1 text-sm text-black/65">Weekly, Fridays 3:30pm ET, CFTC. Trader positioning in CBOT futures.</p>
+          <p className="mt-2 text-sm">{commitments.count} report(s) ingested · value parser not built yet</p>
         </Link>
       </section>
       <section className="mt-8 rounded-lg border border-black/10 bg-white/65 p-5 backdrop-blur">

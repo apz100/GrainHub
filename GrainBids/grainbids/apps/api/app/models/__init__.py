@@ -5,6 +5,7 @@ from app.models.company_source_priority import CompanySourcePriority
 from app.models.commodity import Commodity
 from app.models.contract import GrowerContract
 from app.models.crm_note import CrmNote
+from app.models.farm_profile import FarmProfile
 from app.models.ingestion_run import IngestionRun
 from app.models.location import Location
 from app.models.market_report_delivery import MarketReportDelivery
@@ -31,6 +32,7 @@ __all__ = [
     "CompanySourcePriority",
     "Commodity",
     "CrmNote",
+    "FarmProfile",
     "GrowerContract",
     "IngestionRun",
     "Location",

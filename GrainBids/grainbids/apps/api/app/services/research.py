@@ -30,7 +30,7 @@ FAS_PSD_BASE_URL = "https://api.fas.usda.gov/api/psd"
 WASDE_TXT_URL = "https://www.usda.gov/sites/default/files/documents/wasde.txt"
 CROP_PROGRESS_URL = "https://downloads.usda.gov/esmis/nass-crop-progress/crop-progress.txt"
 
-REPORT_TYPES = ("wasde", "crop_progress", "grain_stocks", "export_sales", "crop_production")
+REPORT_TYPES = ("wasde", "crop_progress", "grain_stocks", "export_sales", "crop_production", "commitments_of_traders")
 
 
 class ResearchKeyRequired(RuntimeError):

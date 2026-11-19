@@ -329,12 +329,12 @@ branch to GitHub frequently.
 - Elevator Ops: which ERP first (Agris / Agvance / AgTrax)?
 - US scope: Corn Belt first, or Corn Belt + Gulf / PNW from day one?
 
-## 9. Progress — Cycles 1–28 (2026-11-18/19)
+## 9. Progress — Cycles 1–29 (2026-11-18/19)
 
-Twenty-eight overnight autonomous cycles on branches `overnight/grainhub-cycle-1`
-through `overnight/grainhub-cycle-28`, none merged to master. Full API test
-suite grew **179 → 291 → 320 → 359 → 364 → 380 → 407 → 407 → 454 → 488 → 536 → 558 → 590 → 617 → 629 → 638 → 643 → 646 → 656 → 692 → 692 → 696 → 697 → 702 → 704 → 709 → 709 → 709 passed, 0 failed**
-across the twenty-eight cycles. Full detail in `docs/plans/overnight-cycle-N-report.md`.
+Twenty-nine overnight autonomous cycles on branches `overnight/grainhub-cycle-1`
+through `overnight/grainhub-cycle-29`, none merged to master. Full API test
+suite grew **179 → 291 → 320 → 359 → 364 → 380 → 407 → 407 → 454 → 488 → 536 → 558 → 590 → 617 → 629 → 638 → 643 → 646 → 656 → 692 → 692 → 696 → 697 → 702 → 704 → 709 → 709 → 709 → 709 passed, 0 failed**
+across the twenty-nine cycles. Full detail in `docs/plans/overnight-cycle-N-report.md`.
 Merge order, gates, and conflicts are in `docs/plans/merge-plan.md`.
 
 - **Cycle 1** (`overnight/grainhub-cycle-1`, 179 tests): Phase 0 hardening,
@@ -532,6 +532,12 @@ Merge order, gates, and conflicts are in `docs/plans/merge-plan.md`.
   matches (816 rows); FS Grain USDA mirror confirmed (197 rows,
   report id 7730); merge plan extended to Cycle 27 (73 commits, 0
   merges).
+- **Cycle 29** (`overnight/grainhub-cycle-29`, 709 tests, docs only):
+  Bushel per-location sample re-verified 6/6 exact matches (Hugoton
+  still Nov 18, one day stale); Mae-Mart still viable as-is (page
+  byte-identical to Cycle 18, proxy shape identical to Cycle 19;
+  proxy now 301s to extensionless `/grain-proxy`); merge plan
+  extended to Cycle 28 (75 commits, 0 merges).
 
 **Remaining blockers that need Adam:** NASS API key (free) and FAS /
 data.gov key (free); LLM provider + key for Advisor `/ask`; Barchart /
@@ -593,3 +599,7 @@ all exact matches (639 rows) — every live-verified collector now
 re-checked this morning with zero drift. **Cycle 28 additions:**
 full 13-site embed family re-verified live, all exact matches
 (816 rows); FS Grain mirror confirmed (197 rows, report id 7730).
+**Cycle 29 additions:** Bushel sample 6/6 exact matches (Hugoton
+still one day stale); Mae-Mart still viable — page byte-identical
+to Cycle 18, proxy shape identical to Cycle 19, canonical URL now
+extensionless.

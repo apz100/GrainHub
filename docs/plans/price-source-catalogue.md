@@ -3493,3 +3493,24 @@ One call per site, no retries. **All 6 returned `status: ok` with exact row-coun
 - **Grain-pricing page:** HTTP 200, 35,952 bytes — **byte-identical size to Cycle 18**. Inline pricing JS still present (`var PROXY = '/grain-proxy.php';`, cosmetic whitespace only); symbols `ZCZ26=F`, `ZSF27=F`, `ZWN27=F` unchanged; all 4 tables present, 1 row each (basis numeric, cash/futures "—" in static HTML, as documented); rye `manualPrice` still in the inline `ALL_BIDS` JSON; `USX` cents rule still in the JS. No Barchart/DTN/AgriCharts/Yahoo markers.
 - **Proxy:** HTTP 200, `application/json`, **89 bytes — byte-identical size to Cycle 19**; JSON shape unchanged (keyed by symbol; `price` numeric, `currency` "USX", `timestamp`/`fetched` ints). **One change:** the `.php` URL now 301s to the extensionless `https://www.mae-martfarms.com/grain-proxy?symbols=ZCZ26=F` (Cycle 19's redirect kept the `.php`). Transparent to the collector (`requests` follows redirects by default) — no code change needed; the stored proxy URL could optionally be updated to the extensionless form.
 - **Verdict: collector still viable as-is.** Nothing restructured, no dead endpoints, no symbol changes.
+
+## Cycle 30 — Bushel sample #2 (6/6 exact); Mae-Mart proxy URL stored extensionless (2026-11-19)
+
+### Bushel per-location sample #2 (6 calls)
+
+One call per site, no retries. **All 6 returned `status: ok` with exact row-count matches** to the Cycles 13–16 baselines. Counts only, no values recorded.
+
+| Site | Rows now | Header date | Verdict |
+|---|---|---|---|
+| Skyland 2734 Etter | 5 | Nov 19 | Exact match |
+| Skyland 2761 Elkhart–Hough–Rolla Area | 6 | Nov 19 | Exact match |
+| Skyland 2778 Buckeye–Syracuse | 6 | Nov 19 | Exact match |
+| Smithfield 1670 Hobbsville | 3 | Nov 19 | Exact match |
+| Smithfield 1690 Petersburg, VA | 4 | Nov 19 | Exact match |
+| Smithfield 2179 Hamer, SC | 1 | **Nov 18** | Exact match (count); still one day stale |
+
+5 of 6 headers fresh (Nov 19); Hamer remains dated Nov 18 — same one-day lag as Cycles 16 and 24, count unchanged, site-side lag not a collector issue. Delivery-label structure unchanged (Skyland "N/C 26/27" labels; Petersburg's second Soybeans row still carries the "Nov 2026 - SBOC 10% or Above" label).
+
+### Mae-Mart proxy URL stored extensionless (mocked tests only, 0 GETs)
+
+Following the Cycle 29 finding (the `.php` URL now 301s to the extensionless canonical form), the stored proxy URL in `mae_mart_source.py` was updated: `http://www.mae-martfarms.com/grain-proxy.php` → `http://www.mae-martfarms.com/grain-proxy` (5 occurrences, URL string only, no behaviour change; scheme kept as `http`). Query construction unchanged (one GET per symbol). New mocked test `test_mae_mart_proxy_url_is_extensionless` asserts the constant and that the mocked fetch calls exactly that URL with `params == {"symbols": "ZCZ26=F"}`. Full suite 710 passed.

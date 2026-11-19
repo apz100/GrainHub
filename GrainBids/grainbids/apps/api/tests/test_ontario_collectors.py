@@ -274,6 +274,38 @@ def test_mae_mart_futures_calls_proxy_one_symbol_per_request() -> None:
         assert kwargs["headers"]["User-Agent"] == mae_mart_source.CONTACT_USER_AGENT
 
 
+def test_mae_mart_proxy_url_is_extensionless() -> None:
+    """Cycle 30: the stored proxy URL is the extensionless canonical
+    form (Cycle 29 found the .php URL 301s to it). The fetch must
+    call that URL directly, with no .php hop. Mocked only."""
+    assert mae_mart_source.MAE_MART_PROXY_URL == (
+        "http://www.mae-martfarms.com/grain-proxy"
+    )
+    assert ".php" not in mae_mart_source.MAE_MART_PROXY_URL
+    assert mae_mart_source.MAE_MART_PROXY_URL.endswith("/grain-proxy")
+
+    class _FakeResponse:
+        def raise_for_status(self) -> None:
+            pass
+
+        def json(self) -> dict:
+            return _SYNTHETIC_PROXY_JSON
+
+    with patch(
+        "app.platform.market_data.sources.mae_mart_source.requests.get"
+    ) as fake_get:
+        fake_get.return_value = _FakeResponse()
+        result = mae_mart_source.fetch_mae_mart_futures(
+            symbols={"Corn": "ZCZ26=F"}
+        )
+    assert result == {"Corn": 4.5025, "Soybeans": 10.7525, "Wheat": 5.5125}
+    fake_get.assert_called_once()
+    args, kwargs = fake_get.call_args
+    assert args[0] == "http://www.mae-martfarms.com/grain-proxy"
+    assert ".php" not in args[0]
+    assert kwargs["params"] == {"symbols": "ZCZ26=F"}
+
+
 # ---------------------------------------------------------------------------
 # North Gower
 # ---------------------------------------------------------------------------

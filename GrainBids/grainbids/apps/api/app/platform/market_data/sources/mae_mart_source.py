@@ -16,7 +16,7 @@ Page structure (verified 2026-11-19, one polite GET):
 Static-HTML limits (recorded, not worked around):
   * The CBOT futures and Cash Price cells are "—" in static HTML.
     The page fills them client-side from its own
-    ``/grain-proxy.php?symbols=...`` futures proxy.
+    ``/grain-proxy?symbols=...`` futures proxy.
   * Basis IS published statically (table cell and the inline
     ``ALL_BIDS`` JSON), so rows carry the site's basis.
   * Rye is the exception: it has no futures symbol and a static
@@ -25,10 +25,13 @@ Static-HTML limits (recorded, not worked around):
     carry ``cash_price`` from that value.
 
 Futures proxy (verified live 2026-11-19, Cycle 19, one GET):
-  ``GET /grain-proxy.php?symbols=ZCZ26=F`` returns HTTP 200,
+  ``GET /grain-proxy?symbols=ZCZ26=F`` returns HTTP 200,
   ``application/json``, shaped exactly as the page's inline JS
   documents: JSON keyed by symbol, each entry with a numeric
-  ``price`` and a ``currency``. ``currency == "USX"`` means the
+  ``price`` and a ``currency``. (Cycle 29: the ``.php`` URL now
+  301s to this extensionless canonical URL; Cycle 30 stored the
+  canonical form directly to save the redirect hop.)
+  ``currency == "USX"`` means the
   price is in cents, so the client divides by 100 — this collector
   follows the page's own rule. ``fetch_mae_mart`` therefore fills
   ``futures_price`` on corn/soybean/wheat rows from the proxy as an
@@ -54,7 +57,7 @@ import requests
 from bs4 import BeautifulSoup
 
 MAE_MART_URL = "http://www.mae-martfarms.com/grain-pricing"
-MAE_MART_PROXY_URL = "http://www.mae-martfarms.com/grain-proxy.php"
+MAE_MART_PROXY_URL = "http://www.mae-martfarms.com/grain-proxy"
 MAE_MART_COMPANY = "Mae-Mart Farms"
 MAE_MART_LOCATION = "Norfolk County"
 CONTACT_USER_AGENT = "GrainHub-Research/1.0 +https://github.com/apz100/GrainHub"
@@ -225,7 +228,7 @@ def fetch_mae_mart_html(url: str = MAE_MART_URL, timeout: int = 30) -> str:
 
 
 def parse_mae_mart_proxy_json(data: dict[str, Any]) -> dict[str, float]:
-    """Parse the /grain-proxy.php response into {commodity: futures $/bu}.
+    """Parse the /grain-proxy response into {commodity: futures $/bu}.
 
     Contract (verified live 2026-11-19, Cycle 19): JSON keyed by
     Yahoo-style symbol, each entry with a numeric ``price`` and a
@@ -309,7 +312,7 @@ def fetch_mae_mart(
         if price is not None:
             row["futures_price"] = price
     result["notes"].append(
-        "futures_price from the site's /grain-proxy.php relay "
+        "futures_price from the site's /grain-proxy relay "
         "(USX cents converted to dollars per the page's own rule); "
         "cash_price is NOT computed from futures + basis"
     )

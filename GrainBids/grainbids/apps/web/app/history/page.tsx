@@ -35,28 +35,47 @@ type SeasonalPoint = {
   observations?: number | null;
 };
 
+type HistoryPayload = {
+  points: HistoryPoint[];
+  source?: string | null;
+  as_of?: string | null;
+};
+
 type SeasonalPayload = {
   points: SeasonalPoint[];
   years: number[];
   years_covered: number;
   years_requested: number;
   note?: string | null;
+  source?: string | null;
+  as_of?: string | null;
 };
 
-function historyFrom(payload: unknown): HistoryPoint[] {
-  if (Array.isArray(payload)) return payload as HistoryPoint[];
+function historyFrom(payload: unknown): HistoryPayload {
+  const empty: HistoryPayload = { points: [], source: null, as_of: null };
+  if (Array.isArray(payload)) return { ...empty, points: payload as HistoryPoint[] };
   if (payload && typeof payload === "object") {
     const obj = payload as Record<string, unknown>;
-    if (Array.isArray(obj.points)) return obj.points as HistoryPoint[];
-    if (Array.isArray(obj.history)) return obj.history as HistoryPoint[];
-    if (Array.isArray(obj.rows)) return obj.rows as HistoryPoint[];
-    if (Array.isArray(obj.items)) return obj.items as HistoryPoint[];
+    const points = Array.isArray(obj.points)
+      ? (obj.points as HistoryPoint[])
+      : Array.isArray(obj.history)
+        ? (obj.history as HistoryPoint[])
+        : Array.isArray(obj.rows)
+          ? (obj.rows as HistoryPoint[])
+          : Array.isArray(obj.items)
+            ? (obj.items as HistoryPoint[])
+            : [];
+    return {
+      points,
+      source: typeof obj.source === "string" ? obj.source : null,
+      as_of: typeof obj.as_of === "string" ? obj.as_of : null,
+    };
   }
-  return [];
+  return empty;
 }
 
 function seasonalFrom(payload: unknown): SeasonalPayload {
-  const empty: SeasonalPayload = { points: [], years: [], years_covered: 0, years_requested: 5 };
+  const empty: SeasonalPayload = { points: [], years: [], years_covered: 0, years_requested: 5, source: null, as_of: null };
   if (payload && typeof payload === "object") {
     const obj = payload as Record<string, unknown>;
     const points = Array.isArray(obj.points) ? (obj.points as SeasonalPoint[]) : [];
@@ -66,6 +85,8 @@ function seasonalFrom(payload: unknown): SeasonalPayload {
       years_covered: typeof obj.years_covered === "number" ? obj.years_covered : 0,
       years_requested: typeof obj.years_requested === "number" ? obj.years_requested : 5,
       note: typeof obj.note === "string" ? obj.note : null,
+      source: typeof obj.source === "string" ? obj.source : null,
+      as_of: typeof obj.as_of === "string" ? obj.as_of : null,
     };
   }
   return empty;
@@ -81,10 +102,10 @@ async function fetchHistory(commodity: string, days: number) {
       cache: "no-store",
       headers,
     });
-    if (!res.ok) return [];
+    if (!res.ok) return historyFrom(null);
     return historyFrom(await res.json());
   } catch {
-    return [];
+    return historyFrom(null);
   }
 }
 
@@ -315,10 +336,20 @@ export default async function HistoryPage({
   const daysRaw = Number(searchParams?.days ?? DEFAULT_DAYS);
   const days = Number.isFinite(daysRaw) ? Math.min(1825, Math.max(1, Math.floor(daysRaw))) : DEFAULT_DAYS;
   const [history, seasonal] = await Promise.all([fetchHistory(commodity, days), fetchSeasonal(commodity)]);
-  const historyChart = historySeries(history);
+  const historyChart = historySeries(history.points);
   const seasonalChart = seasonalSeries(seasonal.points);
   const seasonalEmpty = seasonalChart.series[0].points.length === 0;
   const historyEmpty = historyChart.series.length === 0;
+  // Cycle 17: the empty state names its source and the date it was
+  // computed, so "no data" is dated and sourced, never a bare blank.
+  const historyProvenance =
+    history.source || history.as_of
+      ? ` Source: ${history.source ?? "ingested normalized prices"}${history.as_of ? ` (as of ${history.as_of})` : ""}.`
+      : "";
+  const seasonalProvenance =
+    seasonal.source || seasonal.as_of
+      ? ` Source: ${seasonal.source ?? "ingested normalized prices"}${seasonal.as_of ? ` (as of ${seasonal.as_of})` : ""}.`
+      : "";
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
@@ -355,7 +386,7 @@ export default async function HistoryPage({
         {historyEmpty ? (
           <p className="mt-2 text-sm text-black/55">
             No price history available yet for {commodity}. History accumulates as ingestion
-            runs — nothing is backfilled or estimated.
+            runs — nothing is backfilled or estimated.{historyProvenance}
           </p>
         ) : (
           <>
@@ -387,7 +418,7 @@ export default async function HistoryPage({
             </p>
           </>
         )}
-        {history.length === 0 ? null : (
+        {history.points.length === 0 ? null : (
           <div className="mt-4 overflow-x-auto">
             <table className="min-w-full text-left text-sm">
               <thead>
@@ -402,7 +433,7 @@ export default async function HistoryPage({
                 </tr>
               </thead>
               <tbody>
-                {history.map((point, idx) => (
+                {history.points.map((point, idx) => (
                   <tr key={`${point.date ?? point.quote_date ?? point.captured_at ?? idx}-${idx}`} className="border-b border-black/5">
                     <td className="px-2 py-2">{point.date ?? point.quote_date ?? point.captured_at ?? "-"}</td>
                     <td className="px-2 py-2">{point.commodity_name ?? point.commodity ?? "-"}</td>
@@ -425,7 +456,7 @@ export default async function HistoryPage({
           <p className="mt-2 text-sm text-black/55">
             No seasonal averages yet for {commodity}. Averages need real ingested prices
             for a week of the year — until then the chart and table stay empty rather than
-            showing a guessed average.
+            showing a guessed average.{seasonalProvenance}
           </p>
         ) : (
           <>

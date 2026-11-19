@@ -2184,3 +2184,226 @@ other entries unchanged.
   `BUSHEL_SITES`) and their `fetch_` functions are in
   `bushel_source.py`; `source_registry.py` wiring is the
   coordinator's step (that file is coordinator-only this cycle).
+
+## Cycle 17 — basis tracker + source health wiring verified (2026-11-19)
+
+**No rewire was needed.** The Cycle 3 polish backlog item
+("source health data feeding the basis tracker") was already
+complete: `app/api/routes/basis.py::_load_source_status_map`
+reuses the source-health dashboard's own
+`build_source_health_rows` (`app/api/routes/source_health.py`)
+over the real `ingestion_runs` + `source_health_snapshots`
+rows, so the tracker and the dashboard can never disagree
+about a source. The dashboard vocabulary `live` / `stale` /
+`broken` / `unknown` is reported on basis rows as `healthy` /
+`stale` / `broken` / `unknown` (`live` → `healthy`, stated on
+every tracker/history response via `source_status_note`).
+A source with no ingestion run and no snapshot is `unknown`,
+never assumed healthy — including a price row whose source
+is not registered in the `sources` table at all.
+
+Two things were confirmed as *not* feeding the status, by
+design: the live probe (`app/services/price_source_probe.py`)
+is a manual CLI smoke test whose results are not persisted
+to any table, so it cannot contribute rows; and the basis
+arithmetic itself is untouched — the status is attached at
+the route layer (`_attach_source_status`) after
+`rank_basis` / `build_basis_history` run, so no basis value
+can change because of a health record.
+
+**Cycle 17 additions (tests only, no app code changed):**
+three route-level tests in `tests/test_basis_tracker.py`
+covering a row from a healthy source, a row from a
+stale/broken source, and a row with no health record
+(`unknown`, not live) — the same three cases were already
+covered in `tests/test_cycle3_polish.py`; the new tests put
+them in the basis tracker's own test file, plus a fourth
+test pinning the case-insensitive match between a price
+row's `source_name` and its health record. API suite after
+Cycle 17: **643 passed, 0 failed** (638 Cycle 16 baseline
++ 3 new tests here + 2 tests added concurrently by a
+sibling worker in `test_price_history.py`).
+
+### Cycle 17 — price history + report calendar wiring check (2026-11-19)
+
+**Price history / seasonal averages: already wired to real data; one small gap closed.** `GET /api/prices/history` and `GET /api/prices/seasonal` (`app/api/routes/price_history.py`) read real `NormalizedPrice` rows joined to `PriceSnapshot` only — no static or placeholder prices, no interpolation, years with no data reported as missing. Seasonal averages are computed from those same normalized cash prices, *not* from USDA research rows: `ResearchReport` rows hold report metrics (ending stocks, crop progress), not cash prices, so no price is derived from them (the route's note already says this). The one gap: the responses carried no source or date, so an empty state was a bare empty list. Both endpoints now return `source` (normalized prices already in the database; nothing invented/backfilled/estimated) and `as_of` (today's UTC date) on every response, empty or not. The web `/history` page (`apps/web/app/history/page.tsx`) already called the real API and showed honest empty states; it now surfaces the `source`/`as_of` provenance in both empty states. Two new tests in `tests/test_price_history.py` pin `source`/`as_of` on empty and seeded history and seasonal responses (seasonal multi-year mean verified: 2025 $6.00 + 2026 $7.00, ISO week 10 → $6.50).
+
+**Report calendar: already correctly wired; no change needed.** `GET /api/research/calendar` (`app/api/routes/report_calendar.py`) builds the verified 2026 schedule and attaches `ingestion_status` per event from real `ResearchReport` rows (`ingested` with report date/vintage/source/ingested_at, or `not_ingested_yet`, never a fake "available"); report types with no collector (Prospective Plantings / Acreage / Small Grains Summary) are always `not_ingested_yet`, and with no database available the status is `unknown`. Both states were already covered by `tests/test_cycle3_polish.py` (ingested WASDE row, empty database, no-database), so no new calendar tests were added.
+
+## United States — Cycle 17 source audit (2026-11-19)
+
+Audit only: 0 GETs. Every fact below comes from the repo —
+`us_elevators_urls.toml`, `config.toml`, `source_registry.py`
+(read-only), `bushel_source.py` / `cashbids_embed_source.py` /
+`wpdatatables_source.py`, and this catalogue. No collector code
+or registry changed; no prices invented.
+
+### Counts (`us_elevators_urls.toml`, after the Cycle 17 fixes below)
+
+| Family | Total | Enabled | Disabled |
+|---|---|---|---|
+| bushel | 64 | 62 | 2 |
+| agricharts | 16 | 13 | 3 (dead 404: Cardinal Ethanol, Gold Eagle, POET) |
+| dtn | 16 | 13 | 3 (Luckey Farmers dead 404; Gateway FS, Ray Carroll — Playwright only) |
+| agricharts-embed | 11 | 11 | 0 |
+| wpdatatables | 1 | 1 | 0 |
+| usda | 2 | 2 | 0 |
+| unknown | 5 | 0 | 5 |
+| stonex | 2 | 0 | 2 |
+| unreachable | 3 | 0 | 3 |
+| none | 1 | 0 | 1 |
+| **Total** | **121** | **102** | **19** |
+
+Before the fixes: 87 enabled / 34 disabled. The 15-entry jump is
+entirely the stale-disabled bushel + USDA-mirror entries below.
+
+### Remaining `unknown` / `none` / `unreachable` — full list with verdicts
+
+| Name | URL | Toml | Catalogue verdict |
+|---|---|---|---|
+| Bunge | https://www.bungeag.com/cash-bids | unknown, off | Do-not-add. `/cash-bids` redirects to a locations archive; "Cash Bids" is nav text only, no bid table (Cycles 1, 6, 8). No replacement URL found. Ontario Bunge is a separate dead entry (`bunge = false`). |
+| CGB | https://cgb.com/cgb-grain/ | unknown, off | Corporate grain page; no widget, no bid table at this URL (Cycle 6). Open follow-up: chase the cash-bid module URL from the USDA SCL report — do not guess it. |
+| The Andersons | https://www.andersonsgrain.com | unknown, off | **Closed for static collection.** GRAINweb "MyCashBids" picker (Cycle 11/13); facility pages carry static tables but they are Barchart-licensed data and are NOT collected (Cycle 16 Maumee check). No further probes. Only a rendered browser session against the picker remains, unchanged since Cycle 15. |
+| United Coop | https://www.unitedcooperative.com | unknown, off | ATLAS DTN shell on homepage (`dtn-cashbid-tab`); no static bid rows (Cycle 6). DTN Playwright render check needed. Distinct org from the Webster City, IA Bushel site (`unitedcoop.com`, enabled). |
+| Ursa Farmers Coop | https://www.ursacoop.com | unknown, off | DTN page: "Local Cash Bids loading..." with empty Basis/Cash cells in static HTML (Cycle 6). DTN Playwright render check needed (`us_dtn_source.py` parses rendered tables). |
+| CRC | https://www.centralregioncoop.com/grain | **stonex, off** (reclassified this audit) | StoneX family: homepage `#cash-bids-futures` section holds a lazy-loaded StoneX component iframe, no static bid rows (Cycles 9–10). Same family as Frontier Coop / UFC. No static route; render check only. |
+| CVA | https://www.cvacoop.com/cash-bids | unreachable, off | HTTP 202, empty body — same in Cycle 1 and Cycle 10. Do not retry aggressively; a later re-check is the only open item. |
+| Landus | https://www.landus.ag/businesses/grain/grain-bids | unreachable, off | HTTP 429, Vercel Security Checkpoint page (JS required) — blocked, no retry (Cycle 10). |
+| Mercer Landmark | https://www.mercerlandmark.com/cash-bids | unreachable, off | HTTP 522, empty body — same in Cycle 1 and Cycle 10. Re-check later only. |
+| Star of the West | https://www.starofthewest.com | none, off | Milling-company homepage; zero cash-bid mentions, no grain/bid links — no public bid page, do not add (Cycle 10). |
+| UFC | https://www.ufcmn.com | stonex, off | Redirects to Central United Cooperative; Cash Bids section is a StoneX component iframe (`stonehedge.stonex.com/component/bids`, `hideRows=true`) (Cycle 10). No static route; render check only. |
+
+### Mismatches found and fixed in the toml (Cycle 17)
+
+All 17 were clear contradictions between the catalogue's stated
+verdict (plus the matching `config.toml` `[sources]` toggle and
+`source_registry.py` adapter, both already on) and the toml. No
+enabled/disabled state was changed on a guess.
+
+**Enabled (15) — verified sources the toml had left disabled:**
+
+| Entry | Catalogue verdict the toml contradicted |
+|---|---|
+| FAC, Chandler Feed, Cameron Coop, CGS, Almota Elevator, Williams Gin & Grain, Rugby Farmers Elevator, Lake Norden Farmers Elevator, United Cooperative, Forest River Coop (10) | All verified live in Cycles 4–5 (Bushel `.cbmod` widgets, 2–45 rows each); catalogue Cycle 5 update: "All 11 Bushel sites are now verified live and wired into `source_registry.py`". The toml still carried the Cycle 1 note "Keep disabled until a bushel collector exists" — the collector has existed since Cycle 4 and every one of these already had a registry adapter + a `true` toggle. |
+| Ace Ethanol, Alliance Grain (2) | Verified live Cycle 6 (Bushel `.cbmod`, 11 / 10 rows). The catalogue's Cycle 6 section records the reclassification `unknown → bushel` — but it was never applied to the toml, which still said `unknown` / disabled. Fixed: type → `bushel`, enabled. |
+| AGP (1) | Verified live Cycle 7 (Bushel via iframe, Chester, NE, 1 row). The catalogue records "Reclassified dtn → bushel (iframe)" — never applied to the toml, which still said `dtn` / disabled. Fixed: type → `bushel`, enabled. |
+| James Valley Grain (USDA mirror), FS Grain (USDA mirror) (2) | USDA AMS report mirrors, verified live Cycle 4 (`usda_mirror_source.py`, registry + toggles `usda_mirror_jvg` / `usda_mirror_fsg` already on). The toml still carried the Cycle 1 "Keep disabled until a usda collector exists" note. Fixed: enabled. The two section-header comments (Bushel, USDA) were updated to match. |
+
+**Reclassified, still disabled (1):** CRC `unknown → stonex`
+(catalogue Cycles 9–10 place it in the StoneX family with
+Frontier Coop / UFC; no static route).
+
+**Comment only (1):** Collwest Grain — the toml said "VERIFY
+COUNTRY FIRST"; the country was confirmed Canadian
+2026-11-18 (Collingwood, ON; CAD) and the catalogue says it
+was "Removed from US list". The comment now records the
+confirmed verdict; the entry stays disabled as a record so the
+URL is not re-added. Whether to delete the row outright is a
+coordinator decision (see remaining work).
+
+**No other catalogue ↔ toml contradiction found.** In
+particular: no toml-enabled entry is one the catalogue calls
+failed/unprobed (the 13 enabled DTN sites are all widget-present
+JS-only, Playwright render check open — not failed); the 3
+disabled AgriCharts entries are the confirmed 404s; the
+Smithfield link-list entry correctly stays disabled (a link
+list, not a bid page); Raeford (1675) correctly has no entry
+(empty widget on two probes, not registered).
+
+### Registry / toggle cross-check (read-only)
+
+- **Every `BUSHEL_SITES` key (63), every
+  `CASHBIDS_EMBED_SITES` key (13) and `five_star_coop` has a
+  matching `config.toml` `[sources]` toggle (`true`) and a
+  `source_registry.py` adapter.** No registry entry lacks a
+  toggle; no toggle-`true` entry lacks an adapter. Only
+  `bunge` and `mapleview` toggles are `false` (both with
+  adapters, both disabled by design).
+- **Every toml entry has a collection route:** `agricharts`
+  (16) and `dtn` (16) via the generic `us_agricharts_source.py`
+  / `us_dtn_source.py` orchestrator drivers (no per-site
+  adapter needed — the toml itself is the driver);
+  `bushel` (64) via `bushel_source.py` except the Smithfield
+  link-list entry, which has no `BUSHEL_SITES` key by design;
+  `agricharts-embed` (11) via `cashbids_embed_source.py`;
+  `wpdatatables` (1) via `wpdatatables_source.py`; `usda` (2)
+  via `usda_mirror_source.py`. `stonex` (2), `unknown` (5),
+  `unreachable` (3), `none` (1) correctly have no adapter.
+- **Two registry keys share one toml row, by design:**
+  `pro_coop_21302` and `pro_coop_21302b` are the second and
+  third embeds on the PRO Coop homepage — there is a single
+  PRO Coop toml entry. No dedicated toml rows needed.
+- **`fmn` has a registry adapter + toggle but no US toml
+  entry — correct:** it is the Ontario AgriCharts cash page,
+  not a US elevator.
+- **Drift found (not fixed — coordinator decision):**
+  `config.toml`'s own `[[us.elevators]]` list is stale: 30
+  entries vs 121 in `us_elevators_urls.toml`. 91 urls-toml
+  entries are missing from it (every Cycle 10–16 addition,
+  all embed sites, Five Star, all Skyland/Smithfield
+  per-location rows, the re-enabled bushel sites), and 4
+  entries disagree on type (Agtegra, Heritage Cooperative,
+  Linn Coop, Midway Coop: `dtn` in `config.toml` `[us]`,
+  `agricharts-embed` in the urls toml and the registry).
+  Enabled flags agree (0 mismatches) where both lists have
+  the entry. The legacy GrainBidder orchestrator reads
+  `config.toml` `[us]`; the FastAPI platform reads the
+  registry + `[sources]` toggles. Decide: sync the legacy
+  `[us]` list to the urls toml, or deprecate it and point
+  the orchestrator at `us_elevators_urls.toml`.
+
+### Remaining work (prioritised)
+
+**Playwright-only (no GET will settle these):**
+
+1. DTN render checks (enabled in toml, widget present, rows
+   need a rendered page): Sunrise (classic DTN, companyID
+   23043), Ag Partners (modern DTN widget), Al-Corn + Elite
+   Octane (captcha strings seen — re-check in a browser),
+   Ray Carroll (DTN `index.cfm` iframes), Gateway FS sub-page
+   (`/gatewayfs/agriculture/cash-bids`, Next.js + DTN
+   classes), United Coop (`unitedcooperative.com`), Ursa
+   Farmers Coop. The other enabled DTN sites (Allied, Aurora,
+   CFS, Frontier, Green Plains, Kanza, Brubaker, Hoffman,
+   Wilton) are the same family — one render-check pass
+   covers the set.
+2. StoneX render check: Frontier Coop, CRC, UFC — the StoneX
+   iframe is a JS app shell behind StoneX auth (Cycle 8
+   research: no static-data route). A Playwright render is
+   the only open route; if rows do not load, the family is
+   closed. Note the Frontier ambiguity: the toml types it
+   `dtn` (an ATLAS DTN shell is also on the page) while the
+   catalogue treats it as StoneX-primary — the render check
+   should settle which widget carries the bids.
+3. The Andersons GRAINweb picker — a rendered browser session
+   is the only remaining path, and the data it would serve is
+   Barchart-licensed on the facility pages, so this is low
+   value unless Adam wants a licensed-data decision first.
+
+**GET-probe items (1 GET each, polite, no retries):**
+
+4. CGB — chase the cash-bid module URL from the USDA SCL
+   report; do not guess it.
+5. CVA (202 empty body) and Mercer Landmark (522) — single
+   re-checks only; both were unchanged between Cycle 1 and
+   Cycle 10, so odds are low.
+6. Bunge — no replacement URL found in Cycles 1/6/8; only
+   re-probe if a new URL surfaces.
+
+**Decisions for Adam / coordinator:**
+
+7. Collwest Grain toml row: delete it (catalogue says
+   "removed from US list") or keep the disabled record
+   (current state after this audit)?
+8. `config.toml` `[us.elevators]`: sync the 91 missing
+   entries + 4 type fixes, or deprecate the legacy list in
+   favour of `us_elevators_urls.toml`?
+9. StoneX family (Frontier / CRC / UFC): Playwright-only,
+   auth-gated — worth any more effort, or close it?
+10. DTN / Barchart licensed-feed decision (open since Cycle
+    1): a licensed feed would replace the DTN Playwright
+    work and the Andersons question outright.
+11. Smithfield + Skyland sweeps are **complete** (Skyland
+    14/14 IDs, Smithfield 30/31 — Raeford posts no public
+    bids). No further probes on either; do not spend GETs
+    on Raeford unless its widget shape changes.

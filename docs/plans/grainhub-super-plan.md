@@ -329,12 +329,12 @@ branch to GitHub frequently.
 - Elevator Ops: which ERP first (Agris / Agvance / AgTrax)?
 - US scope: Corn Belt first, or Corn Belt + Gulf / PNW from day one?
 
-## 9. Progress — Cycles 1–14 (2026-11-18/19)
+## 9. Progress — Cycles 1–16 (2026-11-18/19)
 
-Fourteen overnight autonomous cycles on branches `overnight/grainhub-cycle-1`
-through `overnight/grainhub-cycle-14`, none merged to master. Full API test
-suite grew **179 → 291 → 320 → 359 → 364 → 380 → 407 → 407 → 454 → 488 → 536 → 558 → 590 → 617 passed, 0 failed**
-across the fourteen cycles. Full detail in `docs/plans/overnight-cycle-N-report.md`.
+Sixteen overnight autonomous cycles on branches `overnight/grainhub-cycle-1`
+through `overnight/grainhub-cycle-16`, none merged to master. Full API test
+suite grew **179 → 291 → 320 → 359 → 364 → 380 → 407 → 407 → 454 → 488 → 536 → 558 → 590 → 617 → 629 → 638 passed, 0 failed**
+across the sixteen cycles. Full detail in `docs/plans/overnight-cycle-N-report.md`.
 Merge order, gates, and conflicts are in `docs/plans/merge-plan.md`.
 
 - **Cycle 1** (`overnight/grainhub-cycle-1`, 179 tests): Phase 0 hardening,
@@ -431,6 +431,20 @@ Merge order, gates, and conflicts are in `docs/plans/merge-plan.md`.
   a full 3 rows); Andersons `my-cash-bids` bundle read (1,079
   bytes, zero network calls — browser-only confirmed); Chadbourn
   re-check still stale (Nov 18 header).
+- **Cycle 15** (`overnight/grainhub-cycle-15`, 629 tests): Smithfield
+  batches A + B (11 locations; Raeford serves an empty widget and
+  is not registered; Chief Feed Mill's h2 is Rose Hill); Andersons
+  locations-list probe — a pure directory of 41 facility links,
+  0 tables, no bids — closed for static collection pending two
+  confirmatory checks; super-plan §9 extended to Cycle 14.
+- **Cycle 16** (`overnight/grainhub-cycle-16`, 638 tests): Smithfield
+  East Region sweep finished — 30 of 31 locations verified
+  (Waverly fattest at 7 rows, first Grain Sorghum page; Lapaz +
+  Hamer close the list; Raeford re-probe still empty, treated as
+  posting no public bids); Andersons fully closed — Maumee facility
+  page DOES carry 3 static bid tables but they are
+  Barchart-licensed, so not collected; merge plan extended to
+  Cycles 13–15 (49 commits, 0 merges).
 
 **Remaining blockers that need Adam:** NASS API key (free) and FAS /
 data.gov key (free); LLM provider + key for Advisor `/ask`; Barchart /
@@ -448,15 +462,16 @@ decisions is now in `docs/plans/currency-design.md`); email-bid endpoint is publ
 default (admin-only is a one-line change if wanted); pricing/hosting
 decisions. **Newest findings:** the `cashbids.php` embed family is
 now 13 sites (PRO Coop 21302b proven in Cycle 13); the Skyland
-picker sweep is complete (all 14 IDs verified); Smithfield East
-Region is 11 of 31 locations verified; the Andersons is confirmed
-browser-only (bundle read, zero network calls — the locations-list
-probe is the last static chance); the FMN collector is complete for
-the default view (453 rows, all 449 futures-linked rows filled via
-the `jsquote.php` feed); Five Star's wpDataTables collector is built
-(299 rows); the DTN sweep found only 2 of 28 sites static-HTML, 20
-JS-only, 6 unreachable, with Al-Corn the only classic inline
-`CashBidTable` fit for the DTN collector (Sunrise is a second
-classic-DTN fit, enabled in Cycle 10). A Playwright render check of
-the DTN-family JS-only sites, the FMN filtered view, and Mapleview's
-Grain Discovery shell still needs a live browser session.
+picker sweep is complete (all 14 IDs verified) and the Smithfield
+East Region sweep is complete (30 of 31 locations; Raeford posts no
+public bids); the Andersons is fully closed for static collection
+(the Maumee facility tables are Barchart-licensed); the FMN
+collector is complete for the default view (453 rows, all 449
+futures-linked rows filled via the `jsquote.php` feed); Five Star's
+wpDataTables collector is built (299 rows); the DTN sweep found only
+2 of 28 sites static-HTML, 20 JS-only, 6 unreachable, with Al-Corn
+the only classic inline `CashBidTable` fit for the DTN collector
+(Sunrise is a second classic-DTN fit, enabled in Cycle 10). A
+Playwright render check of the DTN-family JS-only sites, the FMN
+filtered view, and Mapleview's Grain Discovery shell still needs a
+live browser session.

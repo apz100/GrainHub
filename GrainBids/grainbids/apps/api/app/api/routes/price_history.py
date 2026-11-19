@@ -52,6 +52,14 @@ CURRENCY_NOTE = (
 SEASONAL_YEARS = 5
 _HISTORY_FETCH_LIMIT = 5000
 
+# Cycle 17: the empty state (and every state) names its source and the
+# date it was computed, so "no data" is honest and dated rather than
+# a bare empty list.
+HISTORY_SOURCE = (
+    "Normalized prices already in the database (ingested elevator "
+    "cash bids); no price is invented, backfilled or estimated."
+)
+
 
 def _quote_date(snapshot: PriceSnapshot) -> datetime | None:
     captured = snapshot.captured_at if snapshot is not None else None
@@ -176,6 +184,8 @@ def price_history(
         "days": days,
         "point_count": len(points),
         "points": points,
+        "source": HISTORY_SOURCE,
+        "as_of": datetime.now(timezone.utc).date().isoformat(),
         "note": CURRENCY_NOTE,
     }
 
@@ -273,5 +283,7 @@ def price_seasonal(
         "observations_by_year": {str(year): count for year, count in sorted(observations_by_year.items())},
         "point_count": len(points),
         "points": points,
+        "source": HISTORY_SOURCE,
+        "as_of": datetime.now(timezone.utc).date().isoformat(),
         "note": f"{note} {CURRENCY_NOTE}",
     }

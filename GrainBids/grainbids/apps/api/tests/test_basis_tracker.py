@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import sys
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
 
@@ -27,9 +27,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from app.api.routes.basis import router as basis_router  # noqa: E402
 from app.core.request_context import RequestContext, get_request_context  # noqa: E402
 from app.db.session import get_db  # noqa: E402
+from app.models.ingestion_run import IngestionRun  # noqa: E402
 from app.models.location import Location  # noqa: E402
 from app.models.normalized_price import NormalizedPrice  # noqa: E402
 from app.models.price_snapshot import PriceSnapshot  # noqa: E402
+from app.models.source import Source  # noqa: E402
 from app.services.basis_tracker import (  # noqa: E402
     build_basis_history,
     compute_basis_for_row,
@@ -86,6 +88,43 @@ def _make_location(**overrides):
 
 def _dt(year: int, month: int, day: int) -> datetime:
     return datetime(year, month, day, 12, 0, tzinfo=timezone.utc)
+
+
+def _now() -> datetime:
+    # Anchor source-health fixtures to the real clock: classification
+    # compares run times against datetime.now(timezone.utc).
+    return datetime.now(timezone.utc)
+
+
+def _source(name: str, **overrides) -> Source:
+    values = {
+        "id": uuid.uuid4(),
+        "org_id": ORG_ID,
+        "name": name,
+        "url": f"https://example.com/{name.lower().replace(' ', '-')}",
+        "polling_interval_minutes": 15,
+        "consecutive_failures": 0,
+        "latest_error_message": None,
+    }
+    values.update(overrides)
+    return Source(**values)
+
+
+def _run(name: str, *, status: str, minutes_ago: int, **overrides) -> IngestionRun:
+    started = _now() - timedelta(minutes=minutes_ago)
+    values = {
+        "id": uuid.uuid4(),
+        "source_name": name,
+        "source_identifier": "https://example.com",
+        "started_at": started,
+        "completed_at": started if status != "running" else None,
+        "status": status,
+        "trigger_type": "manual",
+        "parse_success_rate": Decimal("0.950"),
+        "error_message": None,
+    }
+    values.update(overrides)
+    return IngestionRun(**values)
 
 
 # ---------------------------------------------------------------------------
@@ -345,13 +384,31 @@ class _FakeResult:
 
 
 class _FakeSession:
-    def __init__(self, *, price_pairs=None, locations=None) -> None:
+    """Dispatches on the queried table.
+
+    The price-pairs query joins the sources table, so it must be
+    matched on "normalized_prices" before the plain "sources" check.
+    """
+
+    def __init__(self, *, price_pairs=None, locations=None, sources=None, runs=None, snapshots=None) -> None:
         self._price_pairs = price_pairs or []
         self._locations = locations or []
+        self._sources = sources or []
+        self._runs = runs or []
+        self._snapshots = snapshots or []
 
     def execute(self, query):
-        if "locations" in str(query):
+        text = str(query)
+        if "normalized_prices" in text:
+            return _FakeResult(self._price_pairs)
+        if "locations" in text:
             return _FakeResult(self._locations)
+        if "source_health_snapshots" in text:
+            return _FakeResult(self._snapshots)
+        if "ingestion_runs" in text:
+            return _FakeResult(self._runs)
+        if "sources" in text:
+            return _FakeResult(self._sources)
         return _FakeResult(self._price_pairs)
 
 
@@ -427,6 +484,117 @@ def test_tracker_route_ranks_and_reports_provenance() -> None:
     assert first["data_quality"]
     assert body["row_count"] == 2
     assert body["unranked_count"] == 1
+
+
+def test_tracker_rows_carry_real_source_health_status() -> None:
+    """Cycle 17: basis rows carry the source-health dashboard's status
+    (healthy / stale / broken) derived from real ingestion runs — no
+    static value. "healthy" is the dashboard's "live"."""
+    session = _FakeSession(
+        price_pairs=[
+            (_make_price(), _make_snapshot(_dt(2026, 11, 17))),
+            (
+                _make_price(
+                    location="Russell",
+                    location_id=RUSSELL_ID,
+                    source_name="Sampletown Grain Co.",
+                    cash_price_bu=Decimal("6.60"),
+                    composite_key="russell|corn|dec 2026|dec 2026",
+                ),
+                _make_snapshot(_dt(2026, 11, 17)),
+            ),
+            (
+                _make_price(
+                    location="NoCoord Town",
+                    location_id=NO_COORD_ID,
+                    source_name="DG Global",
+                    futures_price=None,
+                    composite_key="nocoord town|corn|dec 2026|dec 2026",
+                ),
+                _make_snapshot(_dt(2026, 11, 17)),
+            ),
+        ],
+        locations=_locations(),
+        sources=[
+            _source("Test Elevator Co."),
+            _source("Sampletown Grain Co."),
+            _source("DG Global"),
+        ],
+        runs=[
+            _run("Test Elevator Co.", status="completed", minutes_ago=10),
+            _run("Sampletown Grain Co.", status="completed", minutes_ago=60 * 49),
+            _run("DG Global", status="failed", minutes_ago=30),
+        ],
+        snapshots=[],
+    )
+    client = _make_client(session)
+    try:
+        response = client.get("/api/basis/tracker", params={"commodity": "corn"})
+    finally:
+        client.app.dependency_overrides.clear()
+    assert response.status_code == 200
+    body = response.json()
+    by_location = {row["location"]: row for row in body["ranked"] + body["unranked"]}
+    assert by_location["Testville"]["source_status"]["status"] == "healthy"
+    assert by_location["Russell"]["source_status"]["status"] == "stale"
+    assert by_location["NoCoord Town"]["source_status"]["status"] == "broken"
+    # Unranked rows (missing futures price) still carry a source status.
+    assert by_location["NoCoord Town"]["missing_reason"] == "missing_futures_price"
+    assert body["source_statuses"] == {
+        "Test Elevator Co.": "healthy",
+        "Sampletown Grain Co.": "stale",
+        "DG Global": "broken",
+    }
+    assert "live" in body["source_status_note"]
+    assert "healthy" in body["source_status_note"]
+
+
+def test_tracker_rows_unknown_when_no_health_record() -> None:
+    """Cycle 17: a source with no ingestion run or snapshot is
+    "unknown" on its basis rows — never assumed healthy."""
+    session = _FakeSession(
+        price_pairs=_tracker_pairs(),
+        locations=_locations(),
+        sources=[_source("Test Elevator Co.")],
+        runs=[],
+        snapshots=[],
+    )
+    client = _make_client(session)
+    try:
+        response = client.get("/api/basis/tracker", params={"commodity": "corn"})
+    finally:
+        client.app.dependency_overrides.clear()
+    assert response.status_code == 200
+    body = response.json()
+    for row in body["ranked"] + body["unranked"]:
+        assert row["source_status"]["status"] == "unknown"
+        assert "No ingestion data" in row["source_status"]["note"]
+    assert set(body["source_statuses"].values()) == {"unknown"}
+
+
+def test_tracker_source_status_matches_name_case_insensitively() -> None:
+    """Cycle 17: the price row's source name is matched to the health
+    record case-insensitively, so a casing difference does not drop a
+    healthy source to "unknown"."""
+    session = _FakeSession(
+        price_pairs=[
+            (
+                _make_price(source_name="SAMPLETOWN GRAIN CO."),
+                _make_snapshot(_dt(2026, 11, 17)),
+            )
+        ],
+        locations=_locations(),
+        sources=[_source("Sampletown Grain Co.")],
+        runs=[_run("Sampletown Grain Co.", status="completed", minutes_ago=10)],
+        snapshots=[],
+    )
+    client = _make_client(session)
+    try:
+        response = client.get("/api/basis/tracker", params={"commodity": "corn"})
+    finally:
+        client.app.dependency_overrides.clear()
+    assert response.status_code == 200
+    assert response.json()["ranked"][0]["source_status"]["status"] == "healthy"
 
 
 def test_tracker_route_radius_excludes_far_and_unknown_locations() -> None:

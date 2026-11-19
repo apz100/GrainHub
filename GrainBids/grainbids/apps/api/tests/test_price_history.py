@@ -208,6 +208,53 @@ def test_seasonal_returns_empty_points_when_no_rows() -> None:
     assert "not invented" in body["note"].lower()
 
 
+def test_history_empty_state_names_source_and_date() -> None:
+    # Cycle 17: an honest empty state names its source and the date
+    # it was computed, so "no data" is dated, not a bare empty list.
+    client = _make_client(_FakeSession(price_rows=[]))
+    response = client.get("/api/prices/history", params={"commodity": "corn"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["point_count"] == 0
+    assert body["points"] == []
+    assert "Normalized prices" in body["source"]
+    assert body["as_of"] == _now().date().isoformat()
+    # The same fields are present when rows do exist.
+    rows = [_pair(2, cash_price_bu=Decimal("5.30"))]
+    client = _make_client(_FakeSession(price_rows=rows))
+    body = client.get("/api/prices/history", params={"commodity": "corn"}).json()
+    assert body["point_count"] == 1
+    assert "Normalized prices" in body["source"]
+    assert body["as_of"] == _now().date().isoformat()
+
+
+def test_seasonal_empty_state_names_source_and_date() -> None:
+    # Cycle 17: seasonal averages come only from real normalized
+    # prices; with none present the empty state is dated and sourced.
+    client = _make_client(_FakeSession(price_rows=[]))
+    response = client.get("/api/prices/seasonal", params={"commodity": "corn"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["years_covered"] == 0
+    assert body["points"] == []
+    assert "Normalized prices" in body["source"]
+    assert body["as_of"] == _now().date().isoformat()
+    # And a seeded multi-year response carries the same fields.
+    rows = []
+    for captured, cash in [
+        (datetime(2025, 3, 3, 12, tzinfo=timezone.utc), Decimal("6.00")),
+        (datetime(2026, 3, 2, 12, tzinfo=timezone.utc), Decimal("7.00")),
+    ]:
+        rows.append((_make_price(captured, cash_price_bu=cash), _make_snapshot(captured)))
+    client = _make_client(_FakeSession(price_rows=rows))
+    body = client.get("/api/prices/seasonal", params={"commodity": "corn"}).json()
+    assert body["point_count"] == 1
+    assert body["points"][0]["average_cash_price_bu"] == 6.50
+    assert body["points"][0]["years"] == [2025, 2026]
+    assert "Normalized prices" in body["source"]
+    assert body["as_of"] == _now().date().isoformat()
+
+
 def test_seasonal_uses_only_the_five_most_recent_years() -> None:
     rows = []
     for year in (2020, 2021, 2022, 2023, 2024, 2025):

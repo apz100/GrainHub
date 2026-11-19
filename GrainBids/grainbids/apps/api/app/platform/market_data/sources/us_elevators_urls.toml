@@ -161,14 +161,14 @@ url     = "https://www.midwaycoop.com/grain/cash-bids"
 # from static HTML (data loads via JS). Try "dtn" first, then "agricharts".
 
 [[us.elevators]]
-enabled = false
-type    = "unknown"
+enabled = true  # enabled 2026-11-19 (Cycle 17 audit): verified live Cycle 6 — Bushel .cbmod widget, 11 Corn rows, parsed by generic bushel_source.py; registry + toggle already on; toml still said unknown/disabled on the stale Cycle 1 note
+type    = "bushel"  # reclassified 2026-11-19 (Cycle 17 audit): unknown → bushel
 name    = "Ace Ethanol"
 url     = "https://www.aceethanol.com/cash-bids"
 
 [[us.elevators]]
-enabled = false
-type    = "dtn"  # reclassified 2026-11-19: DTN refs in HTML
+enabled = true  # enabled 2026-11-19 (Cycle 17 audit): verified live Cycle 7 — Bushel via iframe (agp.o.bushelsites.com/cash-bids), 1 row (Chester, NE Soybeans), parsed by generic bushel_source.py; registry + toggle already on; toml still said dtn/disabled
+type    = "bushel"  # reclassified 2026-11-19 (Cycle 17 audit): dtn → bushel (iframe)
 name    = "AGP"
 url     = "https://www.agp.com/grain/bids"
 
@@ -185,8 +185,8 @@ name    = "ALCIVIA"
 url     = "https://www.alcivia.com/cash-bids"
 
 [[us.elevators]]
-enabled = false
-type    = "unknown"
+enabled = true  # enabled 2026-11-19 (Cycle 17 audit): verified live Cycle 6 — Bushel .cbmod widget, 10 rows (Corn 5 + Soybeans 5, Gibson City - West), parsed by generic bushel_source.py; registry + toggle already on; toml still said unknown/disabled on the stale Cycle 1 note
+type    = "bushel"  # reclassified 2026-11-19 (Cycle 17 audit): unknown → bushel
 name    = "Alliance Grain"
 url     = "https://www.alliance-grain.com/cash-bids"
 
@@ -198,7 +198,7 @@ url     = "https://www.bungeag.com/cash-bids"
 
 [[us.elevators]]
 enabled = false
-type    = "unknown"
+type    = "stonex"  # reclassified 2026-11-19 (Cycle 17 audit): homepage Cash Bids section holds a lazy-loaded StoneX component iframe (no static bid rows) — same StoneX family as Frontier Coop / UFC per the catalogue (Cycles 9–10); no static route, render check only
 name    = "CRC"
 url     = "https://www.centralregioncoop.com/grain"
 
@@ -699,66 +699,69 @@ type    = "dtn"
 name    = "Wilton Farmers Union Elevator"
 url     = "https://www.wiltonfarmerselevator.com/index.cfm?show=11&mid=5&theLocation=1&cmid=all&layout=19"
 
-# ── BUSHEL — NEW TYPE, needs a collector (JS-rendered "Cash bids for [date]"
-# pages, "Data provided by Bushel"). All verified live 2026-11-19. Keep
-# disabled until a bushel collector exists.
+# ── BUSHEL — collector exists since Cycle 4 (`bushel_source.py`, generic
+# `.cbmod` parser, `direct_dict`). Verified-live entries are enabled;
+# the Cycle 17 audit enabled the 10 Cycle 4/5 sites + Ace Ethanol +
+# Alliance Grain + AGP that the toml had left disabled on the stale
+# Cycle 1 "no collector yet" note. Collwest stays disabled (confirmed
+# Canadian — see its entry). The Smithfield link-list entry stays
+# disabled (a per-location link list, not a bid page).
 
 [[us.elevators]]
-enabled = false
+enabled = true  # enabled 2026-11-19 (Cycle 17 audit): verified live Cycle 5 — Bushel .cbmod widget, 17 rows (Chandler, MN); registry + toggle already on; toml still disabled on the stale Cycle 1 "no collector yet" note
 type    = "bushel"
 name    = "Chandler Feed"
 url     = "https://chandlerfeed.o.bushelsites.com"
 
 [[us.elevators]]
-enabled = false
+enabled = true  # enabled 2026-11-19 (Cycle 17 audit): verified live Cycle 4 — Bushel .cbmod widget, 45 rows across 3 locations (Arcadia + Schleswig corn/soy, AGP Manning soy only); registry + toggle already on; toml still disabled on the stale Cycle 1 "no collector yet" note
 type    = "bushel"
 name    = "FAC"
 url     = "https://www.faccooperative.com/cash-bids"
 
 [[us.elevators]]
-enabled = false
+enabled = true  # enabled 2026-11-19 (Cycle 17 audit): verified live Cycle 5 — Bushel .cbmod widget, 4 rows (Cameron, MO, corn/soy); registry + toggle already on; toml still disabled on the stale Cycle 1 "no collector yet" note
 type    = "bushel"
 name    = "Cameron Coop"
 url     = "https://www.cameroncoop.com/"
 
 [[us.elevators]]
-enabled = false
+enabled = true  # enabled 2026-11-19 (Cycle 17 audit): verified live Cycle 5 — Bushel .cbmod widget, 4 rows (Bazine, KS, wheat/milo/corn); registry + toggle already on; toml still disabled on the stale Cycle 1 "no collector yet" note
 type    = "bushel"
 name    = "CGS"
 url     = "https://www.cgscoop.net/"
 
 [[us.elevators]]
-enabled = false
+enabled = true  # enabled 2026-11-19 (Cycle 17 audit): verified live Cycle 5 — Bushel .cbmod widget, 12 rows (Colfax, WA, soft white / HRW wheat + barley; PNW coverage); registry + toggle already on; toml still disabled on the stale Cycle 1 "no collector yet" note
 type    = "bushel"
 name    = "Almota Elevator"
 url     = "https://www.almotagrain.com/cash-bids"
 
 [[us.elevators]]
-enabled = false
+enabled = true  # enabled 2026-11-19 (Cycle 17 audit): verified live Cycle 5 — Bushel .cbmod widget, 2 rows (corn + grain sorghum) at the literal /cashbidssingle- URL; registry + toggle already on; toml still disabled on the stale Cycle 1 "no collector yet" note
 type    = "bushel"
 name    = "Williams Gin & Grain"
 url     = "https://williamsginandgrain.com/cashbidssingle-"
 
 [[us.elevators]]
-enabled = false
+enabled = true  # enabled 2026-11-19 (Cycle 17 audit): verified live Cycle 5 — Bushel .cbmod widget, 12 rows (Rugby, ND, HRS wheat/soy/corn); registry + toggle already on; toml still disabled on the stale Cycle 1 "no collector yet" note
 type    = "bushel"
 name    = "Rugby Farmers Elevator"
 url     = "https://rugbyfarmers.com/"
 
 [[us.elevators]]
-enabled = false
+enabled = true  # enabled 2026-11-19 (Cycle 17 audit): verified live Cycle 5 — Bushel .cbmod widget, 2 rows (Lake Norden, SD, corn/soy); registry + toggle already on; toml still disabled on the stale Cycle 1 "no collector yet" note
 type    = "bushel"
 name    = "Lake Norden Farmers Elevator"
 url     = "https://www.lakenordenfarmerselevator.net/cash-bids"
 
 [[us.elevators]]
-enabled = false
+enabled = true  # enabled 2026-11-19 (Cycle 17 audit): verified live Cycle 5 — Bushel .cbmod widget, 12 rows (Webster City, IA, corn/soy); distinct org from Batch 4 United Coop (unitedcooperative.com); registry + toggle already on; toml still disabled on the stale Cycle 1 "no collector yet" note
 type    = "bushel"
 name    = "United Cooperative"
 url     = "https://www.unitedcoop.com/cash-bids"
 
-# Collwest Grain: VERIFY COUNTRY FIRST — snippet prices look like CAD/tonne,
-# may be a Canadian operation. Do not enable in the US config until confirmed.
+# Collwest Grain: country CONFIRMED Canadian 2026-11-18 (Collingwood, ON; CAD) — removed from the US list per the catalogue; this entry is kept only as a disabled record so the URL is not re-added. Do not enable in the US config; covered by the Ontario collwest_source.py + bushel fetch_collwest_bushel.
 [[us.elevators]]
 enabled = false
 type    = "bushel"
@@ -766,23 +769,24 @@ name    = "Collwest Grain"
 url     = "https://collwestgrain.o.bushelsites.com"
 
 [[us.elevators]]
-enabled = false
+enabled = true  # enabled 2026-11-19 (Cycle 17 audit): verified live Cycle 5 — Bushel .cbmod widget, 3 rows (Forest River, ND, corn/soy/wheat); registry + toggle already on; toml still disabled on the stale Cycle 1 "no collector yet" note
 type    = "bushel"
 name    = "Forest River Coop"
 url     = "https://www.forestrivercoop.com/"
 
-# ── USDA MIRRORS — NEW TYPE, needs a collector. One fetch returns the USDA
-# AMS daily cash-bid report incl. Gulf export rows (the only public Gulf/PNW
-# route found). Keep disabled until a usda collector exists.
+# ── USDA MIRRORS — collector exists since Cycle 4 (`usda_mirror_source.py`).
+# One fetch returns the USDA AMS daily cash-bid report incl. Gulf export
+# rows (the only public Gulf/PNW route found). Both entries enabled in
+# the Cycle 17 audit (verified live Cycle 4, toggles + registry already on).
 
 [[us.elevators]]
-enabled = false
+enabled = true  # enabled 2026-11-19 (Cycle 17 audit): USDA AMS daily cash-bid report mirror, verified live Cycle 4 (usda_mirror_source.py); registry + toggle (usda_mirror_jvg) already on; toml still disabled on the stale Cycle 1 "no collector yet" note
 type    = "usda"
 name    = "James Valley Grain (USDA mirror)"
 url     = "https://jamesvalleygrain.com/pages/usdacash.php"
 
 [[us.elevators]]
-enabled = false
+enabled = true  # enabled 2026-11-19 (Cycle 17 audit): same USDA AMS report, second host, verified live Cycle 4 (usda_mirror_source.py); registry + toggle (usda_mirror_fsg) already on; toml still disabled on the stale Cycle 1 "no collector yet" note
 type    = "usda"
 name    = "FS Grain (USDA mirror)"
 url     = "https://www.fsgrain.com/pages/usdacash.php"

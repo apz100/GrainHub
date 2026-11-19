@@ -1,4 +1,4 @@
-# Grain Platform — Unified Repo
+# GrainHub — Unified Repo
 
 One repo containing all the code from Adam's two existing repos, merged
 verbatim (no code changes, only this top-level README and .gitignore added).

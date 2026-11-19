@@ -3514,3 +3514,33 @@ One call per site, no retries. **All 6 returned `status: ok` with exact row-coun
 ### Mae-Mart proxy URL stored extensionless (mocked tests only, 0 GETs)
 
 Following the Cycle 29 finding (the `.php` URL now 301s to the extensionless canonical form), the stored proxy URL in `mae_mart_source.py` was updated: `http://www.mae-martfarms.com/grain-proxy.php` → `http://www.mae-martfarms.com/grain-proxy` (5 occurrences, URL string only, no behaviour change; scheme kept as `http`). Query construction unchanged (one GET per symbol). New mocked test `test_mae_mart_proxy_url_is_extensionless` asserts the constant and that the mocked fetch calls exactly that URL with `params == {"symbols": "ZCZ26=F"}`. Full suite 710 passed.
+
+## Cycle 31 — Bushel samples #3 + Cycle 4/5 sites: 12/12 exact; Almota joins staleness watch (2026-11-19)
+
+### Bushel per-location sample #3 (6 calls)
+
+One call per site, no retries. **All 6 returned `status: ok` with exact row-count matches** to the Cycles 13–16 baselines. Counts only, no values recorded.
+
+| Site | Rows now | Header date | Verdict |
+|---|---|---|---|
+| Skyland 2740 Moscow/Dermot/Kismet/Pleasant Valley | 7 | Nov 19 | Exact match |
+| Skyland 3621 Vilas–Walsh | 5 | **Nov 18** | Exact match (count); still one day stale |
+| Smithfield 2294 Chadbourn | 1 | **Nov 18** | Exact match (count); still one day stale |
+| Smithfield 1725 Bladenboro | 1 | Nov 19 | Exact match |
+| Smithfield 2064 Kinston JCH, NC | 3 | Nov 19 | Exact match |
+| Smithfield 1683 Creswell | 2 | Nov 19 | Exact match |
+
+### Cycle 4/5 Bushel sites re-verification (6 calls)
+
+One call per site, no retries. **All 6 returned `status: ok` with exact row-count matches** to Cycle 5. Counts only, no values recorded.
+
+| Site | Rows now | Cycle 5 | Locations |
+|---|---|---|---|
+| Chandler Feed | 17 | 17 | 1 (Chandler) |
+| Cameron Coop | 4 | 4 | 1 (Cameron) |
+| CGS | 4 | 4 | 1 (Bazine) |
+| Almota | 12 | 12 | 1 (Colfax) |
+| Williams Gin | 2 | 2 | 1 ("Williams Gin & Grain" as location label; town still unconfirmed from the page, as in Cycle 5) |
+| Rugby | 12 | 12 | 1 (Rugby) |
+
+**New staleness note: Almota's widget header is dated Nov 18** — one day stale, the same lag pattern as Chadbourn / Hugoton / Vilas-Walsh / Hamer. Its row count is still exactly 12, so the collector parses it fine; the page is serving yesterday's board. Almota joins the staleness watch list (first stale probe for it). The watch list is now five widgets: Chadbourn, Hamer, Hugoton (3370), Vilas-Walsh (3621), Almota — all exactly one day behind, all still on the exemption list for any future freshness gate.

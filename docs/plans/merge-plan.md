@@ -3200,3 +3200,216 @@ Chadbourn + Hamer + Skyland 3370/3621 staleness watch
 in Cycles 14 and 24); Mae-Mart cash-price decision; Mae-Mart
 proxy stored-URL update (optional, extensionless form); poller
 scheduling decision; currency decision.
+
+---
+
+## Cycle 30 (added Cycle 31)
+
+### 0p. Branch chain — Cycle 30, verified from git
+
+The chain is **still linear**: `git log --oneline
+master..overnight/grainhub-cycle-30` gives **79 commits** (77
+through Cycle 29 + 2 in Cycle 30), **0 merge commits**, no
+branch points. Cycle 30's first commit `7c18db0` has parent
+`fc7cf03` (the Cycle 29 tip), and merge-base(29, 30) is the
+Cycle 29 tip `fc7cf03`. Per-branch commit count for Cycle 30: 2
+(`7c18db0`, `d3e3b69`).
+
+That means the §2 procedure continues unchanged: merge Cycle 30
+after 29, one branch at a time with `--no-ff`, running the §3
+gates at each step. A single fast-forward of `master` to the
+`cycle-30` tip (`d3e3b69`) would give the same tree as thirty
+sequential merges; prefer the sequential merges for the same
+reason as §0 (a review checkpoint and stop point per cycle).
+
+(The Cycle 29 section's "77 commits master..cycle-29" figure
+was re-verified in Cycle 31 and is correct — 77, 0 merge
+commits. `master` is still at `f2c3206` — no cycle work is on
+`master` yet.)
+
+### 1p. What the branch contains (Cycle 30)
+
+| Branch | Tip | Tests at tip | Web build at tip |
+|---|---|---|---|
+| Cycle 30 | `d3e3b69` | 710 passed, 0 failed | Not re-run (no web files changed; last full pass Cycle 17) |
+
+Tip commit hash (full): `d3e3b69058000e461135ce7174c6931fb1ad8884`.
+No web files changed in Cycle 30, so there is no fresh
+web-build evidence in this range. 6 files changed in Cycle 30
+(416 insertions, 11 deletions): `mae_mart_source.py` (9
+insertions, 6 deletions), `test_ontario_collectors.py` (+32),
+the super-plan §9 (20 lines changed), the merge plan (+214),
+the Cycle 30 report itself (+125), and the price-source
+catalogue (+21).
+
+- **Cycle 30** (`overnight/grainhub-cycle-30`; commits `7c18db0`,
+  `d3e3b69`): Bushel per-location sample #2 re-verification —
+  **6/6 exact matches (one call per site, no retries)**. All 6
+  returned `status: ok` with row counts exactly matching the
+  Cycles 13–16 baselines. Counts only, no values recorded.
+
+  | Site | Rows now | Header date | Verdict |
+  |---|---|---|---|
+  | Skyland 2734 Etter | 5 | Nov 19 | Exact match |
+  | Skyland 2761 Elkhart–Hough–Rolla Area | 6 | Nov 19 | Exact match |
+  | Skyland 2778 Buckeye–Syracuse | 6 | Nov 19 | Exact match |
+  | Smithfield 1670 Hobbsville | 3 | Nov 19 | Exact match |
+  | Smithfield 1690 Petersburg, VA | 4 | Nov 19 | Exact match |
+  | Smithfield 2179 Hamer, SC | 1 | **Nov 18** | Exact match (count); still one day stale |
+
+  5 of 6 headers fresh (Nov 19); only Hamer remains dated
+  Nov 18 — same one-day lag as Cycles 16 and 24, count
+  unchanged, so site-side staleness, not a collector issue.
+  Delivery-label structure unchanged (Skyland "N/C 26/27"
+  labels; Petersburg's second Soybeans row still carries the
+  "Nov 2026 - SBOC 10% or Above" label).
+- **Mae-Mart proxy URL stored extensionless (mocked tests
+  only, 0 GETs):** following the Cycle 29 finding (the `.php`
+  URL now 301s to the extensionless canonical form), the
+  stored proxy URL in `mae_mart_source.py` was updated:
+  `http://www.mae-martfarms.com/grain-proxy.php` →
+  `http://www.mae-martfarms.com/grain-proxy` (5 occurrences,
+  URL string only, no behaviour change; scheme kept as
+  `http`). Query construction unchanged (one GET per symbol).
+  The only remaining `.php` mention in the file is inside the
+  historical Cycle 29 parenthetical explaining the 301 (the
+  old URL, not a called URL). **1 new test**
+  (`test_mae_mart_proxy_url_is_extensionless`) asserts the
+  constant and that the mocked fetch calls exactly that URL
+  with `params == {"symbols": "ZCZ26=F"}`. No existing test
+  asserted the `.php` URL literally — the existing proxy test
+  asserts against the constant, so it covers the new URL
+  automatically. Targeted file 18 passed; **full suite 710
+  passed**. Two self-caught issues fixed by the worker (a wrong
+  test expectation — the fake returns the full 3-symbol
+  synthetic payload — and a duplicated docstring line).
+- **Merge plan extended to Cycle 29** (214 lines added, 0
+  removed — verified from the `cycle-29..cycle-30` diff). The
+  Cycle 28 section's "75 commits" figure re-verified correct
+  in Cycle 30. No discrepancies found between git and the
+  Cycle 29 report.
+- **Super-plan §9 extended to Cycle 29** (heading/intro now
+  cover Cycles 1–29, test chain 179 → 709; Cycle 29 bullet
+  added; blockers updated — Bushel sample 6/6, Mae-Mart
+  viable, proxy canonical URL now extensionless).
+- **Boundary applied:** zero references in any new Cycle 30
+  code, tests, fixtures, or docs (verified by grep on the added
+  lines of the commit). No contact made.
+  Full detail: `docs/plans/overnight-cycle-30-report.md`.
+
+### 3p. Gates — updated expectations for Cycle 30
+
+§3 applies unchanged, with these per-cycle numbers:
+
+1. **Full API test suite** — expect Cycle 30: 710 — **0 failed**.
+   (Cycle 29 ended at 709; Cycle 30 adds 1 Mae-Mart proxy URL
+   test.)
+2. **Web build** — re-run once at the Cycle 30 step so the final
+   tree is verified as a whole. No web files changed in Cycle 30,
+   so a re-run is a no-op confirmation; last full pass remains
+   Cycle 17.
+3. **Alembic heads** — expect exactly one head, `0019`
+   (unchanged since Cycle 7). Verified from git: no migration
+   file was added in Cycle 30 (`git log` on the Alembic versions
+   dir in `cycle-29..cycle-30` is empty, and the file list at
+   the Cycle 30 tip is `0001`–`0019`).
+4. **Boundary spot-check** — grep the Cycle 30 range diff for
+   the excluded elevator name; expect zero new references in
+   code, tests, fixtures, or docs.
+5. **No-secrets spot-check** — no new credentials, keys, or
+   tokens in the Cycle 30 diff (none are reported).
+
+### 4p. Known conflicts and overlaps — Cycle 30
+
+- **Files also touched by earlier cycles:** the price-source
+  catalogue (edited in every cycle — Cycle 30's additions are
+  the Bushel sample #2 6/6 re-verification results and the
+  Mae-Mart extensionless-URL note; no earlier text was
+  rewritten), the merge plan (pure append of the Cycle 29
+  section, 214 lines added, 0 removed), the super-plan §9
+  (Cycle 29 bullet + blockers update; no earlier bullet was
+  rewritten).
+- **Mae-Mart source** (`app/platform/market_data/sources/
+  mae_mart_source.py`) — touched in **Cycle 30** (9 insertions,
+  6 deletions: the stored proxy URL, `.php` → extensionless,
+  5 occurrences). Last touched before that in Cycle 19 (the
+  futures-proxy fill), so no other cycle in the chain edits the
+  same lines in this range; the Cycle 30 change applies cleanly
+  on top of the Cycle 19 version. Its test file
+  (`tests/test_ontario_collectors.py`, +32 lines, 1 new test)
+  is likewise Cycle 30-only in this range.
+- **`config.toml`** (`app/platform/market_data/sources/
+  config.toml`) — **not touched in Cycle 30** (`git log` on it
+  in `cycle-29..cycle-30` is empty; last touched in Cycle 23
+  with the two toggle flips). No toggle value changed this
+  cycle; Heartland/Mulvane stay `false`, all other AgriCharts
+  toggles stay `true`.
+- **No registry, orchestration, or other code file touched in
+  Cycle 30** — besides the Mae-Mart URL change, the cycle is
+  docs/research only. `app/services/source_registry.py`,
+  `app/services/source_orchestration.py`,
+  `us_agricharts_source.py`, `us_dtn_source.py`, and
+  `app/main.py` were not touched this cycle.
+- **Migration chain** — unchanged: `0015 → … → 0018` (Cycle 1)
+  then `0019` (Cycle 7), single head throughout Cycle 30.
+
+### 5p. What must NOT be merged as-is — update
+
+- **The CI workflow file is STILL not in any branch.** Verified
+  2026-11-19 (Cycle 31): `?? .github/` in `git status` on the
+  Cycle 31 checkout (`.github/workflows/api-tests.yml`).
+  Merging Cycle 30 as well as 1–29 will **not** bring it into
+  `master`. Same remedy as §5: Adam re-authenticates `gh` with
+  `workflow` scope, or adds the file via the GitHub web UI. Do
+  not hand-copy it into a merge commit.
+- **Nothing else new is held back in Cycle 30.** No new unpushed
+  files, secrets, or held-back work is reported in the Cycle 30
+  report. The §5 review-not-blocker list is unchanged and carried
+  forward: email-bid endpoint public by default, futures
+  endpoints still return prices `null` until a licensed feed is
+  wired (the Mae-Mart proxy now fills `futures_price` on
+  collector rows only — it does not feed the futures endpoints),
+  Advisor `/ask` is a 501 scaffold, eSign is a stub, normalized
+  price rows carry no currency (`currency: null`).
+- **Open decisions carried forward from Cycle 30 (not
+  blockers):** **nothing new needs Adam in Cycle 30.** The
+  Bushel sample #2 is re-verified 6/6 and the Mae-Mart proxy
+  URL is now stored extensionless — **done**, closing the
+  optional stored-URL update carried in §5o/§7o. Playwright
+  render checks still pending (DTN family — Al-Corn + Sunrise
+  first — FMN filtered view (Winchester `location_filter=2523`),
+  Mapleview, StoneX family (Frontier, CRC, UFC), The Andersons
+  — closed for static collection, browser-only — and Landus,
+  Vercel checkpoint); DTN toggles stay `false` until verified;
+  scheduling the poller as a second cron job (deployment
+  decision, checklist §4 step 6); Mae-Mart `cash_price` from
+  futures + static basis (still open, gated on the
+  licensed-feed decision); at least one `Commodity` row must
+  exist before the first poller run; agricharts User-Agent
+  decision resolved in Cycle 23 (Chrome UA kept). Still needs
+  Adam (carried from Cycles 1–29, nothing new in Cycle 30):
+  NASS key, FAS/data.gov key, LLM provider + key, Barchart/DTN
+  licensed feed decision (redistribution licence — now also
+  gates the CGB `cashbids-js.php` question and the Mae-Mart
+  cash-price decision), ERP choice (Agvance recommended),
+  eSign provider, pricing/hosting decisions, `gh` `workflow`
+  scope, currency column decision (four concrete choices in
+  `docs/plans/currency-design.md`), email-bid endpoint auth
+  decision (public vs admin-only).
+
+### 7p. After the merges — updated
+
+§7 applies with the Cycle 30 tip as the end state: Alembic head
+`0019` (unchanged since Cycle 7), test suite 710 passed / 0
+failed, web build last fully passed in Cycle 17 (re-run at the
+Cycle 30 merge step). The still-open decisions list in §7.4 is
+unchanged by Cycle 30 except for the additions in §5p above.
+Open work carried forward: Playwright render checks (DTN family
+— Al-Corn + Sunrise first — FMN filtered view, Mapleview,
+StoneX including Frontier, The Andersons — closed for static
+collection, browser-only — and Landus, Vercel checkpoint);
+Heartland / Mulvane closed for now (no new hypothesis);
+Chadbourn + Hamer + Skyland 3370/3621 staleness watch
+(exemption list; Hamer still one day stale, Nov 18 header, as
+in Cycles 16 and 24); Mae-Mart cash-price decision; poller
+scheduling decision; currency decision.

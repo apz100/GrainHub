@@ -227,6 +227,7 @@ def test_registry_twelve_verified_sites_and_key_errors():
         "midway_coop",
         "pro_coop",
         "pro_coop_21302",
+        "pro_coop_21302b",
         "stateline_coop",
         "superior_ag",
         "tgm",
@@ -277,6 +278,18 @@ def test_registry_new_sites_use_verified_live_js_urls():
     )
     assert pro_coop_21302.js_url.endswith("&&acCnt=1")
     assert pro_coop_21302.default_location == "MANSON.IA"  # 1 location, 21302
+    pro_coop_21302b = cashbids_embed_source.get_cashbids_embed_site(
+        "pro_coop_21302b"
+    )
+    assert pro_coop_21302b.company == "PRO Coop"
+    assert pro_coop_21302b.js_url.startswith(
+        "https://procooperative.agricharts.com/inc/cashbids/cashbids-js.php"
+        "?filter=location&location=21302&commodity=&groupby=ccommodity"
+    )
+    # Second 21302 embed: its fields list omits delivery_end.
+    assert "delivery_end" not in pro_coop_21302b.js_url
+    assert pro_coop_21302b.js_url.endswith("&&acCnt=1")
+    assert pro_coop_21302b.default_location == "MANSON.IA"  # 1 location, 21302
     hull_coop = cashbids_embed_source.get_cashbids_embed_site("hull_coop")
     assert hull_coop.company == "Hull Coop"
     assert hull_coop.js_url.startswith(
@@ -446,6 +459,59 @@ def test_fetch_pro_coop_21302_uses_verified_url() -> None:
         result = cashbids_embed_source.fetch_pro_coop_21302()
     mock_get.assert_called_once_with(
         cashbids_embed_source.get_cashbids_embed_site("pro_coop_21302").js_url
+    )
+    assert result["status"] == "ok"
+    assert result["company"] == "PRO Coop"
+    assert result["location"] == "MANSON.IA"
+    assert len(result["rows"]) == 3
+
+
+# ---------------------------------------------------------------------------
+# Cycle 13 — PRO Coop 21302, second embed (Manson, IA)
+# ---------------------------------------------------------------------------
+
+
+def test_pro_coop_21302b_sample_parses_manson_corn_soybeans_rows():
+    site = cashbids_embed_source.get_cashbids_embed_site("pro_coop_21302b")
+    result = cashbids_embed_source.parse_cashbids_embed_html(
+        _read("cashbids_embed_pro_coop_21302b_sample.html"), site=site
+    )
+    assert result["status"] == "ok"
+    assert result["company"] == "PRO Coop"
+    # 4 cashbids in the payload minus 1 login-gated.
+    assert len(result["rows"]) == 3
+    assert result["location"] == "MANSON.IA"
+    assert {row["location"] for row in result["rows"]} == {"MANSON.IA"}
+    assert {row["commodity"] for row in result["rows"]} == {"Corn", "Soybeans"}
+    assert all(row["currency"] == "USD" for row in result["rows"])
+    assert all(row["unit"] == "$/bu" for row in result["rows"])
+    dec = next(
+        row for row in result["rows"] if row["futures_symbol"] == "ZCZ26"
+    )
+    # futures "502-4" = 502.5 cents -> $5.025; basis -28 cents -> -$0.28.
+    assert dec["futures_price"] == pytest.approx(5.025)
+    assert dec["basis"] == pytest.approx(-0.28)
+    assert dec["cash_price"] == pytest.approx(4.72)
+    assert dec["futures_month"] == "Dec 2026"
+    assert dec["delivery_month"] == "Nov 2026"
+    # The second embed's fields list omits delivery_end, but the
+    # payload still carries it on every row — pin that here.
+    assert all(row["delivery_end"] is not None for row in result["rows"])
+    assert dec["delivery_end"] == "11/30/2026"
+    notes = " ".join(result["notes"])
+    assert "1 login-gated" in notes
+
+
+def test_fetch_pro_coop_21302b_uses_verified_url() -> None:
+    html = _read("cashbids_embed_pro_coop_21302b_sample.html")
+    with patch.object(
+        cashbids_embed_source,
+        "fetch_cashbids_embed_html",
+        return_value=html,
+    ) as mock_get:
+        result = cashbids_embed_source.fetch_pro_coop_21302b()
+    mock_get.assert_called_once_with(
+        cashbids_embed_source.get_cashbids_embed_site("pro_coop_21302b").js_url
     )
     assert result["status"] == "ok"
     assert result["company"] == "PRO Coop"

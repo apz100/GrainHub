@@ -234,7 +234,7 @@ status) instead of failing silently:
 - [ ] §0: cycle branches reviewed + merged to `master`; keys/decisions recorded.
 - [ ] §1: Supabase project confirmed; `DATABASE_URL` set in Render only.
 - [ ] §2: Render + Vercel env vars set; no secrets in git.
-- [ ] §3: `alembic heads` = single head `0018`; `alembic current` = `0018` after upgrade.
+- [ ] §3: `alembic heads` = single head `0019`; `alembic current` = `0019` after upgrade.
 - [ ] §4: Ingestion scheduled 08:00 + 15:00 America/Toronto; first run verified in source health.
 - [ ] §5: Health checks 1–11 pass (or each failure recorded with its cause).
 - [ ] §6: Previous known-good Render + Vercel deploys identified for rollback.

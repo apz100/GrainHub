@@ -282,3 +282,177 @@ to a bad merge itself:
    endpoint auth (public vs admin-only), and Playwright render
    checks (12 DTN-family JS-only sites, FMN filtered view,
    Mapleview). Full list in the super-plan §9.
+
+---
+
+## Cycles 8–12 (added Cycle 13)
+
+**Status: PLAN ONLY — nothing has been merged.** §§0–7 above cover
+Cycles 1–7 and are unchanged. This section extends the plan to
+Cycles 8–12, verified from git history and the cycle reports on
+2026-11-19 (Cycle 13). `master` is still at `f2c3206` — no cycle
+work is on `master` yet.
+
+### 0b. Branch chain — Cycles 8–12, verified from git
+
+The chain is **still linear**: `git log --oneline
+master..overnight/grainhub-cycle-12` gives **43 commits** (32
+through Cycle 7 + 11 in Cycles 8–12), **0 merge commits**, no
+branch points. Cycle 8's first commit `b0ba527` has parent
+`7d3240f` (the Cycle 7 tip), and each later cycle branches from
+the previous tip. Per-branch commit counts: Cycle 8: 3, Cycle 9: 2,
+Cycle 10: 2, Cycle 11: 2, Cycle 12: 2.
+
+That means the §2 procedure continues unchanged: merge in order
+8 → 12 after 7, one branch at a time with `--no-ff`, running the
+§3 gates at each step. A single fast-forward of `master` to the
+`cycle-12` tip (`4b2472b`) would give the same tree as twelve
+sequential merges; prefer the sequential merges for the same
+reason as §0 (a review checkpoint and stop point per cycle).
+
+### 1b. What each branch contains (Cycles 8–12)
+
+| Branch | Tip | Tests at tip | Web build at tip |
+|---|---|---|---|
+| Cycle 8 | `62f9480` | 407 passed, 0 failed | Not re-run (no web files changed) |
+| Cycle 9 | `17d26cb` | 454 passed, 0 failed | Not re-run (no web files changed) |
+| Cycle 10 | `7e1a94e` | 488 passed, 0 failed | **PASS** (re-run this cycle) |
+| Cycle 11 | `7696cc0` | 536 passed, 0 failed | Not re-run (no web files changed; last full pass Cycle 10) |
+| Cycle 12 | `4b2472b` | 558 passed, 0 failed | Not re-run (no web files changed; last full pass Cycle 10) |
+
+No web files changed in any of Cycles 8–12 (Cycle 10's report
+confirms none changed since Cycle 5), so the only fresh web-build
+evidence in this range is Cycle 10's pass.
+
+- **Cycle 8** (`overnight/grainhub-cycle-8`; commits `b0ba527`,
+  `aa570be`, `62f9480`): docs-only cycle — this merge plan (§§0–7),
+  super-plan §9 progress to Cycle 7, deployment-checklist
+  migration head corrected `0018 → 0019`; plus a re-check sweep in
+  the catalogue (all 5 Cycle 6 failures back up; Five Star 299
+  static wpDataTables rows; StoneX has no static-data route). No
+  code, so no new tests — suite unchanged at 407.
+  Full detail: `docs/plans/overnight-cycle-8-report.md`.
+- **Cycle 9** (`overnight/grainhub-cycle-9`; commits `0b35f18`,
+  `17d26cb`): Five Star Coop wpDataTables collector (299 rows, 21
+  locations; new generic `wpdatatables_source.py`, 43 tests);
+  ALCIVIA + TGM `cashbids.php` embeds proven (543 rows); CRC
+  resolved as StoneX-only. 47 new tests, suite 454.
+  Full detail: `docs/plans/overnight-cycle-9-report.md`.
+- **Cycle 10** (`overnight/grainhub-cycle-10`; commits `52c6d42`,
+  `7e1a94e`): FMN `writeBidRow` collector (453 rows, 87 delivery
+  points, 204 tables; new `fmn_source.py`, 31 tests); 19-site US
+  sweep (13 reclassified, Sunrise enabled, Synergy Cooperative
+  registered in `bushel_source.py`, 3 tests); currency design note
+  (`docs/plans/currency-design.md`). Web build re-run: PASS. 34
+  new tests, suite 488.
+  Full detail: `docs/plans/overnight-cycle-10-report.md`.
+- **Cycle 11** (`overnight/grainhub-cycle-11`; commits `fd8d58e`,
+  `7696cc0`): FMN `jsquote` feed fills 449/449 futures-linked
+  rows; PRO Coop embed proven; Wheaton Grain tabbed-widget
+  fallback in `bushel_source.py` (`_parse_tabbed_widget`,
+  easyResponsiveTabs); 9-site sub-page sweep (Pro Ag 78 rows and
+  Winchester 10 rows registered; Skyland corrected to 6 static
+  rows and registered; West-Con parser gap found — month-name
+  delivery labels; The Andersons GRAINweb picker documented, no
+  static route). 48 new tests net, suite 536.
+  Full detail: `docs/plans/overnight-cycle-11-report.md`.
+- **Cycle 12** (`overnight/grainhub-cycle-12`; commits `cfa6161`,
+  `4b2472b`): West-Con regex fix (month-name + short-month
+  delivery labels; 84/84 West-Con, 43/43 Wheaton Dumont) unblocks
+  2 sites; Hull / StateLine / PRO-21302 `cashbids.php` embeds
+  proven (12 + 126 + 12 rows) and enabled; three per-location
+  Bushel probes enabled (Georgetown 3440, Skyland 2730,
+  Bentonville 1666). 22 new tests, suite 558.
+  Full detail: `docs/plans/overnight-cycle-12-report.md`.
+
+### 3b. Gates — updated expectations for Cycles 8–12
+
+§3 applies unchanged, with these per-cycle numbers:
+
+1. **Full API test suite** — expect Cycle 8: 407, Cycle 9: 454,
+   Cycle 10: 488, Cycle 11: 536, Cycle 12: 558 — **0 failed** at
+   every step.
+2. **Web build** — re-run once at the Cycle 10 step (it passed
+   there) and once at the Cycle 12 step so the final tree is
+   verified as a whole. Cycles 8, 9, 11, 12 changed no web files,
+   so a build failure at one of those steps would point at an
+   earlier cycle, not the branch being merged.
+3. **Alembic chain** — head is **still `0019`**. Verified from
+   git: no migration file was added in Cycles 8–12 (`git log` on
+   the Alembic versions dir in `master..cycle-12` shows only the
+   Cycle 1 and Cycle 7 commits, and the file list at the Cycle 12
+   tip is `0001`–`0019`). Expect exactly one head, `0019`, at
+   every step 8–12.
+4. **Boundary spot-check** — each Cycle 8–12 report has its own
+   boundary section; Cycle 10 notes the company named in the
+   Cycle 2 boundary appears as one ordinary FMN delivery point
+   among 87 — ordinary source only, consistent with the boundary.
+   Re-check once at the Cycle 12 step as in §3.4.
+5. **No-secrets spot-check** — as §3.5; all five reports state
+   none.
+
+### 4b. Known conflicts and overlaps — Cycles 8–12
+
+The chain is still linear, so a sequential merge still produces
+no conflicts. The §4 watch-list extends as follows:
+
+- **Price-source catalogue** (`docs/plans/price-source-catalogue.md`)
+  — edited in **every** cycle 8–12 as well (all five work commits
+  touch it). Same rule as §4: later wins.
+- **Source registry** (`app/services/source_registry.py`) —
+  touched in Cycles 9–12 (Cycle 8 added no code): Five Star
+  adapter (9), Synergy (10), Winchester + Skyland (11), Hull /
+  StateLine / PRO + three per-location entries (12). Later wins,
+  never drop a registration.
+- **`us_elevators_urls.toml`** — reclassifications accumulate in
+  Cycles 9–12: Five Star `dtn → wpdatatables` (9); 13 in the
+  Cycle 10 sweep; Pro Ag / West-Con / Hull / StateLine /
+  Winchester / Skyland (11); West-Con / Wheaton Dumont / Hull /
+  StateLine / PRO + per-location entries (12). The Cycle 12 values
+  are the current truth.
+- **`bushel_source.py`** — touched in Cycles 10 (Synergy site +
+  `fetch_synergy`), 11 (tabbed-widget fallback
+  `_parse_tabbed_widget` for Wheaton Grain — additive, only runs
+  when no `div.cbCommodity` sections are found), and 12
+  (per-location entries). A bad resolve here would lose the
+  Wheaton tabbed shape; same care as the Cycle 6 string-literal
+  note in §4, but there is no broken intermediate commit in this
+  range.
+- **Super-plan §9** (`docs/plans/grainhub-super-plan.md`) —
+  updated in Cycle 8 (progress to Cycle 7) and Cycle 12; linear,
+  no conflict expected.
+- **Migration chain** — unchanged: `0015 → … → 0018` (Cycle 1)
+  then `0019` (Cycle 7), single head throughout Cycles 8–12.
+
+### 5b. What must NOT be merged as-is — update
+
+- **The CI workflow file is STILL not in any branch.** Verified
+  2026-11-19 (Cycle 13): `?? .github/` in `git status` on the
+  Cycle 13 checkout. Merging Cycles 8–12 as well as 1–7 will
+  **not** bring it into `master`. Cycle 9 adds a cautionary
+  detail: that cycle it was accidentally staged by `git add -A`
+  and the push was rejected for exactly the `workflow`-scope
+  reason; the commit was redone without it and the file remains
+  untracked locally. Same remedy as §5: Adam re-authenticates
+  `gh` with `workflow` scope, or adds the file via the GitHub web
+  UI. Do not hand-copy it into a merge commit.
+- **§7 step 1 is partly done on the branch already:** Cycle 8
+  (`b0ba527`) corrected `docs/plans/deployment-checklist.md` §3
+  to head `0019` — but the §8 deploy sign-off checklist still
+  says `alembic heads` = single head `0018` (stale line). Fix that
+  line when merging; do not deploy against the stale number.
+- **Nothing else new is held back in Cycles 9–12.** No new
+  unpushed files, secrets, or held-back work is reported in any
+  of the five reports. The §5 review-not-blocker list is
+  unchanged, with one addition: Cycle 10 wrote a currency design
+  doc (`docs/plans/currency-design.md`), but normalized price rows
+  still carry no currency — the currency decision is still open.
+
+### 7b. After the merges — updated
+
+§7 applies with the Cycle 12 tip as the end state: Alembic head
+`0019` (unchanged since Cycle 7), test suite 558 passed / 0
+failed, web build last fully passed in Cycle 10 (re-run at the
+Cycle 12 merge step). The still-open decisions list in §7.4 is
+unchanged by Cycles 8–12, plus the currency design doc now exists
+as the basis for the currency-column decision.

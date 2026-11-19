@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html><head><title>Synthetic cashbids-js.php response — PRO Coop, location 21302 (Manson, IA), second embed</title></head>
+<body>
+<!--
+  SYNTHETIC fixture for tests/test_cashbids_embed_collector.py.
+  Modeled on the PRO Coop location-21302 cashbids-js.php response
+  shape (verified live 2026-11-19, Cycle 13): filter=location,
+  location=21302, groupby=ccommodity, 1 location group
+  (MANSON.IA), groups CORN / SOYBEANS. This is the SECOND of the
+  homepage's two 21302 embeds — its loader src sits in the
+  homepage's elementor-hidden-desktop section and its fields list
+  omits delivery_end (delivery_start / price / basis /
+  futureschange only). The fields list does NOT filter the payload:
+  the live response still carries delivery_end on every row, and
+  its (commodity, delivery window, symbol, futures month) structure
+  matches the first embed's payload exactly — the two embeds serve
+  the same Manson view. The fixture keeps delivery_end in the
+  payload to pin that behaviour.
+  ALL values below are invented test data, not live prices.
+-->
+<script type="text/javascript" language="javascript" nonce="ac-sites-inline-js" id="cb-functions" is-independent="true">var bids = [{"id":"21302","customer":"999","name":"CORN","display_name":"CORN","short_name":"CORN","cashbids":[{"id":"51","commodity":"97230","symbol":"ZCZ26","delivery_start":"11/01/2026","delivery_end":"11/30/2026","basis":-28,"require_login":false,"active":true,"unitvalue":1,"unitweight":56,"sym_root":"ZC","basismonth":"Dec 2026","futures":"502-4","futureschange":"-2-2","timestamp":1795044628,"realtime":false,"cashpricebushel":"$4.72","price":"$4.72","pricetonne":"$174.10","change":"$-0.02","rawchange":-0.02,"cashprice":"$4.72","cashpricetonne":"$174.10","futuresprice":"502-4","name":"CORN","location_id":"21302","location_name":"MANSON.IA","location":"21302"},{"id":"52","commodity":"97230","symbol":"ZCH27","delivery_start":"03/01/2027","delivery_end":"03/31/2027","basis":-32,"require_login":false,"active":true,"unitvalue":1,"unitweight":56,"sym_root":"ZC","basismonth":"Mar 2027","futures":"512-6","futureschange":"0-2","timestamp":1795044628,"realtime":false,"cashpricebushel":"$4.78","price":"$4.78","pricetonne":"$176.30","change":"$0.01","rawchange":0.01,"cashprice":"$4.78","cashpricetonne":"$176.30","futuresprice":"512-6","name":"CORN","location_id":"21302","location_name":"MANSON.IA","location":"21302"},{"id":"53","commodity":"97230","symbol":"ZCZ27","delivery_start":"11/01/2027","delivery_end":"11/30/2027","basis":-42,"require_login":true,"active":true,"unitvalue":1,"unitweight":56,"sym_root":"ZC","basismonth":"Dec 2027","futures":"522-0","futureschange":"0-0","timestamp":1795044628,"realtime":false,"cashpricebushel":"$4.82","price":"$4.82","pricetonne":"$177.80","change":"$0.00","rawchange":0.0,"cashprice":"$4.82","cashpricetonne":"$177.80","futuresprice":"522-0","name":"CORN","location_id":"21302","location_name":"MANSON.IA","location":"21302"}]},{"id":"21302","customer":"999","name":"SOYBEANS","display_name":"SOYBEANS","short_name":"SOYBEANS","cashbids":[{"id":"61","commodity":"97231","symbol":"ZSX26","delivery_start":"11/01/2026","delivery_end":"11/30/2026","basis":-48,"require_login":false,"active":true,"unitvalue":1,"unitweight":60,"sym_root":"ZS","basismonth":"Nov 2026","futures":"1082-4","futureschange":"2-2","timestamp":1795044628,"realtime":false,"cashpricebushel":"$10.32","price":"$10.32","pricetonne":"$379.00","change":"$0.05","rawchange":0.05,"cashprice":"$10.32","cashpricetonne":"$379.00","futuresprice":"1082-4","name":"SOYBEANS","location_id":"21302","location_name":"MANSON.IA","location":"21302"}]}];</script>
+</body>
+</html>

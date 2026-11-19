@@ -348,7 +348,10 @@ CASHBIDS_EMBED_SITES: dict[str, CashbidsEmbedSite] = {
         "futureschange) was verified live 2026-11-19 (Cycle 12) as "
         "the separate 'pro_coop_21302' entry (MANSON.IA, 12 rows); "
         "the second 21302 embed (fields without delivery_end) was "
-        "NOT checked. Embed at procooperative.com.",
+        "verified live 2026-11-19 (Cycle 13) as the separate "
+        "'pro_coop_21302b' entry (MANSON.IA, 12 rows — the same "
+        "Manson view; the payload still carries delivery_end on "
+        "every row). Embed at procooperative.com.",
     ),
     "pro_coop_21302": CashbidsEmbedSite(
         key="pro_coop_21302",
@@ -376,7 +379,40 @@ CASHBIDS_EMBED_SITES: dict[str, CashbidsEmbedSite] = {
         "wire — the registry URL is that wire form, matching the "
         "21297 entry. This is the FIRST of the homepage's two "
         "location-21302 embeds; the second (fields without "
-        "delivery_end) was NOT checked. Embed at procooperative.com.",
+        "delivery_end) was verified live 2026-11-19 (Cycle 13) as "
+        "the separate 'pro_coop_21302b' entry — same Manson view. "
+        "Embed at procooperative.com.",
+    ),
+    "pro_coop_21302b": CashbidsEmbedSite(
+        key="pro_coop_21302b",
+        company="PRO Coop",
+        js_url=(
+            "https://procooperative.agricharts.com/inc/cashbids/cashbids-js.php"
+            "?filter=location&location=21302&commodity=&groupby=ccommodity"
+            "&width=100%&showtimestamp=1&showchart=1"
+            "&enableScrollIntoView=1&format=table&fields=%0Adelivery_start"
+            "%2C%0Aprice%2C%0Abasis%2C%0Afutureschange%0A"
+            "&groupheading=table&bidsort=commodity&dateformat=%25m%2F"
+            "%25d%2F%25Y&months=11&noscript=1&&acCnt=1"
+        ),
+        default_location="MANSON.IA",
+        verified=True,
+        notes="Verified live 2026-11-19 (Cycle 13): 200, var-bids JSON, "
+        "1 location (MANSON.IA), 12 rows (CORN 6, SOYBEANS 6). "
+        "groupby=ccommodity: groups are named CORN / SOYBEANS, so the "
+        "row location comes from location_name. This is the SECOND of "
+        "the homepage's two location-21302 embeds — the loader src "
+        "sits in the homepage's elementor-hidden-desktop section "
+        "(the mobile variant of the same widget) and its fields list "
+        "omits delivery_end (delivery_start / price / basis / "
+        "futureschange only). The fields list does NOT filter the "
+        "payload: the returned bid objects still carry delivery_end "
+        "on all 12 rows, and the (commodity, delivery window, symbol, "
+        "futures month) structure matches the first embed's payload "
+        "exactly — the two embeds serve the same Manson view. The "
+        "js_url was derived from the saved Cycle 11 homepage loader "
+        "src the same way as pro_coop_21302 (no homepage re-fetch). "
+        "Embed at procooperative.com.",
     ),
     "hull_coop": CashbidsEmbedSite(
         key="hull_coop",
@@ -802,6 +838,18 @@ def fetch_pro_coop_21302() -> dict[str, Any]:
     """Fetch PRO Coop (Manson, IA — location 21302 view, first embed).
     Verified live 2026-11-19 (Cycle 12)."""
     return fetch_cashbids_embed_site("pro_coop_21302")
+
+
+def fetch_pro_coop_21302b() -> dict[str, Any]:
+    """Fetch PRO Coop (Manson, IA — location 21302 view, second embed).
+
+    Verified live 2026-11-19 (Cycle 13): 200, var-bids JSON, 12 rows
+    (CORN 6, SOYBEANS 6). This is the second of the homepage's two
+    21302 embeds (fields without delivery_end, in the hidden-desktop
+    section); the payload still carries delivery_end on every row and
+    matches the first embed's Manson view structurally.
+    """
+    return fetch_cashbids_embed_site("pro_coop_21302b")
 
 
 def fetch_hull_coop() -> dict[str, Any]:

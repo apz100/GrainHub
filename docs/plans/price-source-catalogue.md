@@ -607,24 +607,24 @@ recorded here — row counts and widget patterns only.
 | Company | URL probed | HTTP | Static bid rows? | Widget / pattern in static HTML | Collector pattern |
 |---|---|---|---|---|---|
 | CVA | https://www.cvacoop.com/cash-bids | 202, empty body | — | — (no content; same as Cycle 1) | None — reclassified `unknown → unreachable` |
-| Hull Coop | https://www.hullcoop.com/cash-bids | 404 | — | 404 page; its Cash Bids button links `/cashbids` (different slug) | None at this URL — stays `unknown`; one GET of `/cashbids` next |
+| Hull Coop | https://www.hullcoop.com/cash-bids | 404 | — | 404 page; its Cash Bids button links `/cashbids` (different slug) | None at this URL — stays `unknown`; one GET of `/cashbids` next. **Cycle 11 (2026-11-19):** 200 at `/cashbids` — AgriCharts `cashbids.php` embed (`hullcoopresp.agricharts.com`, `groupby=ccommodity`), no static rows; reclassified `unknown → agricharts-embed`, still disabled; `cashbids-js.php` check open. |
 | Landus | https://www.landus.ag/businesses/grain/grain-bids | 429 | — | Vercel Security Checkpoint ("We're verifying your browser", JS required) | Blocked — reclassified `unknown → unreachable`, no retry |
 | Mercer Landmark | https://www.mercerlandmark.com/cash-bids | 522, empty body | — | — (no content; same as Cycle 1) | None — reclassified `unknown → unreachable` |
-| Pro Ag | https://www.proagfarmers.com | 200 | No | AgriCharts-hosted homepage (s3 `media.agricharts.com` assets, `quotelib.js`); no bid widget on homepage, nav links `/markets/cash.php`. Barchart marketplace link present — not followed (out of scope) | None at this URL — stays `unknown`; one GET of `/markets/cash.php` next |
+| Pro Ag | https://www.proagfarmers.com | 200 | No | AgriCharts-hosted homepage (s3 `media.agricharts.com` assets, `quotelib.js`); no bid widget on homepage, nav links `/markets/cash.php`. Barchart marketplace link present — not followed (out of scope) | None at this URL — stays `unknown`; one GET of `/markets/cash.php` next. **Cycle 11 (2026-11-19):** 200 at `/markets/cash.php` — **78 static `writeBidRow` rows** (Corn / Soybeans / Wheat, 6 `h4` locations), all 78 match the existing `us_agricharts_source.py` `_WRITEBIDROW_RX` (verified against saved HTML); reclassified `unknown → agricharts` and **enabled**. |
 | PRO Coop | https://procooperative.com | 200 (→ `/`) | No | **AgriCharts `cashbids.php` embed ×3** (`procooperative.agricharts.com`, locations 21297 `groupby=location` + 21302 `groupby=ccommodity`); also links `/cash-bids` and a `my.procooperative.com` login portal (not followed) | **Collector candidate (later cycle):** same family as Cycle 7/9's six + ALCIVIA/TGM — one GET of the loader-derived `cashbids-js.php` URL to prove the static `var bids` route. Reclassified `unknown → agricharts-embed`, still disabled |
 | Ray Carroll | https://www.ray-carroll.com | 200 | No | **DTN index.cfm iframes ×4** (`index.cfm?show=87…layout=combined_table_by_location`, corn / soybeans / SRW wheat / milo); page tables are nav / futures / announcements; footer "Copyright DTN" | DTN Playwright — same `index.cfm` family as Great Lakes Grain / London Ag. Reclassified `unknown → dtn`, still disabled (render check + iframe/sub-page route open) |
-| Skyland Grain | https://www.skylandgrain.com | 200 | No | **Bushel FCCP family**: `portal.bushelpowered.com/skyland` app links, `/cashbidssingle-` nav link; no `.cbmod` widget on the homepage, no bid table | Bushel — bids live on the `/cashbidssingle-` sub-page. Reclassified `unknown → bushel`, still disabled; one GET of `/cashbidssingle-` next |
-| Smithfield | https://smithfieldgrain.com | 200 | No | **Bushel FCCP family**: "Data provided by Bushel" footer, `portal.bushelpowered.com/smithfield` links; no `.cbmod` widget on the homepage — the only table is a futures table (Contract / Last / Chg) | Bushel — bids live on the FCCP cash-bids pages (nav: `/fccp-cash-bids-east-region-20249`). Reclassified `unknown → bushel`, still disabled; one GET of the East Region page next |
+| Skyland Grain | https://www.skylandgrain.com | 200 | No | **Bushel FCCP family**: `portal.bushelpowered.com/skyland` app links, `/cashbidssingle-` nav link; no `.cbmod` widget on the homepage, no bid table | Bushel — bids live on the `/cashbidssingle-` sub-page. Reclassified `unknown → bushel`, still disabled; one GET of `/cashbidssingle-` next. **Cycle 11 (2026-11-19):** 200 at `/cashbidssingle-` — the nav link target is literally `/cashbidssingle-` (empty ID) and serves a **14-location picker** (`CashBidsLocationID`s 2730–3621 in static HTML). The sweep worker reported no widget — **corrected by the coordinator's re-check: the page also serves a static 7-col `.cbmod` widget (Cunningham Area, 6 rows) and is now enabled with a registry entry** (see the Cycle 11 section). |
+| Smithfield | https://smithfieldgrain.com | 200 | No | **Bushel FCCP family**: "Data provided by Bushel" footer, `portal.bushelpowered.com/smithfield` links; no `.cbmod` widget on the homepage — the only table is a futures table (Contract / Last / Chg) | Bushel — bids live on the FCCP cash-bids pages (nav: `/fccp-cash-bids-east-region-20249`). Reclassified `unknown → bushel`, still disabled; one GET of the East Region page next. **Cycle 11 (2026-11-19):** 200 at `/fccp-cash-bids-east-region-20249` — a **per-location link list** (NC / IN / OH / SC / VA, ~30 locations), no static rows; each location links `/cashbidssingle-<id>` and page JS iframes that target per location; probe one per-location target next (e.g. `/cashbidssingle-1666`, Bentonville); stays `bushel`, still disabled. |
 | Star of the West | https://www.starofthewest.com | 200 | No | Milling-company homepage; zero cash-bid mentions, no grain/bid links at all | None — reclassified `unknown → none`, do not add |
-| StateLine Coop | https://www.statelinecoop.com | 200 (→ `statelinecoop.com/`) | No | WordPress homepage, no challenge page this time (Cycle 1 reported a Cloudflare challenge; the reCAPTCHA strings now are form-related). No widget on homepage; nav links `/cash-bids`; page CSS references `table.cashbid_table`, hinting at an embed on the sub-page | None at this URL — stays `unknown`; one GET of `/cash-bids` next |
+| StateLine Coop | https://www.statelinecoop.com | 200 (→ `statelinecoop.com/`) | No | WordPress homepage, no challenge page this time (Cycle 1 reported a Cloudflare challenge; the reCAPTCHA strings now are form-related). No widget on homepage; nav links `/cash-bids`; page CSS references `table.cashbid_table`, hinting at an embed on the sub-page | None at this URL — stays `unknown`; one GET of `/cash-bids` next. **Cycle 11 (2026-11-19):** 200 at `/cash-bids` — AgriCharts `cashbids.php` embed (`statelinecoop.agricharts.com`, `groupby=location`) plus custom CSS for `table.cashbid_table`, no static rows; reclassified `unknown → agricharts-embed`, still disabled; `cashbids-js.php` check open. |
 | Sunrise | https://www.sunriseco-op.com | 200 | No | **Classic DTN**: `<div id="target">` + `CashBidTable(tableOptions)`, companyID 23043, CIHedging `CashBidWidget.js` / `ChartJS.js`, ATLAS DTN shell (`/dtncashbidwidget/bindlocation`) | **Exact fit for existing `us_dtn_source.py`** — reclassified `unknown → dtn` and **enabled** in `us_elevators_urls.toml` (the only enable in this cycle). Playwright render check still open |
 | Synergy | https://www.synergycoop.com | 200 | **Yes — 4 rows, Corn 2 + Soybeans 2, Cameron, 6-col widget, dated header Nov 19, 2026** | Bushel `.cbmod` widget in static HTML (div/`ul` rows, `sixColumnsBigFirst`, not `<table>` rows) | **Collector candidate — ready:** the existing generic `bushel_source.py` parses the saved HTML with status ok (4 rows, Cameron, Corn 2 + Soybeans 2). Reclassified `unknown → bushel` and enabled; `BUSHEL_SITES` registry entry + `fetch_synergy()` added in Cycle 10 (3 tests) |
-| The Andersons | https://www.andersonsgrain.com | 200 | No | Corporate Trade Group homepage, no widget; bid links `/locations/cash-bids/` + `/local-bids/locations-list/` | None at this URL — stays `unknown`; one GET of a bid sub-page next. Distinct from The Andersons Canada (DTN, Ontario section) |
+| The Andersons | https://www.andersonsgrain.com | 200 | No | Corporate Trade Group homepage, no widget; bid links `/locations/cash-bids/` + `/local-bids/locations-list/` | None at this URL — stays `unknown`; one GET of a bid sub-page next. Distinct from The Andersons Canada (DTN, Ontario section). **Cycle 11 (2026-11-19):** 200 at `/locations/cash-bids/` — proprietary GRAINweb "MyCashBids" **interactive location-picker** (choose a location + commodities, click Add; selections saved for next visit), no static rows, no recognizable embed; bids load via JS after a location is picked; needs a browser/API investigation; stays `unknown`, still disabled. |
 | UFC | https://www.ufcmn.com | 200 (→ `centralunitedcoop.com/`) | No | **StoneX**: redirects to the Central United Cooperative homepage (same site/org as CRC); Cash Bids section is a StoneX component iframe (`stonehedge.stonex.com/component/bids`, `hideRows=true`). The DTN widget hits are map/weather widgets, not cash bids | StoneX — same family as Frontier Coop / CRC (JS app shell, no static route per Cycle 8 research). Reclassified `unknown → stonex`, still disabled; render check is the only open route |
-| West-Con | https://www.west-con.com | 200 | No | AgriCharts-hosted homepage (s3 `media.agricharts.com` assets, `quotelib.js`); homepage cash widget is **JS-filled — values blank (`&nbsp;`) in static HTML**, location scaffolding Holloway / Appleton / Milbank / DLVD AGP Dawson / Aberdeen | None at this URL — stays `unknown`; one GET of `/markets/cash.php` next to confirm the `writeBidRow` route |
-| Wheaton Dumont | https://www.wdcoop.com | 200 | No | AgriCharts-hosted homepage (s3 `media.agricharts.com` assets, `quotelib.js`); homepage cash widget is **JS-filled — values blank in static HTML**, location scaffolding Wheaton / Dumont / Browns Valley / LaMars / Hankinson / Mantador / Sisseton (+ Britton, SD / Rutland, ND) | None at this URL — stays `unknown`; one GET of `/markets/cash.php` next to confirm the `writeBidRow` route |
+| West-Con | https://www.west-con.com | 200 | No | AgriCharts-hosted homepage (s3 `media.agricharts.com` assets, `quotelib.js`); homepage cash widget is **JS-filled — values blank (`&nbsp;`) in static HTML**, location scaffolding Holloway / Appleton / Milbank / DLVD AGP Dawson / Aberdeen | None at this URL — stays `unknown`; one GET of `/markets/cash.php` next to confirm the `writeBidRow` route. **Cycle 11 (2026-11-19):** 200 at `/markets/cash.php` — **84 static `writeBidRow` rows** (Corn / Soybeans / DNS Wheat) — **but a parser gap:** delivery start/end are month-name labels (`'Dec 2026'`, `'Jan 2027'`), not `MM/DD/YYYY`, so the existing `us_agricharts_source.py` `_WRITEBIDROW_RX` matches **0/84**; reclassified `unknown → agricharts`, still disabled pending a small regex extension. |
+| Wheaton Dumont | https://www.wdcoop.com | 200 | No | AgriCharts-hosted homepage (s3 `media.agricharts.com` assets, `quotelib.js`); homepage cash widget is **JS-filled — values blank in static HTML**, location scaffolding Wheaton / Dumont / Browns Valley / LaMars / Hankinson / Mantador / Sisseton (+ Britton, SD / Rutland, ND) | None at this URL — stays `unknown`; one GET of `/markets/cash.php` next to confirm the `writeBidRow` route. **Cycle 11 (2026-11-19):** dropped from the sub-page sweep to stay in the 9-GET budget (same AgriCharts pattern as West-Con); the `/markets/cash.php` probe is still open. |
 | Wheaton Grain | https://www.wheatongrain.com | 200 | **Yes — 5 rows, Corn 2 + Soybeans 3, Chippewa Falls, 6-col widget** (Corn heads Bid as "Cash", Soybeans as "Bid") | Bushel `.cbmod` widget in static HTML — **but a new shape variant**: tabbed widget (`easyResponsiveTabs`, location tab "Chippewa Falls"), commodity headings are bare `h3.fcControls` with **no `div.cbCommodity` wrapper**, rows are `sixColumnsBigFirst` `ul`s | **Collector candidate — parser gap found:** the existing generic `bushel_source.py` returns "empty" against the saved HTML (`_parse_widget` only walks `div.cbCommodity` sections). A later cycle needs a small parser extension (fall back to `h3.fcControls` + following `ul`s when no `cbCommodity` divs exist). Reclassified `unknown → bushel`, still disabled; registry entry needed after the fix |
-| Winchester Ag | https://www.winchesteragservice.com | 200 (→ `wheatongrain.com/fccp-winchester-locations-23823`) | No | **Bushel FCCP embeds ×2**: the redirect target is a Wheaton Grain FCCP location page with iframes `/cashbidssingle-3439?embed=y` + `/cashbidssingle-3440?embed=y`; no static rows at the probed URL | Bushel — Winchester Ag is a Wheaton Grain location, not an independent site. Reclassified `unknown → bushel`, still disabled; one GET per embed target next (Cycle 7 AGP precedent) |
+| Winchester Ag | https://www.winchesteragservice.com | 200 (→ `wheatongrain.com/fccp-winchester-locations-23823`) | No | **Bushel FCCP embeds ×2**: the redirect target is a Wheaton Grain FCCP location page with iframes `/cashbidssingle-3439?embed=y` + `/cashbidssingle-3440?embed=y`; no static rows at the probed URL | Bushel — Winchester Ag is a Wheaton Grain location, not an independent site. Reclassified `unknown → bushel`, still disabled; one GET per embed target next (Cycle 7 AGP precedent). **Cycle 11 (2026-11-19):** 200 at `/cashbidssingle-3439?embed=y` — **static Bushel `.cbmod` widget, 10 rows (Corn 5 + Soybeans 5, Winchester)**, standard wrapped `.cbCommodity` + 7-col `ul.sevenColumnsBigFirst` (FAC shape); existing generic `bushel_source.py` `parse_bushel_html` verified status ok, 10 rows, against saved HTML; **enabled** (entry URL updated to the embed target); the 3440 target stays open. |
 
 ### Static-HTML sites — parser verification (saved HTML only, no new fetch)
 
@@ -684,3 +684,114 @@ All other entries stay `enabled = false` except Sunrise.
 - **Playwright render checks:** Sunrise (classic DTN, enabled);
   Ray Carroll (DTN index.cfm iframes); UFC / StoneX family
   (Frontier, CRC, UFC — now 3 sites, still no static route).
+
+## United States — Cycle 11 sub-page sweep (2026-11-19)
+
+Probed the 9 sub-page follow-ups left by Cycle 10, one polite GET
+each (User-Agent `GrainHub-Research/1.0`, 30 s timeout, no retries,
+~2 s spacing) — 9 GETs total, budget respected. Skyland needed 2
+GETs (homepage to recover the `/cashbidssingle-` target, then the
+target itself), so Wheaton Dumont's `/markets/cash.php` probe was
+dropped to stay in budget: same AgriCharts pattern as West-Con, and
+it is still open. Raw HTML saved to `/tmp/cycle11/` scratch only,
+never the repo. No prices are recorded here — row counts and widget
+patterns only. Classify only; no collectors were built by the sweep
+worker — the coordinator added registry entries for the three
+collector-ready sites afterwards (Winchester, Skyland, Wheaton Grain;
+see below).
+
+### Counts
+
+| Status | Count | Meaning |
+|---|---|---|
+| HTTP 200 | 9 | Every probed sub-page served (no 404s, blocks, or empty bodies this cycle) |
+| Static bid rows visible in static HTML | **4** | Pro Ag (78 `writeBidRow` rows), West-Con (84 `writeBidRow` rows), Winchester 3439 (10 Bushel `.cbmod` rows), Skyland (6 Bushel `.cbmod` rows — corrected by coordinator re-check, see below) |
+| Embed / loader pattern, no static rows | 2 | Hull Coop + StateLine Coop (AgriCharts `cashbids.php` embed) |
+| Location picker / link list, no static rows | 1 | Smithfield (per-location link list) — Skyland moved to static rows (correction below) |
+| Interactive JS app, no static rows | 1 | The Andersons (GRAINweb "MyCashBids" location-picker) |
+
+### Per-site results
+
+| Company | URL probed | HTTP | Static bid rows? | Widget / pattern in static HTML | Collector pattern |
+|---|---|---|---|---|---|
+| Hull Coop | https://www.hullcoop.com/cashbids | 200 (→ `/cashbids/`) | No | **AgriCharts `cashbids.php` embed** (`hullcoopresp.agricharts.com`, `groupby=ccommodity`, `format=table`, 8-month window); WordPress/Elementor page, no bid table in static HTML | AgriCharts embed — same family as Cycle 7/9's six + ALCIVIA/TGM/PRO Coop. Reclassified `unknown → agricharts-embed`, still disabled; one GET of the loader-derived `cashbids-js.php` URL to prove the static `var bids` route |
+| Pro Ag | https://www.proagfarmers.com/markets/cash.php | 200 | **Yes — 78 rows** (Corn / Soybeans / Wheat, 6 `h4` locations: Brandon, CLARISSA, EAGLE BEND / EAGLE BEND WEST, GARFIELD, Hoffman, PARKERS PRAIRIE) | Classic AgriCharts `writeBidRow()` calls inline in static HTML, `MM/DD/YYYY` delivery dates | **Collector-ready:** all 78 calls match the existing `us_agricharts_source.py` `_WRITEBIDROW_RX` (verified against saved HTML). Reclassified `unknown → agricharts` and **enabled** (entry URL updated to `/markets/cash.php`); no registry adapter needed — the orchestrator drives `fetch_us_agricharts(url, name)` from the toml |
+| West-Con | https://www.west-con.com/markets/cash.php | 200 | **Yes — 84 rows** (Corn / Soybeans / DNS Wheat, location param `All`) | Classic AgriCharts `writeBidRow()` calls inline in static HTML — **but delivery start/end are month-name labels** (`'Dec 2026'`, `'Jan 2027'`, 10 distinct), not `MM/DD/YYYY` | **Parser gap found:** the existing `_WRITEBIDROW_RX` requires `MM/DD/YYYY` dates and matches **0/84**. Reclassified `unknown → agricharts`, still disabled; a small regex extension (accept month-name delivery labels) unblocks it |
+| StateLine Coop | https://www.statelinecoop.com/cash-bids | 200 (→ `statelinecoop.com/cash-bids/`) | No | **AgriCharts `cashbids.php` embed** (`statelinecoop.agricharts.com`, `groupby=location`) on a WordPress page, plus custom CSS for `table.cashbid_table` (the Cycle 10 hint was right); no bid table in static HTML. Footer: "All market data is provided by Barchart Solutions" (attribution only — no Barchart link followed) | AgriCharts embed — same family as Hull Coop / PRO Coop. Reclassified `unknown → agricharts-embed`, still disabled; `cashbids-js.php` check open |
+| The Andersons | https://www.andersonsgrain.com/locations/cash-bids/ | 200 | No | Proprietary GRAINweb **"MyCashBids" interactive location-picker**: "Customize Your Cash Bids! Select the location first, and then the commodities…" with an Add-commodity form (`data-ui="add-commodity"`), a "Bid and Basis Charts" modal, and an empty-src `chartFrame` iframe; links to `/local-bids/locations-list/` and `/local-bids/locations/` | No recognizable embed and no static rows; bids load via JS after a location is picked. Stays `unknown`, still disabled; needs a browser/API investigation (distinct from The Andersons Canada, DTN, in the Ontario section) |
+| Skyland Grain | https://www.skylandgrain.com/cashbidssingle- | 200 | **Yes — 6 rows** (Corn 2, Milo 1, Red Wheat 2, Soybeans 1, Cunningham Area), widget header dated Nov 19, 2026 | The nav link target is literally **`/cashbidssingle-` (empty ID)** and serves a **14-location picker** (`CashBidsLocationID`s 2730–3621 in static HTML) **AND** a static 7-col Bushel `.cbmod` widget for the default location (Cunningham Area). The sweep worker reported "no `.cbmod` widget, no bid rows" — **wrong; corrected by the coordinator's re-check** (a fresh GET parses ok, 6 rows; the saved `/tmp/cycle11` HTML parses ok too). Same canonical trailing-dash pattern as Williams Gin (Cycle 5) | **Collector-ready:** the existing generic `bushel_source.py` parses it with no changes. **Enabled** (entry URL updated to `/cashbidssingle-`); `BUSHEL_SITES` registry entry + `fetch_skyland()` added in Cycle 11 (6 tests). Per-location `/cashbidssingle-<id>` targets still open |
+| Smithfield | https://smithfieldgrain.com/fccp-cash-bids-east-region-20249 | 200 | No | **Bushel FCCP per-location link list** (NC / IN / OH / SC / VA, ~30 locations, e.g. Bentonville 1666, Bladenboro 1725); no static rows, no `.cbmod` widget; page JS iframes `/cashbidssingle-<locId>` per location | Bushel — bids live on the per-location `/cashbidssingle-<id>` targets. Stays `bushel`, still disabled; probe one per-location target next (e.g. `/cashbidssingle-1666`, Bentonville) |
+| Winchester Ag | https://www.wheatongrain.com/cashbidssingle-3439?embed=y | 200 | **Yes — 10 rows** (Corn 5 + Soybeans 5, Winchester), widget header dated Nov 19, 2026 | Bushel **`.cbmod` widget in static HTML**, standard wrapped shape: `div.cbCommodity` + `ul.sevenColumnsBigFirst` 7-col rows (Delivery / Bid / Basis / Futures / Change / Futures Month / Last Trade) — the FAC shape, not Wheaton Grain's tabbed variant | **Collector-ready:** the existing generic `bushel_source.py` `parse_bushel_html` verified status ok, 10 rows, against saved HTML — no parser change needed. **Enabled** (entry URL updated to the embed target); `BUSHEL_SITES` registry entry + `fetch_winchester()` added in Cycle 11 (6 tests). The 3440 target stays open |
+| Wheaton Dumont | — (not probed) | — | — | Dropped to stay in the 9-GET budget (Skyland took 2 GETs); same AgriCharts-hosted pattern as West-Con | Still open: one GET of `https://www.wdcoop.com/markets/cash.php` next |
+
+### Static-HTML sites — parser verification (saved HTML only, no new fetch)
+
+- **Winchester 3439 — parses cleanly.** `parse_bushel_html` run
+  against the saved `/tmp/cycle11` HTML returns status ok: 10 rows,
+  location Winchester, Corn 5 + Soybeans 5, widget header dated Nov
+  19, 2026. No `bushel_source.py` change needed for this shape
+  (the Cycle 11 tabbed-widget fix for Wheaton Grain is not needed
+  here — this is the standard wrapped variant).
+- **Pro Ag — matches the existing collector regex.** The
+  `us_agricharts_source.py` `_WRITEBIDROW_RX` applied to the saved
+  HTML matches 78/78 data calls. No code change needed.
+- **Skyland — parses cleanly (coordinator correction).** The sweep
+  worker reported no widget on `/cashbidssingle-`, but the saved
+  `/tmp/cycle11` HTML and a fresh coordinator GET both return status
+  ok from `parse_bushel_html`: 6 rows, location Cunningham Area
+  (Corn 2, Milo 1, Red Wheat 2, Soybeans 1). The page serves a
+  14-location picker AND a default-location widget; the worker
+  evidently only inspected the picker. No `bushel_source.py` change
+  needed. Registry entry + `fetch_skyland()` added by the
+  coordinator (6 tests).
+- **West-Con — parser gap.** The same regex matches 0/84 data
+  calls: every call's delivery start/end are month-name labels
+  (`'Dec 2026'`, …) where the regex requires `MM/DD/YYYY`. The
+  rest of the call shape matches (commodity, basis, weight,
+  rowclass, chartsym, `quotes['SYMBOL']` futures symbol). Fix in a
+  later cycle: accept month-name delivery labels in
+  `_WRITEBIDROW_RX` (and decide how the collector dates a
+  month-only delivery window). No live HTML in the repo.
+
+### Reclassifications applied (`us_elevators_urls.toml`)
+
+`unknown → agricharts`: Pro Ag (also `enabled = false → true`),
+West-Con. `unknown → agricharts-embed`: Hull Coop, StateLine Coop.
+Winchester Ag: entry URL updated to the verified embed target
+(`wheatongrain.com/cashbidssingle-3439?embed=y`) and `enabled =
+false → true`. Skyland Grain: entry URL updated to
+`/cashbidssingle-` and `enabled = false → true` (coordinator
+correction — static widget found on re-check). The Andersons,
+Smithfield: type unchanged (`unknown` / `bushel`), comments updated
+with the Cycle 11 findings, still disabled. Wheaton Dumont: untouched
+(still open). All other entries unchanged.
+
+### Follow-ups for a later cycle
+
+- **Embed `cashbids-js.php` checks (one GET each):** Hull Coop
+  (`hullcoopresp.agricharts.com`) and StateLine Coop
+  (`statelinecoop.agricharts.com`), same loader-derived route as
+  PRO Coop — if the static `var bids` JSON serves, add
+  `fetch_` entries to `cashbids_embed_source.py` and enable.
+  (Two embed sites now wait on this check: Hull Coop and StateLine
+  Coop. PRO Coop's `cashbids-js.php` route was verified in Cycle 11
+  by a parallel worker — see its `us_elevators_urls.toml` entry,
+  now enabled.)
+- **Per-location Bushel probes (one GET each):** Skyland
+  `/cashbidssingle-<id>` (14 IDs on file, e.g. 2730 — the default
+  location is now covered by `fetch_skyland()`); Smithfield
+  `/cashbidssingle-<id>` (e.g. 1666 Bentonville); Winchester
+  `/cashbidssingle-3440?embed=y`.
+- **West-Con regex fix:** extend `_WRITEBIDROW_RX` in
+  `us_agricharts_source.py` for month-name delivery labels, then
+  enable West-Con (and re-check Wheaton Dumont's
+  `/markets/cash.php` first — it may share the same date format).
+- **Wheaton Dumont `/markets/cash.php` probe:** one GET, still
+  open (dropped from this sweep on budget).
+- **The Andersons browser/API investigation:** the GRAINweb
+  "MyCashBids" picker needs a rendered session or an API route
+  found in its JS bundles; no static route exists.
+- **Registry wiring (coordinator):** Pro Ag (`agricharts`) and
+  Winchester Ag (`bushel`, `BUSHEL_SITES` + `fetch_` function)
+  were enabled in the toml this cycle; their registry entries are
+  still to be added.

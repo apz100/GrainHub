@@ -1,4 +1,5 @@
-"""Tests for the Farm Market News (AgriCharts) cash-bid collector (Cycle 10).
+"""Tests for the Farm Market News (AgriCharts) cash-bid collector (Cycle 10,
+quotes feed in Cycle 11).
 
 All parsing tests run against saved synthetic fixtures in
 tests/fixtures/ — no live fetching inside pytest. Fixture values are
@@ -6,8 +7,9 @@ invented test data, not live prices.
 
 One test (test_fmn_live_html_structure) reads the single saved live
 copy at /tmp/fmn/fmn_cash.html when it exists and asserts structure
-counts only (tables / rows / delivery points) — no prices. It skips
-when the scratch copy is absent.
+counts only (tables / rows / delivery points) — no prices. The live
+quotes-feed test reads /tmp/fmn/jsquote.txt the same way (counts
+only). Both skip when the scratch copies are absent.
 """
 
 from __future__ import annotations
@@ -19,6 +21,7 @@ from unittest.mock import patch
 from zoneinfo import ZoneInfo
 
 import pytest
+import requests
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -26,10 +29,43 @@ from app.platform.market_data.sources import fmn_source  # noqa: E402
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
 LIVE_HTML = Path("/tmp/fmn/fmn_cash.html")
+LIVE_FEED = Path("/tmp/fmn/jsquote.txt")
 
 # Fixture as-of date: the page publishes no trade date, so rows are
 # dated with the fetch date.
 AS_OF = "2026-11-19"
+
+# Synthetic quotes mapping for the fixture (invented values only —
+# not live prices). Deliberately omits ZWZ26, ZCZ27 and ZSX27 so the
+# missing-quote rows can be checked: they must stay None, not invented.
+QUOTES = {
+    "ZCZ26": {"rawLast": "500.0", "change": "2.5", "exchange": "CBOT"},
+    "ZSF27": {"rawLast": "1200.0", "change": "-1.25", "exchange": "CBOT"},
+    "MWZ26": {"rawLast": "6.50", "change": "0.01", "exchange": "MIAX"},
+    "ZWN27": {"rawLast": "600.0", "change": "1.5", "exchange": "CBOT"},
+}
+
+# Synthetic jsquote feed text (same JS-literal shape as the live feed:
+# unquoted keys, single-quoted values, trailing commas).
+FEED_TEXT = """var quotes = {
+\t'ZCZ26': {
+\t\tsymbol: 'ZCZ26',
+\t\tname: 'Corn',
+\t\texchange: 'CBOT',
+\t\trawLast: '500.0',
+\t\tchange: '2.5',
+\t\tmonth: 'December 2026',
+\t},
+\t'MWZ26': {
+\t\tsymbol: 'MWZ26',
+\t\tname: 'Wheat',
+\t\texchange: 'MIAX',
+\t\trawLast: '6.50',
+\t\tchange: '0.01',
+\t\tmonth: 'December 2026',
+\t},
+};
+"""
 
 
 def _read(name: str) -> str:
@@ -302,19 +338,273 @@ def test_fmn_function_definition_produces_no_rows() -> None:
 
 
 # ---------------------------------------------------------------------------
+# Quotes feed (Cycle 11)
+# ---------------------------------------------------------------------------
+
+
+def _parse_with_quotes(name: str = "fmn_sample.html") -> dict:
+    return fmn_source.parse_fmn_html(
+        _read(name), as_of=AS_OF, quotes=QUOTES
+    )
+
+
+def test_fmn_quotes_fill_corn_row() -> None:
+    rows = _parse_with_quotes()["rows"]
+    corn = next(
+        r
+        for r in rows
+        if r["location"] == "Alliston"
+        and r["commodity"] == "Corn"
+        and r["delivery_month"] == "Nov 2026"
+    )
+    # CBOT quote in cents: rawLast 500.0 -> $5.00; change 2.5c -> $0.025.
+    assert corn["futures_price"] == pytest.approx(5.00)
+    assert corn["change"] == pytest.approx(0.025)
+    # Cash rule: (500 + 100 basis) cents, whole-cent rounding -> $6.00.
+    assert corn["cash_price"] == pytest.approx(6.00)
+    assert corn["cash_price_mt"] is None
+    assert corn["futures_month"] == "Dec 2026"
+    assert "quotes feed" in corn["note"]
+
+
+def test_fmn_quotes_fill_other_locations_same_symbol() -> None:
+    rows = _parse_with_quotes()["rows"]
+    chatham = next(r for r in rows if r["location"] == "Chatham-Kent Avg")
+    assert chatham["futures_price"] == pytest.approx(5.00)
+    # Basis 105: (500 + 105) cents -> $6.05.
+    assert chatham["cash_price"] == pytest.approx(6.05)
+    quebec = next(r for r in rows if r["location"] == "Quebec FOB")
+    # Basis 115: (500 + 115) cents -> $6.15.
+    assert quebec["cash_price"] == pytest.approx(6.15)
+
+
+def test_fmn_quotes_fill_soy_row() -> None:
+    rows = _parse_with_quotes()["rows"]
+    soy = next(
+        r
+        for r in rows
+        if r["location"] == "Alliston"
+        and r["commodity"] == "Soybeans"
+        and r["delivery_month"] == "Oct 2027"
+    )
+    assert soy["futures_price"] == pytest.approx(12.00)
+    assert soy["change"] == pytest.approx(-0.0125)
+    # (1200 + 250) cents -> $14.50.
+    assert soy["cash_price"] == pytest.approx(14.50)
+
+
+def test_fmn_quotes_fill_mw_row_in_dollars() -> None:
+    rows = _parse_with_quotes()["rows"]
+    hrs = next(r for r in rows if r["name"] == "HRS Old Crop Wheat")
+    # Minneapolis quote arrives in dollars, not cents: rawLast as-is.
+    assert hrs["futures_price"] == pytest.approx(6.50)
+    assert hrs["change"] == pytest.approx(0.01)
+    # MW cash rule: rawLast + basis/100, to 2dp -> 6.50 + 0.95 = $7.45.
+    assert hrs["cash_price"] == pytest.approx(7.45)
+    assert hrs["futures_month"] == "Dec 2026"
+
+
+def test_fmn_quotes_fill_wheat_row() -> None:
+    rows = _parse_with_quotes()["rows"]
+    hrw_new = next(r for r in rows if r["name"] == "HRW New Crop Wheat")
+    assert hrw_new["futures_price"] == pytest.approx(6.00)
+    assert hrw_new["change"] == pytest.approx(0.015)
+    # (600 + 110) cents -> $7.10.
+    assert hrw_new["cash_price"] == pytest.approx(7.10)
+
+
+def test_fmn_missing_quote_rows_stay_none() -> None:
+    result = _parse_with_quotes()
+    rows = result["rows"]
+    # ZWZ26, ZCZ27 and ZSX27 are not in QUOTES — never invented.
+    for name in ("HRW Old Crop Wheat",):
+        row = next(r for r in rows if r["name"] == name)
+        assert row["futures_price"] is None
+        assert row["change"] is None
+        assert row["cash_price"] is None
+        assert "no quote for ZWZ26" in row["note"]
+    new_crop_corn = next(
+        r
+        for r in rows
+        if r["commodity"] == "Corn" and r["delivery_month"] == "Oct 2027"
+    )
+    assert new_crop_corn["futures_symbol"] == "ZCZ27"
+    assert new_crop_corn["futures_price"] is None
+    assert new_crop_corn["cash_price"] is None
+    assert "no quote for ZCZ27" in new_crop_corn["note"]
+    soy_nov = next(
+        r
+        for r in rows
+        if r["commodity"] == "Soybeans" and r["delivery_month"] == "Nov 2026"
+    )
+    assert soy_nov["futures_symbol"] == "ZSX27"
+    assert soy_nov["futures_price"] is None
+    assert "no quote for ZSX27" in soy_nov["note"]
+    assert result["notes"][-2] == (
+        "quotes feed applied: 7 of 10 futures-linked rows filled; "
+        "3 had no quote in the feed"
+    )
+
+
+def test_fmn_manual_rows_unchanged_with_quotes() -> None:
+    rows = _parse_with_quotes()["rows"]
+    barley = next(
+        r
+        for r in rows
+        if r["location"] == "Hensall HDC" and r["commodity"] == "Barley"
+    )
+    assert barley["cash_price"] == 280.0
+    assert barley["cash_price_mt"] == 280.0
+    assert barley["unit"] == "$/t"
+    assert barley["basis"] is None
+    assert barley["futures_price"] is None
+    assert barley["futures_symbol"] is None
+    assert barley["change"] is None
+    assert "manual" in barley["note"].lower()
+    oats = next(
+        r
+        for r in rows
+        if r["location"] == "Hensall HDC" and r["commodity"] == "Oats"
+    )
+    assert oats["cash_price"] == 310.0
+    assert oats["futures_price"] is None
+
+
+@pytest.mark.parametrize(
+    "raw_last,basis,rounding,symbol,exchange,expected",
+    [
+        # CBOT cents: (raw + basis) rounded to whole cents, / 100.
+        ("500.25", -25, 0.5, "ZCZ26", "CBOT", 4.75),
+        ("500.75", -25, 0.5, "ZCZ26", "CBOT", 4.76),
+        ("434.75", -35, 0.5, "ZCZ26", "CBOT", 4.00),
+        ("500.0", 100, 0.5, "ZCZ26", "CBOT", 6.00),
+        # No rounding step when rounding is None: straight / 100, to 2dp.
+        ("500.25", -25, None, "ZCZ26", "CBOT", 4.75),
+        # MW dollars: rawLast + basis/100, to 2dp.
+        ("6.50", 95, 0.5, "MWZ26", "MIAX", 7.45),
+        ("6.50", -20, 0.5, "MWZ26", "MIAX", 6.30),
+        # WCE: rawLast in dollars -> price is rawLast * 100 cents.
+        ("4.50", -25, 0.5, "ZCZ26", "WCE", 4.25),
+        # Missing quote or basis -> None, never invented.
+        (None, -25, 0.5, "ZCZ26", "CBOT", None),
+        ("n/a", -25, 0.5, "ZCZ26", "CBOT", None),
+        ("500.0", None, 0.5, "ZCZ26", "CBOT", None),
+    ],
+)
+def test_fmn_quote_cash_price_rule(
+    raw_last, basis, rounding, symbol, exchange, expected
+) -> None:
+    assert (
+        fmn_source.quote_cash_price(
+            raw_last, basis, rounding, symbol=symbol, exchange=exchange
+        )
+        == expected
+    )
+
+
+@pytest.mark.parametrize(
+    "value,symbol,exchange,expected",
+    [
+        ("500.0", "ZCZ26", "CBOT", 5.00),
+        ("2.5", "ZCZ26", "CBOT", 0.025),
+        ("-1.25", "ZSF27", "CBOT", -0.0125),
+        ("6.50", "MWZ26", "MIAX", 6.50),
+        ("0.01", "MWZ26", "MIAX", 0.01),
+        ("4.50", "ZCZ26", "WCE", 4.50),
+        ("n/a", "ZCZ26", "CBOT", None),
+        (None, "ZCZ26", "CBOT", None),
+        (600.0, "ZWN27", "CBOT", 6.00),
+    ],
+)
+def test_fmn_quote_to_dollars(value, symbol, exchange, expected) -> None:
+    assert (
+        fmn_source.quote_to_dollars(value, symbol=symbol, exchange=exchange)
+        == expected
+    )
+
+
+def test_fmn_parse_quotes_feed_synthetic() -> None:
+    quotes = fmn_source.parse_quotes_feed(FEED_TEXT)
+    assert sorted(quotes) == ["MWZ26", "ZCZ26"]
+    assert quotes["ZCZ26"]["rawLast"] == "500.0"
+    # The field regex must not read "change" out of "exchange".
+    assert quotes["ZCZ26"]["change"] == "2.5"
+    assert quotes["ZCZ26"]["exchange"] == "CBOT"
+    assert quotes["MWZ26"]["rawLast"] == "6.50"
+    assert quotes["MWZ26"]["exchange"] == "MIAX"
+    assert quotes["MWZ26"]["month"] == "December 2026"
+
+
+def test_fmn_parse_quotes_feed_invalid_is_empty() -> None:
+    assert fmn_source.parse_quotes_feed("") == {}
+    assert fmn_source.parse_quotes_feed("<html>not a feed</html>") == {}
+    assert fmn_source.parse_quotes_feed("var quotes = {};") == {}
+    assert fmn_source.parse_quotes_feed("var quotes = {") == {}
+
+
+# ---------------------------------------------------------------------------
 # Fetch plumbing (mocked — no live HTTP in tests)
 # ---------------------------------------------------------------------------
 
 
-def test_fmn_fetch_cash_uses_verified_url() -> None:
+def test_fmn_fetch_cash_uses_verified_urls() -> None:
     html = _read("fmn_sample.html")
-    with patch.object(
-        fmn_source, "fetch_fmn_html", return_value=html
-    ) as mock_get:
+    with (
+        patch.object(
+            fmn_source, "fetch_fmn_html", return_value=html
+        ) as mock_page,
+        patch.object(
+            fmn_source, "fetch_fmn_quotes", return_value=QUOTES
+        ) as mock_feed,
+    ):
         result = fmn_source.fetch_fmn_cash(as_of=AS_OF)
-    mock_get.assert_called_once_with(fmn_source.FMN_URL)
+    mock_page.assert_called_once_with(fmn_source.FMN_URL)
+    mock_feed.assert_called_once_with(fmn_source.FMN_QUOTES_URL)
     assert result["status"] == "ok"
     assert len(result["rows"]) == 12
+    corn = next(
+        r
+        for r in result["rows"]
+        if r["location"] == "Alliston"
+        and r["commodity"] == "Corn"
+        and r["delivery_month"] == "Nov 2026"
+    )
+    assert corn["futures_price"] == pytest.approx(5.00)
+    assert corn["cash_price"] == pytest.approx(6.00)
+
+
+def test_fmn_fetch_cash_feed_failure_falls_back_to_page_only() -> None:
+    html = _read("fmn_sample.html")
+    with (
+        patch.object(fmn_source, "fetch_fmn_html", return_value=html),
+        patch.object(
+            fmn_source,
+            "fetch_fmn_quotes",
+            side_effect=requests.RequestException("boom"),
+        ),
+    ):
+        result = fmn_source.fetch_fmn_cash(as_of=AS_OF)
+    assert result["status"] == "ok"
+    assert len(result["rows"]) == 12
+    assert all(
+        r["futures_price"] is None for r in result["rows"] if r["futures_symbol"]
+    )
+    assert "quotes feed fetch failed" in " ".join(result["notes"])
+
+
+def test_fmn_fetch_cash_empty_feed_falls_back_to_page_only() -> None:
+    html = _read("fmn_sample.html")
+    with (
+        patch.object(fmn_source, "fetch_fmn_html", return_value=html),
+        patch.object(fmn_source, "fetch_fmn_quotes", return_value={}),
+    ):
+        result = fmn_source.fetch_fmn_cash(as_of=AS_OF)
+    assert result["status"] == "ok"
+    assert len(result["rows"]) == 12
+    assert all(
+        r["cash_price"] is None for r in result["rows"] if r["futures_symbol"]
+    )
+    assert "quotes feed returned no symbols" in " ".join(result["notes"])
 
 
 # ---------------------------------------------------------------------------
@@ -339,4 +629,41 @@ def test_fmn_live_html_structure() -> None:
     assert len({r["location"] for r in result["rows"]}) == 87
     assert result["notes"][-1] == (
         "parsed 453 rows from 204 bid tables (87 delivery points)"
+    )
+
+
+@pytest.mark.skipif(
+    not LIVE_HTML.exists() or not LIVE_FEED.exists(),
+    reason="saved live copies /tmp/fmn/fmn_cash.html / /tmp/fmn/jsquote.txt absent",
+)
+def test_fmn_live_html_with_live_feed_fills_all_futures_rows() -> None:
+    """Counts only — no prices asserted or copied anywhere.
+
+    Saved live page (2026-11-19) + saved live jsquote feed
+    (verified 2026-11-19, Cycle 11): 453 rows, 449 futures-linked
+    rows all filled, 4 manual barley/oats rows unchanged.
+    """
+    quotes = fmn_source.parse_quotes_feed(
+        LIVE_FEED.read_text(encoding="utf-8")
+    )
+    assert len(quotes) == 10
+    result = fmn_source.parse_fmn_html(
+        LIVE_HTML.read_text(encoding="utf-8"),
+        as_of="2026-11-19",
+        quotes=quotes,
+    )
+    assert result["status"] == "ok"
+    assert len(result["rows"]) == 453
+    linked = [r for r in result["rows"] if r["futures_symbol"]]
+    manual = [r for r in result["rows"] if r["futures_symbol"] is None]
+    assert len(linked) == 449
+    assert len(manual) == 4
+    assert all(r["futures_price"] is not None for r in linked)
+    assert all(r["cash_price"] is not None for r in linked)
+    assert all(r["change"] is not None for r in linked)
+    assert all(r["cash_price"] is not None for r in manual)
+    assert all(r["futures_price"] is None for r in manual)
+    assert result["notes"][-2] == (
+        "quotes feed applied: 449 of 449 futures-linked rows filled; "
+        "0 had no quote in the feed"
     )

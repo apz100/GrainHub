@@ -1,19 +1,20 @@
 """Tests for the generic AgriCharts cashbids.php-embed collector.
 
-The eight embed sites (Agtegra, Heritage Coop, Linn Coop, Midway
+The nine embed sites (Agtegra, Heritage Coop, Linn Coop, Midway
 Coop, Ag State, Superior Ag — Cycle 7 — plus ALCIVIA and TGM,
-Cycle 9) all serve their bids from a ``cashbids-js.php`` endpoint
-whose response carries a ``var bids`` JSON payload (verified live
-2026-11-19, one polite GET per URL — see ``cashbids_embed_source.py``).
-These tests lock the parser in with synthetic fixtures — no live
-fetching inside pytest, fixture values are invented test data, not
-live prices.
+Cycle 9, plus PRO Coop, Cycle 11) all serve their bids from a
+``cashbids-js.php`` endpoint whose response carries a ``var bids``
+JSON payload (verified live 2026-11-19, one polite GET per URL — see
+``cashbids_embed_source.py``). These tests lock the parser in with
+synthetic fixtures — no live fetching inside pytest, fixture values
+are invented test data, not live prices.
 """
 
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
@@ -213,7 +214,7 @@ def test_tgm_groupby_commodity_beans_maps_to_soybeans():
     assert white["futures_price"] == pytest.approx(4.20)
 
 
-def test_registry_eight_verified_sites_and_key_errors():
+def test_registry_nine_verified_sites_and_key_errors():
     sites = cashbids_embed_source.CASHBIDS_EMBED_SITES
     assert sorted(sites) == [
         "ag_state",
@@ -222,6 +223,7 @@ def test_registry_eight_verified_sites_and_key_errors():
         "heritage_coop",
         "linn_coop",
         "midway_coop",
+        "pro_coop",
         "superior_ag",
         "tgm",
     ]
@@ -253,6 +255,14 @@ def test_registry_new_sites_use_verified_live_js_urls():
     )
     assert tgm.js_url.endswith("&&acCnt=1")
     assert tgm.default_location is None  # 24 locations, filter=all
+    pro_coop = cashbids_embed_source.get_cashbids_embed_site("pro_coop")
+    assert pro_coop.company == "PRO Coop"
+    assert pro_coop.js_url.startswith(
+        "https://procooperative.agricharts.com/inc/cashbids/cashbids-js.php"
+        "?filter=location&location=21297&commodity=&groupby=location"
+    )
+    assert pro_coop.js_url.endswith("&&acCnt=1")
+    assert pro_coop.default_location == "AYRSHIRE.IA"  # 1 location, 21297
 
 
 def test_site_parse_path_uses_registry_defaults_for_new_sites():
@@ -283,3 +293,82 @@ def test_site_parse_path_uses_registry_defaults():
     )
     assert result["company"] == "Heritage Cooperative"
     assert result["status"] == "ok"
+
+
+# ---------------------------------------------------------------------------
+# PRO Coop (Cycle 11) — location 21297, Ayrshire IA, Corn only
+# ---------------------------------------------------------------------------
+
+
+def test_pro_coop_sample_parses_ayrshire_corn_rows():
+    site = cashbids_embed_source.get_cashbids_embed_site("pro_coop")
+    result = cashbids_embed_source.parse_cashbids_embed_html(
+        _read("cashbids_embed_pro_coop_sample.html"), site=site
+    )
+    assert result["status"] == "ok"
+    assert result["company"] == "PRO Coop"
+    # 4 cashbids in the payload minus 1 login-gated minus 1 inactive.
+    assert len(result["rows"]) == 2
+    assert result["location"] == "AYRSHIRE.IA"
+    assert {row["location"] for row in result["rows"]} == {"AYRSHIRE.IA"}
+    assert {row["commodity"] for row in result["rows"]} == {"Corn"}
+    assert all(row["currency"] == "USD" for row in result["rows"])
+    assert all(row["unit"] == "$/bu" for row in result["rows"])
+
+
+def test_pro_coop_units_conversions():
+    site = cashbids_embed_source.get_cashbids_embed_site("pro_coop")
+    result = cashbids_embed_source.parse_cashbids_embed_html(
+        _read("cashbids_embed_pro_coop_sample.html"), site=site
+    )
+    dec = next(
+        row
+        for row in result["rows"]
+        if row["futures_symbol"] == "ZCZ26"
+    )
+    # futures "500-0" = 500.0 cents -> $5.00; basis -25 cents -> -$0.25.
+    assert dec["futures_price"] == pytest.approx(5.00)
+    assert dec["basis"] == pytest.approx(-0.25)
+    assert dec["cash_price"] == pytest.approx(4.75)
+    assert dec["cash_price_mt"] == pytest.approx(175.25)
+    assert dec["change"] == pytest.approx(-0.03)
+    assert dec["futures_change"] == pytest.approx(-0.025)
+    assert dec["futures_month"] == "Dec 2026"
+    assert dec["delivery_month"] == "Nov 2026"
+    mar = next(
+        row
+        for row in result["rows"]
+        if row["futures_symbol"] == "ZCH27"
+    )
+    # futures "510-2" = 510.25 cents -> $5.1025; basis -30 cents.
+    assert mar["futures_price"] == pytest.approx(5.1025)
+    assert mar["basis"] == pytest.approx(-0.30)
+    assert mar["futures_month"] == "Mar 2027"
+    assert mar["delivery_month"] == "Mar 2027"
+
+
+def test_pro_coop_login_gated_and_inactive_rows_skipped_and_noted():
+    site = cashbids_embed_source.get_cashbids_embed_site("pro_coop")
+    result = cashbids_embed_source.parse_cashbids_embed_html(
+        _read("cashbids_embed_pro_coop_sample.html"), site=site
+    )
+    assert len(result["rows"]) == 2
+    notes = " ".join(result["notes"])
+    assert "1 login-gated" in notes
+    assert "1 inactive" in notes
+
+
+def test_fetch_pro_coop_uses_verified_url() -> None:
+    html = _read("cashbids_embed_pro_coop_sample.html")
+    with patch.object(
+        cashbids_embed_source,
+        "fetch_cashbids_embed_html",
+        return_value=html,
+    ) as mock_get:
+        result = cashbids_embed_source.fetch_pro_coop()
+    mock_get.assert_called_once_with(
+        cashbids_embed_source.get_cashbids_embed_site("pro_coop").js_url
+    )
+    assert result["status"] == "ok"
+    assert result["company"] == "PRO Coop"
+    assert len(result["rows"]) == 2

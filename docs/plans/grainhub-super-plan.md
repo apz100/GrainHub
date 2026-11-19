@@ -329,12 +329,12 @@ branch to GitHub frequently.
 - Elevator Ops: which ERP first (Agris / Agvance / AgTrax)?
 - US scope: Corn Belt first, or Corn Belt + Gulf / PNW from day one?
 
-## 9. Progress — Cycles 1–7 (2026-11-18/19)
+## 9. Progress — Cycles 1–10 (2026-11-18/19)
 
-Seven overnight autonomous cycles on branches `overnight/grainhub-cycle-1`
-through `overnight/grainhub-cycle-7`, none merged to master. Full API test
-suite grew **179 → 291 → 320 → 359 → 364 → 380 → 407 passed, 0 failed**
-across the seven cycles. Full detail in `docs/plans/overnight-cycle-N-report.md`.
+Ten overnight autonomous cycles on branches `overnight/grainhub-cycle-1`
+through `overnight/grainhub-cycle-10`, none merged to master. Full API test
+suite grew **179 → 291 → 320 → 359 → 364 → 380 → 407 → 407 → 454 → 488 passed, 0 failed**
+across the ten cycles. Full detail in `docs/plans/overnight-cycle-N-report.md`.
 Merge order, gates, and conflicts are in `docs/plans/merge-plan.md`.
 
 - **Cycle 1** (`overnight/grainhub-cycle-1`, 179 tests): Phase 0 hardening,
@@ -379,6 +379,27 @@ Merge order, gates, and conflicts are in `docs/plans/merge-plan.md`.
   `cashbids-js.php` route — no Playwright needed); AGP iframe verified
   Bushel (Chester, NE) and registered; basis thresholds wired into the
   alert evaluator (migration `0019`, single Alembic head).
+- **Cycle 8** (`overnight/grainhub-cycle-8`, 407 tests, docs only):
+  merge plan for branches 1–7 (linear chain verified, `--no-ff` order,
+  gates, conflicts, rollback); super-plan progress to Cycle 7;
+  deployment-checklist migration head corrected 0018 → 0019; re-check
+  sweep of all 5 Cycle 6 failures — all back up — including Five Star
+  Coop's 299 static rows in a new wpDataTables pattern, and StoneX
+  research (no static-data route exists; render check only).
+- **Cycle 9** (`overnight/grainhub-cycle-9`, 454 tests): Five Star
+  wpDataTables collector built (299 rows, 21 locations, delivery-label
+  normalisation); ALCIVIA (181 rows) + TGM (362 rows) `cashbids-js.php`
+  routes proven and registered (embed family now 8 sites); CRC
+  resolved — homepage Cash Bids section is a lazy-loaded StoneX
+  iframe, no collector.
+- **Cycle 10** (`overnight/grainhub-cycle-10`, 488 tests): FMN
+  writeBidRow collector (204 tables, 453 rows, 87 delivery points —
+  the 87th is "US Rep Corn", missed by the earlier read; futures
+  price/change/cash price still need the `jsquote.php` feed);
+  19-site US sweep (13 reclassified, Sunrise enabled as classic DTN,
+  Synergy registered as Bushel, Wheaton Grain parser gap found,
+  StoneX family grows to 3 with UFC); currency design note (proposal
+  only, no migration); web build re-verified passing.
 
 **Remaining blockers that need Adam:** NASS API key (free) and FAS /
 data.gov key (free); LLM provider + key for Advisor `/ask`; Barchart /
@@ -391,14 +412,16 @@ api-tests.yml`) can be pushed — the file is in no branch, it sits
 untracked locally, and the `.github` directory must not be assumed
 present after merging; currency column or per-source currency
 mapping — normalized price rows carry no currency, so basis/best-bid
-responses report `currency: null`; email-bid endpoint is public by
+responses report `currency: null` (a design note with four concrete
+decisions is now in `docs/plans/currency-design.md`); email-bid endpoint is public by
 default (admin-only is a one-line change if wanted); pricing/hosting
-decisions. **Newest findings:** the `cashbids.php` embed collector is
-done (6 sites, 105 rows, static route proven); AGP is verified Bushel
-and registered; basis alerts are now wired into the alert evaluator
-(migration `0019` — note the deployment checklist still says the
-Alembic head is `0018`); the DTN sweep found only 2 of 28 sites
+decisions. **Newest findings:** the `cashbids.php` embed family is
+now 8 sites (ALCIVIA + TGM proven in Cycle 9, 543 rows); the FMN
+collector is built (453 rows, 87 points) but its futures price/change/
+cash price need the `jsquote.php` feed; Five Star's wpDataTables
+collector is built (299 rows); the DTN sweep found only 2 of 28 sites
 static-HTML, 20 JS-only, 6 unreachable, with Al-Corn the only classic
-inline `CashBidTable` fit for the DTN collector. A Playwright render
-check of the 12 DTN-family JS-only sites, the FMN filtered view, and
+inline `CashBidTable` fit for the DTN collector (Sunrise is a second
+classic-DTN fit, enabled in Cycle 10). A Playwright render
+check of the DTN-family JS-only sites, the FMN filtered view, and
 Mapleview's Grain Discovery shell still needs a live browser session.

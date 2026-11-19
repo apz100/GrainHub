@@ -228,9 +228,9 @@ url     = "https://www.gatewayfs.com/markets/cash.php"
 
 [[us.elevators]]
 enabled = false
-type    = "unknown"  # Cycle 10: HTTP 404 at /cash-bids; the 404 page links /cashbids (different slug) — probe that next
+type    = "agricharts-embed"  # reclassified 2026-11-19 (Cycle 11): HTTP 200 at /cashbids (the /cash-bids 404 slug from Cycle 10 was wrong); page carries an AgriCharts cashbids.php embed (hullcoopresp.agricharts.com, groupby=ccommodity), no static bid rows — rows load via the embed; cashbids-js.php static-route check still open (same as PRO Coop); still disabled
 name    = "Hull Coop"
-url     = "https://www.hullcoop.com/cash-bids"
+url     = "https://www.hullcoop.com/cashbids"
 
 [[us.elevators]]
 enabled = false
@@ -248,14 +248,14 @@ url     = "https://www.mercerlandmark.com/cash-bids"
 # Official sites confirmed; cash bid sub-pages need verification
 
 [[us.elevators]]
-enabled = false
-type    = "unknown"  # Cycle 10: AgriCharts-hosted homepage (s3 media.agricharts.com, quotelib.js); no bid widget on homepage, nav links /markets/cash.php — probe that next (do not follow the Barchart marketplace link)
+enabled = true  # enabled 2026-11-19 (Cycle 11): 78 static writeBidRow rows at /markets/cash.php (Corn / Soybeans / Wheat, 6 h4 locations), all 78 match the existing us_agricharts_source.py _WRITEBIDROW_RX (verified against saved HTML) — collector-ready; registry wiring is the coordinator's step
+type    = "agricharts"  # reclassified 2026-11-19 (Cycle 11): classic AgriCharts writeBidRow pattern at /markets/cash.php
 name    = "Pro Ag"
-url     = "https://www.proagfarmers.com"
+url     = "https://www.proagfarmers.com/markets/cash.php"
 
 [[us.elevators]]
-enabled = false
-type    = "agricharts-embed"  # reclassified 2026-11-19 (Cycle 10): 3 AgriCharts cashbids.php embeds (procooperative.agricharts.com, locations 21297 + 21302); cashbids-js.php static-route check next, do not enable until verified
+enabled = true
+type    = "agricharts-embed"  # verified 2026-11-19 (Cycle 11): cashbids-js.php 200, var-bids JSON, 1 location (AYRSHIRE.IA), 6 Corn rows — location 21297 embed only; the two location-21302 embeds on the same homepage were not checked (GET budget)
 name    = "PRO Coop"
 url     = "https://procooperative.com"
 
@@ -266,14 +266,14 @@ name    = "Ray Carroll"
 url     = "https://www.ray-carroll.com"
 
 [[us.elevators]]
-enabled = false
-type    = "bushel"  # reclassified 2026-11-19 (Cycle 10): Bushel FCCP family (portal.bushelpowered.com/skyland, /cashbidssingle- nav link); no .cbmod widget on homepage — probe /cashbidssingle- next
+enabled = true
+type    = "bushel"  # Cycle 11: HTTP 200 at /cashbidssingle- (the nav link target is literally '/cashbidssingle-' with an empty ID) — serves a 14-location picker AND a static 7-col .cbmod widget for the default location (Cunningham Area), 6 rows (Corn 2, Milo 1, Red Wheat 2, Soybeans 1); coordinator re-check corrected the sweep worker's "no widget" report. Registry entry added in Cycle 11; per-location targets /cashbidssingle-<id> still open
 name    = "Skyland Grain"
-url     = "https://www.skylandgrain.com"
+url     = "https://www.skylandgrain.com/cashbidssingle-"
 
 [[us.elevators]]
 enabled = false
-type    = "bushel"  # reclassified 2026-11-19 (Cycle 10): Bushel FCCP family ("Data provided by Bushel" footer, portal.bushelpowered.com/smithfield); no .cbmod widget on homepage, only a futures table — probe /fccp-cash-bids-east-region-20249 next
+type    = "bushel"  # Cycle 11: HTTP 200 at /fccp-cash-bids-east-region-20249 — a per-location link list (NC / IN / OH / SC / VA, ~30 locations), no static bid rows; each location links /cashbidssingle-<id> and page JS iframes that target per location; probe one per-location target next (e.g. /cashbidssingle-1666, Bentonville); still disabled
 name    = "Smithfield"
 url     = "https://smithfieldgrain.com"
 
@@ -285,9 +285,9 @@ url     = "https://www.starofthewest.com"
 
 [[us.elevators]]
 enabled = false
-type    = "unknown"  # Cycle 10: homepage 200, no Cloudflare challenge this time (Cycle 1 reported one); no widget on homepage, nav links /cash-bids — probe the sub-page next (page CSS references table.cashbid_table, hinting at an embed there)
+type    = "agricharts-embed"  # reclassified 2026-11-19 (Cycle 11): HTTP 200 at /cash-bids; WordPress page carries an AgriCharts cashbids.php embed (statelinecoop.agricharts.com, groupby=location) plus custom CSS for table.cashbid_table, no static bid rows — rows load via the embed; cashbids-js.php static-route check still open (same as PRO Coop / Hull Coop); still disabled
 name    = "StateLine Coop"
-url     = "https://www.statelinecoop.com"
+url     = "https://www.statelinecoop.com/cash-bids"
 
 [[us.elevators]]
 enabled = true  # enabled 2026-11-19 (Cycle 10): classic DTN CashBidTable, covered by existing us_dtn_source.py — Playwright render check still open
@@ -309,7 +309,7 @@ url     = "https://www.synergycoop.com"
 
 [[us.elevators]]
 enabled = false
-type    = "unknown"  # Cycle 10: corporate Trade Group homepage, no widget; bid links /locations/cash-bids/ + /local-bids/locations-list/ — probe a sub-page next (distinct from The Andersons Canada, DTN, in the Ontario section)
+type    = "unknown"  # Cycle 11: HTTP 200 at /locations/cash-bids/ — proprietary GRAINweb "MyCashBids" interactive location-picker (choose a location + commodities, click Add; selections saved for next visit); no static bid rows, no recognizable embed, bids load via JS after a location is picked; needs a browser/API investigation; still disabled (distinct from The Andersons Canada, DTN, in the Ontario section)
 name    = "The Andersons"
 url     = "https://www.andersonsgrain.com"
 
@@ -339,9 +339,9 @@ url     = "https://www.ursacoop.com"
 
 [[us.elevators]]
 enabled = false
-type    = "unknown"  # Cycle 10: AgriCharts-hosted homepage (s3 media.agricharts.com, quotelib.js); homepage cash widget is JS-filled (values blank in static HTML), locations Holloway / Appleton / Milbank / DLVD AGP Dawson / Aberdeen — probe /markets/cash.php next
+type    = "agricharts"  # reclassified 2026-11-19 (Cycle 11): 84 static writeBidRow rows at /markets/cash.php (Corn / Soybeans / DNS Wheat, location param 'All') — BUT parser gap: delivery start/end are month-name labels ('Dec 2026', 'Jan 2027') not MM/DD/YYYY, so the existing us_agricharts_source.py _WRITEBIDROW_RX matches 0/84; needs a small regex extension before enabling
 name    = "West-Con"
-url     = "https://www.west-con.com"
+url     = "https://www.west-con.com/markets/cash.php"
 
 [[us.elevators]]
 enabled = false
@@ -350,16 +350,16 @@ name    = "Wheaton Dumont"
 url     = "https://www.wdcoop.com"
 
 [[us.elevators]]
-enabled = false
-type    = "bushel"  # reclassified 2026-11-19 (Cycle 10): static Bushel .cbmod widget, 5 rows (Corn 2 + Soybeans 3, Chippewa Falls), 6-col layout — BUT parser gap: tabbed widget (easyResponsiveTabs), commodity headings are bare h3.fcControls with no div.cbCommodity wrapper, so generic bushel_source.py returns "empty" against saved HTML; needs a parser extension + registry entry
+enabled = true
+type    = "bushel"  # reclassified 2026-11-19 (Cycle 10): static Bushel .cbmod widget, 5 rows (Corn 2 + Soybeans 3, Chippewa Falls), 6-col layout — tabbed widget (easyResponsiveTabs), commodity headings are bare h3.fcControls with no div.cbCommodity wrapper; Cycle 11 added the tabbed-widget fallback to bushel_source.py + registry entry (fetch_wheaton_grain)
 name    = "Wheaton Grain"
 url     = "https://www.wheatongrain.com"
 
 [[us.elevators]]
-enabled = false
-type    = "bushel"  # reclassified 2026-11-19 (Cycle 10): redirects to wheatongrain.com/fccp-winchester-locations-23823 — a Wheaton Grain FCCP location page with two Bushel /cashbidssingle- embeds (3439, 3440, ?embed=y), no static rows at the probed URL; probe the embed targets next
+enabled = true  # enabled 2026-11-19 (Cycle 11): HTTP 200 at the 3439 embed target — static Bushel .cbmod widget, 10 rows (Corn 5 + Soybeans 5, Winchester), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst (FAC shape); existing generic bushel_source.py parse_bushel_html verified status ok, 10 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_winchester() added in Cycle 11
+type    = "bushel"  # Cycle 11: embed target 3439 verified static; the 3440 target stays open
 name    = "Winchester Ag"
-url     = "https://www.winchesteragservice.com"
+url     = "https://www.wheatongrain.com/cashbidssingle-3439?embed=y"
 
 # ── NOT FOUND (no cash bid page detected) ─────────────────────────────────────
 # CFE               — https://www.cfe.coop

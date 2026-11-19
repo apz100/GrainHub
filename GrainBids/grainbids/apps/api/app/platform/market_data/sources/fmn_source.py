@@ -30,13 +30,17 @@ page, because it is not:
     (``www.agricharts.com/marketdata/jsquote.php?varname=quotes&...``)
     that populates a ``quotes`` dictionary (10 symbols on the verified
     page) which the ``writeBidRow`` calls reference as
-    ``quotes['ZCZ26']`` etc. That feed is deliberately NOT fetched
-    here (one-GET scope for this cycle), so ``futures_price``,
-    ``change`` and ``cash_price`` are None on futures-linked rows,
-    with a note saying so. A later cycle can fetch the jsquote feed
-    (or render the page) to fill them. What IS static per row: the
-    row name, the basis argument, the delivery window, the contract
-    symbol, and the settlement fallback (see below).
+    ``quotes['ZCZ26']`` etc. ``fetch_fmn_cash`` fetches that feed
+    (verified live 2026-11-19, Cycle 11: 200, ``var quotes`` with all
+    10 symbols) and ``parse_quotes_feed`` parses it into
+    {symbol: {rawLast, change, exchange, ...}}; ``parse_fmn_html``
+    accepts the mapping as ``quotes=`` and fills ``futures_price``,
+    ``change`` and ``cash_price`` on futures-linked rows. When the
+    feed is not passed (or a row's symbol is missing from it) those
+    values stay None with a note saying so — never invented. What IS
+    static per row: the row name, the basis argument, the delivery
+    window, the contract symbol, and the settlement fallback (see
+    below).
   * ``writeBidRow`` signature (from the page's own inline script):
     ``(name, basis, manual, eod, incwt, rounding, start, end,
     location, group, notes, weight, rowclass, chartsym, quote,
@@ -46,14 +50,26 @@ page, because it is not:
     Futures Price=quote.rawLast, Change=quote.change, Basis=basis,
     Cash Price=computed (see below), Settlement=quote.settlement
     or the ``settlement`` argument, falling back to "0-0".
-  * Cash price (page's own render rule): for futures-linked rows,
-    ``cash = (quote.rawLast + basis) / 100`` (with a rounding step
-    and a ``basis / 100`` variant for Minneapolis-wheat symbols) —
-    uncomputable without the feed. For manual rows (barley/oats),
-    ``cash = basis / 100`` deterministically from static arguments,
-    so it IS published here. Manual rows carry no quote argument at
-    all (19 arguments instead of 20) and their rendered Basis /
-    Futures / Change cells are blank.
+  * Cash price (page's own render rule, replicated in
+    ``quote_cash_price`` from the page's inline ``writeBidRow`` in
+    the saved HTML): ``price = quote.rawLast * (exchange == 'WCE'
+    ? 100 : 1)``; for MW/ZR/ZM symbols ``rounded = price + basis/100``
+    and the cash cell is ``rounded`` in dollars, otherwise
+    ``rounded = price + basis`` in cents and — when ``rounding > -1``
+    (0.5 on every FMN row observed) — the page rounds to whole cents
+    (ceil when the fraction >= rounding, else floor) and writes
+    ``rounded / 100``. Units, verified from the live feed
+    (2026-11-19, Cycle 11): CBOT quotes arrive in cents
+    (rawLast/change in cents, / 100 for dollars); Minneapolis-wheat
+    quotes (MWU27/MWZ26, exchange MIAX, basecode 'C') arrive in
+    dollars (rawLast/change as-is). The feed carries no ``unitcode``
+    field, so the page's unitcode branch never fires here.
+    ``currConv`` is false on every FMN row observed and the feed's
+    exchangeRate is '1', so no currency conversion applies. For
+    manual rows (barley/oats), ``cash = basis / 100`` deterministically
+    from static arguments, so it IS published here. Manual rows carry
+    no quote argument at all (19 arguments instead of 20) and their
+    rendered Basis / Futures / Change cells are blank.
   * Basis is published in cents scale: the page's cash rule adds the
     basis argument directly to the cent-denominated futures price,
     and the manual barley/oats arguments are five-figure cents
@@ -123,6 +139,18 @@ CONTACT_USER_AGENT = "GrainHub-Research/1.0 +https://github.com/apz100/GrainHub"
 FMN_URL = "https://fmn1.agricharts.com/markets/cash.php"
 FMN_COMPANY = "Farm Market News"
 SOURCE_KEY = "fmn"
+# The quotes feed URL, verbatim from the cash page's own <script src>
+# (saved /tmp/fmn/fmn_cash.html; verified live 2026-11-19, Cycle 11:
+# 200, var quotes with all 10 symbols). The empty user=/pass= params
+# are the page's own public-feed params, not credentials — do not put
+# any other credentials anywhere near this URL.
+FMN_QUOTES_URL = (
+    "https://www.agricharts.com/marketdata/jsquote.php"
+    "?varname=quotes&symbols=ZWN27,ZWZ26,ZCZ26,ZCZ27,ZSF27,ZSX27,MWU27,"
+    "MWZ26,ZCH27,ZSH27&fields=name,month,last&user=&pass=&settle=0"
+    "&display_ice=0&ice_exchanges=&exchsyms=&currencyconv="
+    "&displayType=bids"
+)
 # The page publishes no as-of date; rows are dated with the fetch
 # date in the market's timezone.
 FETCH_TZ = ZoneInfo("America/Toronto")
@@ -154,6 +182,17 @@ _QUOTE_REF_RE = re.compile(r"""^quotes\[['"]([A-Z0-9]+)['"]\]$""")
 # writeBidRow( ... ); — matched by a balanced-paren scan, not by
 # regex, because arguments contain nested brackets/quotes.
 _CALL_START = "writeBidRow("
+# The jsquote feed is a JS object literal (unquoted keys, single-quoted
+# string values), not JSON: ``var quotes = {'ZCZ26': {symbol: 'ZCZ26',
+# ..., rawLast: '434.75', change: '-0.75', ...}, ...};``. Parsed with a
+# brace-matching scan plus per-field regexes — no JS is executed.
+_QUOTES_START = "var quotes = {"
+_QUOTE_BLOCK_RE = re.compile(r"'([A-Z0-9]+)'\s*:\s*\{")
+_QUOTE_FIELDS = ("symbol", "rawLast", "change", "exchange", "exchangeRate", "month")
+# writeBidRow's cash branch keys on the symbol prefix: MW / ZR / ZM
+# symbols are dollar-denominated (their rawLast/change arrive in
+# dollars, not cents). Everything else on this page is CBOT cents.
+_DOLLAR_QUOTE_PREFIXES = ("MW", "ZR", "ZM")
 
 
 def _today_iso() -> str:
@@ -207,6 +246,162 @@ def futures_month_from_symbol(symbol: str | None) -> str | None:
     if month is None:
         return None
     return f"{month} 20{year2}"
+
+
+def _extract_js_object(text: str, start: int) -> tuple[str, int] | None:
+    """Return (body, end_pos) for the {...} starting at text[start].
+
+    Brace-matching scan that skips quoted strings, so braces inside
+    string values do not end the object early. None when unbalanced.
+    """
+    if start < 0 or start >= len(text) or text[start] != "{":
+        return None
+    depth = 0
+    in_quote: str | None = None
+    escaped = False
+    pos = start
+    while pos < len(text):
+        ch = text[pos]
+        if in_quote is not None:
+            if escaped:
+                escaped = False
+            elif ch == "\\":
+                escaped = True
+            elif ch == in_quote:
+                in_quote = None
+        else:
+            if ch in ("'", '"'):
+                in_quote = ch
+            elif ch == "{":
+                depth += 1
+            elif ch == "}":
+                depth -= 1
+                if depth == 0:
+                    return text[start + 1 : pos], pos + 1
+        pos += 1
+    return None
+
+
+def _js_field(body: str, field: str) -> str | None:
+    """Return one scalar field from a JS object-literal block.
+
+    Accepts a quoted string or a bare number. The negative lookbehind
+    keeps ``change`` from matching inside ``exchange`` and ``month``
+    from matching inside ``shortmonth``.
+    """
+    match = re.search(
+        r"(?<![A-Za-z])" + re.escape(field) + r"\s*:\s*(?:'([^']*)'|(-?[\d.]+))",
+        body,
+    )
+    if not match:
+        return None
+    return match.group(1) if match.group(1) is not None else match.group(2)
+
+
+def parse_quotes_feed(text: str) -> dict[str, dict[str, str]]:
+    """Parse a jsquote.php ``var quotes = {...};`` response.
+
+    Returns {symbol: {field: value}} for the fields the collector
+    uses (rawLast, change, exchange, exchangeRate, month). Values are
+    kept as strings; conversion happens when a row is filled. Returns
+    {} when the feed has no quotes object or no symbols.
+    """
+    start = text.find(_QUOTES_START)
+    if start < 0:
+        return {}
+    brace = text.find("{", start)
+    extracted = _extract_js_object(text, brace)
+    if extracted is None:
+        return {}
+    body, _ = extracted
+    quotes: dict[str, dict[str, str]] = {}
+    for match in _QUOTE_BLOCK_RE.finditer(body):
+        symbol = match.group(1)
+        block = _extract_js_object(body, match.end() - 1)  # the "{" itself
+        if block is None:
+            continue
+        block_body, _ = block
+        entry = {}
+        for field in _QUOTE_FIELDS:
+            value = _js_field(block_body, field)
+            if value is not None:
+                entry[field] = value
+        if entry:
+            quotes[symbol] = entry
+    return quotes
+
+
+def _is_dollar_quote(symbol: str | None) -> bool:
+    """True for MW / ZR / ZM symbols, whose feed values are dollars."""
+    return bool(symbol) and symbol[:2].upper() in _DOLLAR_QUOTE_PREFIXES
+
+
+def _quote_float(value: Any) -> float | None:
+    """Parse a feed value ('600.5' / 600.5) to float; None when absent/unparseable."""
+    if value is None or isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    text = str(value).strip()
+    if not text:
+        return None
+    try:
+        return float(text)
+    except ValueError:
+        return None
+
+
+def quote_to_dollars(
+    value: Any, *, symbol: str | None, exchange: str | None = None
+) -> float | None:
+    """Convert a feed rawLast/change value to dollars per bushel.
+
+    CBOT quotes arrive in cents (rawLast 434.75 -> $4.3475). MW/ZR/ZM
+    quotes and WCE quotes arrive in dollars already (MW rawLast 6.575
+    -> $6.575) — the page's own writeBidRow treats those branches as
+    dollars (see quote_cash_price). None when the value is missing or
+    unparseable — never invented.
+    """
+    num = _quote_float(value)
+    if num is None:
+        return None
+    if _is_dollar_quote(symbol) or (exchange or "").strip().upper() == "WCE":
+        return num
+    return num / 100.0
+
+
+def quote_cash_price(
+    raw_last: Any,
+    basis: float | None,
+    rounding: float | None,
+    *,
+    symbol: str | None,
+    exchange: str | None = None,
+) -> float | None:
+    """Replicate the page's writeBidRow cash rule for a futures-linked row.
+
+    From the page's own inline script (saved /tmp/fmn/fmn_cash.html):
+    ``price = quote.rawLast * (quote.exchange == 'WCE' ? 100 : 1)``;
+    for MW/ZR/ZM symbols ``rounded = price + basis/100`` and the cash
+    cell is ``rounded`` in dollars (toFixed(2)); otherwise
+    ``rounded = price + basis`` in cents and — when ``rounding > -1``
+    (0.5 on every FMN row observed) — the page rounds to whole cents
+    (ceil when the fraction >= rounding, else floor) and writes
+    ``rounded / 100``. ``currConv`` is false on every FMN row observed
+    and the feed's exchangeRate is '1', so no currency conversion
+    applies. Returns None when the quote or the basis is missing.
+    """
+    raw = _quote_float(raw_last)
+    if raw is None or basis is None:
+        return None
+    if _is_dollar_quote(symbol):
+        return round(raw + basis / 100.0, 2)
+    price_cents = raw * 100.0 if (exchange or "").strip().upper() == "WCE" else raw
+    rounded = price_cents + basis
+    if rounding is not None and rounding > -1:
+        remainder = rounded - math.floor(rounded)
+        rounded = math.ceil(rounded) if remainder >= rounding else math.floor(rounded)
+    return round(rounded / 100.0, 2)
 
 
 def _extract_calls(script_text: str) -> list[str]:
@@ -393,8 +588,11 @@ def _make_row(
     crop: str,
     fields: dict[str, Any],
     as_of: str,
+    quote: dict[str, Any] | None = None,
+    quotes_given: bool = False,
 ) -> dict[str, Any]:
-    """Build one normalized row; feed-dependent values stay None."""
+    """Build one normalized row; feed-dependent values stay None
+    unless the row's quote is supplied."""
     commodity = _canonical_commodity(crop, fields["name"])
     manual = fields["manual"]
     if manual:
@@ -432,6 +630,60 @@ def _make_row(
             "settlement": fields["settlement"],
             "note": note,
         }
+    if quote is not None:
+        # Futures-linked row with its quote: fill futures price /
+        # change / cash price from the feed, per the page's own
+        # render rule (see quote_cash_price). A value the quote does
+        # not carry stays None — never invented.
+        symbol = fields["futures_symbol"]
+        exchange = quote.get("exchange")
+        futures_price = quote_to_dollars(
+            quote.get("rawLast"), symbol=symbol, exchange=exchange
+        )
+        change = quote_to_dollars(
+            quote.get("change"), symbol=symbol, exchange=exchange
+        )
+        cash_price = quote_cash_price(
+            quote.get("rawLast"),
+            fields["basis"],
+            fields["rounding"],
+            symbol=symbol,
+            exchange=exchange,
+        )
+        note = (
+            "Basis as published (cents scale); futures price, "
+            "change and cash price from the page's quotes feed "
+            "(jsquote.php)"
+        )
+        missing = [
+            label
+            for label, value in (
+                ("futures price", futures_price),
+                ("change", change),
+                ("cash price", cash_price),
+            )
+            if value is None
+        ]
+        if missing:
+            note += "; quote present but missing: " + ", ".join(missing)
+    else:
+        futures_price = None
+        change = None
+        cash_price = None
+        if quotes_given:
+            note = (
+                "Basis as published (cents scale); no quote for "
+                f"{fields['futures_symbol']} in the page's quotes "
+                "feed — futures price, change and cash price left "
+                "as None, never invented"
+            )
+        else:
+            note = (
+                "Basis as published (cents scale); futures price, "
+                "change and cash price come from the page's external "
+                "quotes feed and are not in the static HTML (futures "
+                "month decoded from the contract symbol)"
+            )
     return {
         "company": FMN_COMPANY,
         "source": SOURCE_KEY,
@@ -440,29 +692,21 @@ def _make_row(
         "name": fields["name"],
         "delivery_month": fields["delivery_month"],
         "delivery_end": fields["delivery_end"],
-        # Futures price / change / cash price are set by the page's
-        # external quotes feed (jsquote.php), which is not in the
-        # static HTML — never invented here.
-        "cash_price": None,
+        "cash_price": cash_price,
         "cash_price_mt": None,
         # Basis as published (cents scale — see module docstring);
         # NOT divided by 100, NOT dollars per bushel.
         "basis": fields["basis"],
-        "futures_price": None,
+        "futures_price": futures_price,
         "futures_month": futures_month_from_symbol(fields["futures_symbol"]),
         "futures_symbol": fields["futures_symbol"],
         "last_trade": None,
-        "change": None,
+        "change": change,
         "currency": "CAD",
         "unit": "$/bu",
         "date": as_of,
         "settlement": fields["settlement"],
-        "note": (
-            "Basis as published (cents scale); futures price, "
-            "change and cash price come from the page's external "
-            "quotes feed and are not in the static HTML (futures "
-            "month decoded from the contract symbol)"
-        ),
+        "note": note,
     }
 
 
@@ -486,29 +730,49 @@ def parse_fmn_html(
     html: str,
     *,
     as_of: str | _date | None = None,
+    quotes: dict[str, dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Parse FMN cash-bid HTML (default all-locations view) into rows.
 
     Only the static page is read: ``homepage_quoteboard`` tables and
     the ``writeBidRow`` calls in each table's ``<tbody>`` script.
+    ``quotes`` is an optional mapping from ``parse_quotes_feed`` —
+    when given, futures price / change / cash price are filled on
+    futures-linked rows whose symbol is in the mapping (per the
+    page's own render rule); rows with no quote stay None.
     Returns {"company", "location", "rows", "status", "notes"};
     see the module docstring.
     """
     as_of_iso = _as_of_iso(as_of)
+    quotes_given = quotes is not None
     notes: list[str] = [
         "Default all-locations view only: the Location dropdown "
         "lists far more points than the 204 tables, so this is not "
         "the complete FMN set (dropdown filter out of scope).",
-        "Futures price, change and cash price on futures-linked rows "
-        "come from the page's external quotes feed (jsquote.php) and "
-        "are not in the static HTML — left as None, never invented; "
-        "futures month is decoded from the contract symbol.",
+    ]
+    if quotes_given:
+        notes.append(
+            "Quotes feed (jsquote.php) applied: futures price, "
+            "change and cash price on futures-linked rows come from "
+            "the feed (see the per-row note); rows whose symbol is "
+            "missing from the feed stay None, never invented.",
+        )
+    else:
+        notes.append(
+            "Futures price, change and cash price on futures-linked rows "
+            "come from the page's external quotes feed (jsquote.php) and "
+            "are not in the static HTML — left as None, never invented; "
+            "futures month is decoded from the contract symbol.",
+        )
+    notes.append(
         "Basis is published as-is in cents scale (see module "
         "docstring); currency CAD and units $/bu ($/t for manual "
         "barley/oats rows) are the FMN Ontario convention — the page "
         "labels no currency or unit.",
+    )
+    notes.append(
         f"No as-of date is published on the page; date is the fetch date ({as_of_iso}).",
-    ]
+    )
 
     soup = BeautifulSoup(html, "lxml")
     tables = soup.find_all("table", class_="homepage_quoteboard")
@@ -527,6 +791,9 @@ def parse_fmn_html(
     rows: list[dict[str, Any]] = []
     locations: set[str] = set()
     tables_seen = 0
+    linked = 0
+    filled = 0
+    missing_quote = 0
     for table in tables:
         title_row = table.find("tr", class_="section")
         if title_row is None:
@@ -545,15 +812,31 @@ def parse_fmn_html(
                 fields = _parse_call(_split_args(call_text))
                 if fields is None:
                     continue
+                quote = None
+                if not fields["manual"]:
+                    linked += 1
+                    if quotes_given:
+                        quote = quotes.get(fields["futures_symbol"] or "")
+                        if quote is not None:
+                            filled += 1
+                        else:
+                            missing_quote += 1
                 rows.append(
                     _make_row(
                         location=location,
                         crop=crop,
                         fields=fields,
                         as_of=as_of_iso,
+                        quote=quote,
+                        quotes_given=quotes_given,
                     )
                 )
 
+    if quotes_given:
+        notes.append(
+            f"quotes feed applied: {filled} of {linked} futures-linked "
+            f"rows filled; {missing_quote} had no quote in the feed"
+        )
     notes.append(
         f"parsed {len(rows)} rows from {tables_seen} bid tables "
         f"({len(locations)} delivery points)"
@@ -583,14 +866,53 @@ def fetch_fmn_html(url: str = FMN_URL, timeout: int = 30) -> str:
     return response.text
 
 
+def fetch_fmn_quotes_text(url: str = FMN_QUOTES_URL, timeout: int = 30) -> str:
+    """One polite GET of the jsquote quotes feed."""
+    response = requests.get(
+        url, headers={"User-Agent": CONTACT_USER_AGENT}, timeout=timeout
+    )
+    response.raise_for_status()
+    return response.text
+
+
+def fetch_fmn_quotes(
+    url: str = FMN_QUOTES_URL, timeout: int = 30
+) -> dict[str, dict[str, str]]:
+    """Fetch and parse the jsquote quotes feed into {symbol: fields}."""
+    return parse_quotes_feed(fetch_fmn_quotes_text(url, timeout=timeout))
+
+
 def fetch_fmn_cash(
     url: str = FMN_URL,
     *,
     as_of: str | _date | None = None,
+    quotes_url: str = FMN_QUOTES_URL,
 ) -> dict[str, Any]:
     """Fetch and parse FMN cash bids (default all-locations view).
 
-    One polite GET of the cash page; ``as_of`` defaults to the fetch
-    date (America/Toronto) because the page publishes no trade date.
+    Two polite GETs: the cash page and its jsquote quotes feed, which
+    fills futures price / change / cash price on futures-linked rows.
+    ``as_of`` defaults to the fetch date (America/Toronto) because the
+    page publishes no trade date. If the feed fetch fails (or returns
+    no symbols), the page still parses with those values left as None
+    and a note saying so.
     """
-    return parse_fmn_html(fetch_fmn_html(url), as_of=as_of)
+    html = fetch_fmn_html(url)
+    try:
+        quotes = fetch_fmn_quotes(quotes_url)
+    except requests.RequestException as exc:
+        result = parse_fmn_html(html, as_of=as_of)
+        result["notes"].append(
+            "quotes feed fetch failed "
+            f"({exc}); futures price, change and cash price left as "
+            "None on futures-linked rows"
+        )
+        return result
+    if not quotes:
+        result = parse_fmn_html(html, as_of=as_of)
+        result["notes"].append(
+            "quotes feed returned no symbols; futures price, change "
+            "and cash price left as None on futures-linked rows"
+        )
+        return result
+    return parse_fmn_html(html, as_of=as_of, quotes=quotes)

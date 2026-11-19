@@ -16,9 +16,9 @@ neither step needs a browser:
      parse target: it is present and complete on every site checked,
      while the rendered table is NOT reliable (Agtegra's table body
      is empty ``<tr class="odd/even">`` rows filled client-side from
-     the JSON; the other seven sites server-render it).
+     the JSON; the other eight sites server-render it).
 
-Bid object fields used (all present on every row of all eight sites
+Bid object fields used (all present on every row of all nine sites
 checked): ``name`` (commodity), ``symbol`` (e.g. ``ZCZ26``),
 ``delivery_start`` / ``delivery_end`` (``MM/DD/YYYY``), ``basismonth``
 (``Dec 2026``), ``basis`` (integer cents, e.g. -90), ``futures`` /
@@ -83,6 +83,7 @@ CONTACT_USER_AGENT = "GrainHub-Research/1.0 +https://github.com/apz100/GrainHub"
 #   Superior Ag    superiorag-cb-jsi.agricharts.com / 82244
 #   ALCIVIA        alciviacoop.agricharts.com     / filter=all
 #   TGM            totalgrain.agricharts.com      / filter=all
+#   PRO Coop       procooperative.agricharts.com  / 21297 (Ayrshire, IA)
 
 # Raw commodity label (lowercased, grade prefix stripped) -> canonical.
 COMMODITY_MAP = {
@@ -315,6 +316,33 @@ CASHBIDS_EMBED_SITES: dict[str, CashbidsEmbedSite] = {
         "The feed labels soybeans 'Beans' (ZS symbols on all 120 "
         "rows) — mapped to Soybeans in COMMODITY_MAP. Embed at "
         "totalgrainmarketing.com/Cash-Bids.",
+    ),
+    "pro_coop": CashbidsEmbedSite(
+        key="pro_coop",
+        company="PRO Coop",
+        js_url=(
+            "https://procooperative.agricharts.com/inc/cashbids/cashbids-js.php"
+            "?filter=location&location=21297&commodity=&groupby=location"
+            "&width=100%&showtimestamp=1&showchart=1"
+            "&enableScrollIntoView=1&format=table&fields=%0Aname%2C"
+            "%0Adelivery_start%2C%0Adelivery_end%2C%0Aprice%2C%0Abasis"
+            "%2C%0Abasismonth%2C%0Afutures%2C%0Afutureschange%0A"
+            "&groupheading=table&bidsort=commodity&dateformat=%25m%2F%25d"
+            "%2F%25Y&months=11&noscript=1&&acCnt=1"
+        ),
+        default_location="AYRSHIRE.IA",
+        verified=True,
+        notes="Verified live 2026-11-19 (Cycle 11): 200, var-bids JSON, "
+        "1 location (AYRSHIRE.IA), 6 rows (Corn 6). The js_url was "
+        "derived from the homepage cashbids.php loader src "
+        "(filename swap to cashbids-js.php, newlines %0A-encoded, "
+        "+ noscript=1 & acCnt=1 per this module's documented method); "
+        "the loader JS itself was not fetched (GET budget), so the "
+        "URL is the derived form that served the payload, not the "
+        "loader's own widgetURL verbatim. The homepage carries two "
+        "more embeds for location 21302 (groupby=ccommodity) that "
+        "were NOT checked — this entry covers the 21297 Ayrshire "
+        "view only. Embed at procooperative.com.",
     ),
 }
 
@@ -687,3 +715,9 @@ def fetch_tgm() -> dict[str, Any]:
     """Fetch TGM / Total Grain Marketing (Illinois / Indiana).
     Verified live 2026-11-19 (Cycle 9)."""
     return fetch_cashbids_embed_site("tgm")
+
+
+def fetch_pro_coop() -> dict[str, Any]:
+    """Fetch PRO Coop (Ayrshire, IA — location 21297 view).
+    Verified live 2026-11-19 (Cycle 11)."""
+    return fetch_cashbids_embed_site("pro_coop")

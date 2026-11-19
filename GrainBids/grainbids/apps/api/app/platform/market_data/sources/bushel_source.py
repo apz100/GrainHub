@@ -58,6 +58,17 @@ live — one polite GET, 200, standard 7-column ``.cbmod`` widget,
 parsed by the generic parser with no changes. The page carries a
 single location/row (Chester, NE, Soybeans, Nov 2026, USD/bu).
 
+Cycle 11 (2026-11-19) fixed the Wheaton Grain tabbed widget: the
+``.cbmod`` div holds an easyResponsiveTabs block with NO
+``div.cbCommodity`` wrappers — bare ``h3.fcControls`` commodity
+headings followed by six/sevenColumnsBigFirst ul row groups, one
+panel per location, the location in the ``ul.resp-tabs-list`` tab
+label (no h2 at all). ``_parse_widget`` now falls back to
+``_parse_tabbed_widget`` when no ``cbCommodity`` sections are found;
+the wrapped path is untouched. Wheaton's Corn section also heads the
+Bid column "Cash" (mapped in HEADER_FIELDS alongside "Bid" and
+"Cash Price").
+
 Units — published numbers, NOT normalized: futures and change keep
 the units each site publishes, and those vary. Decimal sites publish
 futures in dollars (FAC 4.3325) and change in cents (FAC -2.25) or
@@ -96,6 +107,8 @@ FAC_URL = "https://www.faccooperative.com/cash-bids"
 COLLWEST_URL = "https://www.collwestgrain.com/"
 AGP_URL = "https://agp.o.bushelsites.com/cash-bids"
 SYNERGY_URL = "https://www.synergycoop.com"
+SKYLAND_URL = "https://www.skylandgrain.com/cashbidssingle-"
+WINCHESTER_URL = "https://www.wheatongrain.com/cashbidssingle-3439?embed=y"
 
 # Raw widget commodity label -> canonical commodity name.
 COMMODITY_MAP = {
@@ -135,11 +148,13 @@ COMMODITY_MAP = {
 
 # Header label (lowercased) -> row field. Covers both the 7-column and
 # 5-column widget layouts and the real-<table> fallback. "cash price"
-# is the Bid heading on Forest River's #1 Spring Wheat section.
+# is the Bid heading on Forest River's #1 Spring Wheat section; bare
+# "cash" is the Bid heading on Wheaton Grain's Corn section (Cycle 11).
 HEADER_FIELDS = {
     "delivery": "delivery_month",
     "bid": "cash_price",
     "cash price": "cash_price",
+    "cash": "cash_price",
     "basis": "basis",
     "futures": "futures_price",
     "change": "change",
@@ -387,6 +402,53 @@ BUSHEL_SITES: dict[str, BushelSite] = {
         "Cameron), 6-col layout, USD/bu; widget header dated Nov 19, "
         "2026. Generic parser returns status ok against saved HTML.",
     ),
+    "wheaton_grain": BushelSite(
+        key="wheaton_grain",
+        company="Wheaton Grain",
+        url="https://www.wheatongrain.com",
+        currency="USD",
+        default_location="Chippewa Falls",
+        verified=True,
+        notes="Verified live 2026-11-19 (Cycle 11): 200, tabbed Bushel "
+        ".cbmod widget (easyResponsiveTabs) with NO div.cbCommodity "
+        "sections — bare h3.fcControls headings + sixColumnsBigFirst "
+        "ul row groups, location in the resp-tabs-list tab "
+        "('Chippewa Falls'). 5 rows (Corn 2 + Soybeans 3), 6-col "
+        "layout, USD/bu. Corn section heads the Bid column 'Cash'. "
+        "Parsed by the Cycle 11 tabbed-widget fallback; the generic "
+        "parser returned 'empty' before the fix.",
+    ),
+    "skyland": BushelSite(
+        key="skyland",
+        company="Skyland Grain",
+        url=SKYLAND_URL,
+        currency="USD",
+        default_location="Cunningham Area",
+        verified=True,
+        notes="Verified live 2026-11-19 (Cycle 11, coordinator re-check): "
+        "200 at the canonical /cashbidssingle- URL (trailing dash, "
+        "empty ID — same pattern as Williams Gin). The page serves a "
+        "14-location picker AND a static 7-col .cbmod widget for the "
+        "default location (Cunningham Area): 6 rows (Corn 2, Milo 1, "
+        "Red Wheat 2, Soybeans 1), USD/bu. The Cycle 11 sweep worker "
+        "reported no widget — corrected here; per-location "
+        "/cashbidssingle-<id> targets are still open.",
+    ),
+    "winchester": BushelSite(
+        key="winchester",
+        company="Winchester Ag",
+        url=WINCHESTER_URL,
+        currency="USD",
+        default_location="Winchester",
+        verified=True,
+        notes="Verified live 2026-11-19 (Cycle 11): 200 at the "
+        "3439 embed target behind wheatongrain.com "
+        "(fccp-winchester-locations-23823). Standard wrapped 7-col "
+        ".cbmod widget, 10 rows (Corn 5 + Soybeans 5, Winchester), "
+        "USD/bu; generic parser returns status ok. Winchester Ag is "
+        "a Wheaton Grain location, not an independent site. The 3440 "
+        "embed target is still open.",
+    ),
 }
 
 
@@ -485,6 +547,7 @@ def _parse_widget(
     """Parse the .cbmod div widget (verified shape on FAC + Collwest)."""
     rows: list[dict[str, Any]] = []
     location = site.default_location if site else None
+    saw_commodity_sections = False
 
     # Walk the widget in document order so each commodity section picks
     # up the .cashBidLocation h2 that precedes it (FAC has 3 locations
@@ -502,6 +565,7 @@ def _parse_widget(
                     site.location_labels.get(text, text) if site else text
                 )
         if element.name == "div" and "cbCommodity" in classes:
+            saw_commodity_sections = True
             rows.extend(
                 _parse_commodity_section(
                     element,
@@ -512,11 +576,92 @@ def _parse_widget(
                 )
             )
 
+    if not saw_commodity_sections:
+        # Tabbed widget (Wheaton Grain, Cycle 11): no div.cbCommodity
+        # sections — bare h3.fcControls commodity headings plus
+        # six/sevenColumnsBigFirst ul row groups inside
+        # easyResponsiveTabs panels. Same row shape as the wrapped path.
+        rows.extend(
+            _parse_tabbed_widget(
+                widget,
+                company=company,
+                currency=currency,
+                site=site,
+                base_location=location,
+            )
+        )
+
     header = widget.find("p", class_="fcControlsSectionHeader")
     if header:
         as_of = header.get_text(" ", strip=True)
         if as_of:
             notes.append(f"widget header: {as_of}")
+    return rows
+
+
+def _parse_tabbed_widget(
+    widget: Any,
+    *,
+    company: str,
+    currency: str,
+    site: BushelSite | None,
+    base_location: str | None,
+) -> list[dict[str, Any]]:
+    """Parse a tabbed .cbmod widget with no div.cbCommodity wrappers.
+
+    Wheaton Grain serves this shape: an easyResponsiveTabs block whose
+    ``ul.resp-tabs-list`` holds one tab per location (the tab label is
+    the town) and whose ``div.resp-tabs-container`` holds one panel per
+    location, in the same order. Inside each panel, bare
+    ``h3.fcControls`` commodity headings are followed by the usual
+    header + data ul row groups. With a single tab the location is
+    unambiguous; with several, each panel takes its matching tab label.
+    """
+    rows: list[dict[str, Any]] = []
+    tab_list = widget.find("ul", class_="resp-tabs-list")
+    tab_labels = (
+        [li.get_text(" ", strip=True) for li in tab_list.find_all("li")]
+        if tab_list is not None
+        else []
+    )
+    container = widget.find("div", class_="resp-tabs-container")
+    panels = (
+        container.find_all("div", recursive=False)
+        if container is not None
+        else [widget]
+    )
+    for idx, panel in enumerate(panels):
+        panel_location = (
+            tab_labels[idx]
+            if idx < len(tab_labels) and tab_labels[idx]
+            else base_location
+        )
+        if site is not None and panel_location:
+            panel_location = site.location_labels.get(
+                panel_location, panel_location
+            )
+        for heading in panel.find_all("h3", class_="fcControls"):
+            commodity = _canonical_commodity(
+                heading.get_text(" ", strip=True)
+            )
+            uls: list[Any] = []
+            for sibling in heading.find_next_siblings():
+                if not getattr(sibling, "name", None):
+                    continue
+                if sibling.name == "h3":
+                    break
+                if sibling.name == "ul":
+                    uls.append(sibling)
+            rows.extend(
+                _parse_row_ul_group(
+                    uls,
+                    commodity=commodity,
+                    company=company,
+                    location=panel_location,
+                    currency=currency,
+                    site=site,
+                )
+            )
     return rows
 
 
@@ -531,10 +676,37 @@ def _parse_commodity_section(
     heading = section.find("h3")
     raw_name = heading.get_text(" ", strip=True) if heading else ""
     commodity = _canonical_commodity(raw_name)
+    return _parse_row_ul_group(
+        section.find_all("ul"),
+        commodity=commodity,
+        company=company,
+        location=location,
+        currency=currency,
+        site=site,
+    )
+
+
+def _parse_row_ul_group(
+    row_uls: list[Any],
+    *,
+    commodity: str,
+    company: str,
+    location: str | None,
+    currency: str,
+    site: BushelSite | None,
+) -> list[dict[str, Any]]:
+    """Parse one commodity's header + data ul row groups.
+
+    Shared by the wrapped (div.cbCommodity) path and the tabbed
+    (bare h3 + sibling uls) path: the first fcControlsSubHdr ul maps
+    column positions from its labels, fcControls1/fcControls2 uls are
+    data rows, anything else is skipped. A header ul never yields a
+    row.
+    """
     rows: list[dict[str, Any]] = []
     column_map: list[str | None] | None = None
 
-    for row_ul in section.find_all("ul"):
+    for row_ul in row_uls:
         classes = " ".join(row_ul.get("class") or [])
         cells = row_ul.find_all("li")
         if "fcControlsSubHdr" in classes:
@@ -910,3 +1082,29 @@ def fetch_synergy() -> dict[str, Any]:
     (Corn 2 + Soybeans 2), 6-col layout, USD/bu.
     """
     return fetch_bushel_site("synergy")
+
+
+def fetch_skyland() -> dict[str, Any]:
+    """Fetch Skyland Grain (Cunningham Area, KS) via the canonical
+    /cashbidssingle- URL. Verified live 2026-11-19 (Cycle 11,
+    coordinator re-check): 200, static 7-col .cbmod widget, 6 rows
+    (Corn 2, Milo 1, Red Wheat 2, Soybeans 1), USD/bu.
+    """
+    return fetch_bushel_site("skyland")
+
+
+def fetch_winchester() -> dict[str, Any]:
+    """Fetch Winchester Ag (Winchester, via Wheaton Grain's 3439 embed
+    target). Verified live 2026-11-19 (Cycle 11): 200, standard
+    wrapped 7-col .cbmod widget, 10 rows (Corn 5 + Soybeans 5), USD/bu.
+    """
+    return fetch_bushel_site("winchester")
+
+
+def fetch_wheaton_grain() -> dict[str, Any]:
+    """Fetch Wheaton Grain (Chippewa Falls, WI). Verified live 2026-11-19
+    (Cycle 11): 200, tabbed Bushel .cbmod widget (easyResponsiveTabs,
+    no div.cbCommodity), 5 rows (Corn 2 + Soybeans 3), 6-col layout,
+    USD/bu. Parsed by the tabbed-widget fallback.
+    """
+    return fetch_bushel_site("wheaton_grain")

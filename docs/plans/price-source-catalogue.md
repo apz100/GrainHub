@@ -3661,3 +3661,39 @@ One call per site, no retries, via the module's own `cashbids_embed_source.py` w
 | PRO Coop 21302b (Manson) | 12 | 12 | 1 (MANSON.IA) | Exact match |
 
 **Process note:** subagent spawning became unavailable in this session ("subagent bootstrap is no longer authorized"), so Cycle 35 was executed directly by the coordinator — same method, same one-GET-per-site rule, no change to the results.
+
+## Cycle 36 — AgriCharts wrappers + key collectors: 16/16 exact (2026-11-19)
+
+One call per wrapper, no retries. **All 16 returned `status: ok` with exact row-count matches.** Counts only, no values recorded. Executed directly by the coordinator (subagent spawning still unavailable).
+
+### AgriCharts wrappers (11 calls, 653 rows)
+
+Last re-verified Cycle 27 (10 wrappers, 639 rows — Heritage excluded there). All 11 now exact, including Heritage at 14 rows (confirmed Cycle 23).
+
+| Wrapper | Rows now | Prior | Locations | Verdict |
+|---|---|---|---|---|
+| Ag Plus | 36 | 36 (Cycle 27) | 6 | Exact match |
+| Farmers Win Coop | 171 | 171 | 18 | Exact match |
+| Heritage Grain Cooperative | 14 | 14 (Cycle 23) | 1 | Exact match |
+| Keller | 14 | 14 | 1 | Exact match |
+| Kokomo Grain | 63 | 63 | 8 | Exact match |
+| Legacy Farmers | 66 | 66 | 10 | Exact match |
+| Pro Ag | 78 | 78 | 6 | Exact match |
+| West-Con | 84 | 84 | 1 (fallback location) | Exact match |
+| Wheaton Dumont | 43 | 43 | 8 | Exact match |
+| Central Farmers Coop | 75 | 75 | 11 | Exact match |
+| Anthony Farmers Co-op | 9 | 9 | 3 | Exact match |
+
+### Key collectors (5 calls)
+
+Last re-verified Cycle 26, all exact then — and still exact now.
+
+| Collector | Rows now | Prior | Notes |
+|---|---|---|---|
+| FMN (`fetch_fmn_cash`, page + jsquote feed) | 453 | 453 (Cycle 26) | 204 tables, 87 delivery points; 449/449 futures-linked rows filled from the feed |
+| Five Star Coop | 299 | 299 | 21 locations; page trade date Nov 18 |
+| TGM | 362 | 362 | 24 locations (completes the embed family: 13/13 now re-verified across Cycles 35–36) |
+| USDA mirror — James Valley | 197 | 197 | Report id 7730, dated Nov 18, 2026 |
+| USDA mirror — FS Grain | 197 | 197 | Same report id 7730, dated Nov 18, 2026 |
+
+**Coverage note:** with Cycles 35–36, every live-verified collector family has now been re-checked this morning with zero drift: Bushel per-location sweeps (Cycles 29–34), the full 13-site embed family (Cycle 35 + TGM here), all 11 working AgriCharts wrappers, FMN, Five Star, and both USDA mirrors.

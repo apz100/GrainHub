@@ -562,6 +562,11 @@ Merge order, gates, and conflicts are in `docs/plans/merge-plan.md`.
   Anchor/Cropsey/Colfax, registry updated); Smithfield East
   Region sweep fully re-verified (all 30 locations, Cycles
   29–34); merge plan extended to Cycle 33 (85 commits, 0 merges).
+- **Cycle 35** (`overnight/grainhub-cycle-35`, 711 tests, docs
+  only): embed family re-verified 12/12 exact matches (454
+  rows); subagent spawning became unavailable — Cycle 35 run
+  coordinator-direct; merge plan extended to Cycle 34
+  (87 commits, 0 merges).
 
 **Remaining blockers that need Adam:** NASS API key (free) and FAS /
 data.gov key (free); LLM provider + key for Advisor `/ask`; Barchart /

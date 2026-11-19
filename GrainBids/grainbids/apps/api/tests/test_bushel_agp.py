@@ -10,6 +10,12 @@ verified ``BUSHEL_SITES`` entry with a ``fetch_agp()`` wrapper.
 
 The fixture below is synthetic: same widget shape as the live page,
 invented prices. No live fetching inside pytest.
+
+Cycle 33 (2026-11-19): the live iframe target no longer serves
+Chester, NE — it now serves AGP Aberdeen, SD (8 rows: Soybeans 3 +
+Soybean Meal 5). The registry ``default_location`` was updated to
+Aberdeen; the Chester fixture is kept as a parse test of that
+widget shape (its location comes from the fixture's own h2).
 """
 
 from __future__ import annotations
@@ -34,7 +40,8 @@ def test_agp_registry_entry_is_verified() -> None:
     assert site.company == "AGP"
     assert site.url == "https://agp.o.bushelsites.com/cash-bids"
     assert site.currency == "USD"
-    assert site.default_location == "Chester"
+    assert site.default_location == "Aberdeen"
+    assert "Aberdeen" in site.notes
     assert site.verified is True
 
 

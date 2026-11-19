@@ -347,7 +347,7 @@ No prices are recorded here — row counts and widget patterns only.
 | Linn Coop | https://www.linncoop.com/grain/cash-bids | 200 | No | AgriCharts `cashbids.php` embed (`linncoop.agricharts.com`, filter=all) + ATLAS DTN shell | **Resolved 2026-11-19 (Cycle 7):** static route proven — `cashbids-js.php` `var bids` JSON, 51 rows across 5 locations (ADM, Alburnett & Springville Elevator, Cargill (Beans), Cargill (Starch), Ingredion; #2 Yellow Corn 39, Soybeans 12). Generic collector `cashbids_embed_source.py` (`fetch_linn_coop`). No Playwright needed. |
 | Midway Coop | https://www.midwaycoop.com/grain/cash-bids | 200 | No | AgriCharts `cashbids.php` embed (`midwaycoop.agricharts.com`, location 82270) + ATLAS DTN shell | **Resolved 2026-11-19 (Cycle 7):** static route proven — `cashbids-js.php` `var bids` JSON, 8 rows (location label published as "All Locations"; Corn / Milo / Soybeans / Wheat, 2 each). Generic collector `cashbids_embed_source.py` (`fetch_midway_coop`). No Playwright needed. |
 | Ace Ethanol | https://www.aceethanol.com/cash-bids | 200 | **Yes — 11 rows, Corn, 7-col widget** | Bushel `.cbmod` widget in static HTML, dated header | Existing generic Bushel collector (`bushel_source.py`) — verified against saved HTML, status ok |
-| AGP | https://www.agp.com/grain/bids | 200 (→ `/bids/`) | No | **Bushel via iframe**: `<iframe src="https://agp.o.bushelsites.com/cash-bids">` inside a `dtn-page` shell | Reclassified dtn → bushel (iframe). **Verified 2026-11-19 (Cycle 7):** one polite GET of the iframe target — 200, standard 7-col Bushel `.cbmod` widget in static HTML, parsed by the generic `bushel_source.py` collector with no changes (status ok). Only 1 row on the page: Chester, NE, Soybeans, Nov 2026, USD/bu; widget header dated Nov 18, 2026 11:40 PM. Registry entry `agp` added (`fetch_agp()`); not yet wired into `source_registry.py` (coordinator decision). |
+| AGP | https://www.agp.com/grain/bids | 200 (→ `/bids/`) | No | **Bushel via iframe**: `<iframe src="https://agp.o.bushelsites.com/cash-bids">` inside a `dtn-page` shell | Reclassified dtn → bushel (iframe). **Verified 2026-11-19 (Cycle 7):** one polite GET of the iframe target — 200, standard 7-col Bushel `.cbmod` widget in static HTML, parsed by the generic `bushel_source.py` collector with no changes (status ok). Only 1 row on the page: Chester, NE, Soybeans, Nov 2026, USD/bu; widget header dated Nov 18, 2026 11:40 PM. Registry entry `agp` added (`fetch_agp()`); wired into `source_registry.py` in Cycle 20 (coordinator). **Cycle 33 (2026-11-19):** re-verified live — the same iframe URL now serves AGP Aberdeen, SD, **8 rows** (Soybeans 3 + Soybean Meal 5, Nov 2026–Mar 2027), header Nov 19, 2026 01:50 AM; site-side change (was Chester, NE, 1 row in Cycle 7). Registry `default_location` updated Chester → Aberdeen; no parser change, no new entry (same URL). |
 | Ag State | https://www.agstate.org/grain | 200 (→ `agstate.org/grain/`) | No | AgriCharts `cashbids.php` embed (`agstate.agricharts.com`, location 84205); **zero `dtn` strings** — Cycle 1's DTN label was wrong | **Resolved 2026-11-19 (Cycle 7):** static route proven — `cashbids-js.php` `var bids` JSON, 11 rows (Corn 6, Soybeans 5; `groupby=ccommodity`, location label published as "A.C."). Generic collector `cashbids_embed_source.py` (`fetch_ag_state`). No Playwright needed. |
 | ALCIVIA | https://www.alcivia.com/cash-bids | read timeout (30 s) | — | — (unreachable this sweep) | Re-check later, no retry. **Cycle 8:** back up — 200 (→ `/wisconsin-grain-services/cash-bids-grain-wisconsin-grain/`), AgriCharts `cashbids.php` embed (`alciviacoop.agricharts.com`, `groupby=location`, `filter=all`) — same family as Cycle 7's six; `cashbids-js.php` static route to verify in a later cycle. **Cycle 9:** resolved — `cashbids-js.php` static route proven, 181 rows, 15 locations; `fetch_alcivia` added, reclassified `unknown → agricharts-embed`. |
 | Alliance Grain | https://www.alliance-grain.com/cash-bids | 200 | **Yes — 10 rows, Corn 5 + Soybeans 5, 7-col widget** | Bushel `.cbmod` widget in static HTML; location h2 "Gibson City - West"; compact delivery labels (`Nov26`) | Existing generic Bushel collector — verified against saved HTML, status ok |
@@ -3576,3 +3576,35 @@ One call per site, no retries. **All 6 returned `status: ok` with exact row-coun
 | United Cooperative (Webster City) | 12 | 12 (Cycle 5) | Nov 19 | Exact match |
 
 **Note:** Wheaton Grain's tabbed widget carries no capturable header date (no `fcControlsSectionHeader` element) — structure observation only, not a failure; the 5 rows parsed cleanly via the Cycle 11 tabbed-widget fallback. If header-date freshness tracking matters for that site, it would need a different date source on the page.
+
+## Cycle 33 — Bushel samples #5 + Skyland/AGP: 11/12 exact; AGP switches Chester → Aberdeen (2026-11-19)
+
+### Bushel per-location sample #5 (6 calls)
+
+One call per site, no retries. **All 6 returned `status: ok` with exact row-count matches** to the Cycles 12–15 baselines; all six headers fresh (Nov 19). Counts only, no values recorded. IDs verified against the registry before fetching (1666 = Bentonville confirmed; Clarkton is 1668).
+
+| Site | Rows now | Header date | Verdict |
+|---|---|---|---|
+| Smithfield Bentonville (1666) | 3 | Nov 19 | Exact match |
+| Smithfield Bladenboro Feed Mill (1667) | 2 | Nov 19 | Exact match |
+| Smithfield Clinton (1669) | 3 | Nov 19 | Exact match |
+| Smithfield Morgans Corner (1673) | 2 | Nov 19 | Exact match |
+| Smithfield Red Springs (1676) | 1 | Nov 19 | Exact match |
+| Smithfield Walstonburg (1678) | 3 | Nov 19 | Exact match |
+
+**Bentonville gap from Cycle 32 closed:** the Cycle 32 brief mislabelled 1666 as Clarkton and the worker fetched Clarkton (1668) instead; Bentonville (1666) was not re-fetched. This cycle it was — 3 rows, exact match to Cycle 12.
+
+### Skyland / Forest River / AGP / Ace Ethanol (6 calls)
+
+One call per site, no retries. **5 of 6 exact matches**, all headers fresh (Nov 19). Counts only, no values recorded.
+
+| Site | Rows now | Prior | Header date | Verdict |
+|---|---|---|---|---|
+| Skyland 2766 Spearman–Gruver–Texline | 5 | 5 (Cycle 14) | Nov 19 | Exact match |
+| Skyland 2770 Sunray Area | 5 | 5 (Cycle 14) | Nov 19 | Exact match |
+| Skyland 2771 Kendall–Midway–Lydia | 6 | 6 (Cycle 14) | Nov 19 | Exact match |
+| Forest River | 3 | 3 (Cycle 5) | Nov 19 | Exact match |
+| AGP (iframe target) | 8 | 1 (Cycle 7) | Nov 19, 01:50 AM | **Changed — see below** |
+| Ace Ethanol | 11 | 11 (Cycle 6) | Nov 19 | Exact match |
+
+**AGP — site-side change, not a collector issue:** the iframe target (`agp.o.bushelsites.com/cash-bids`) no longer serves Chester, NE. It now returns location **AGP Aberdeen, SD**, 8 rows: Soybeans 3 (Nov/Dec/Jan) + Soybean Meal 5 (Nov–Mar, a commodity not present in Cycle 7). Status `ok`, parsed cleanly with no warnings. Coordinator decision: update the existing `agp` registry entry rather than register a second one — same URL, same collector, only the served default location changed. `default_location` updated Chester → Aberdeen in `bushel_source.py` (notes, `fetch_agp` docstring, and the `config.toml` / `us_elevators_urls.toml` comments updated the same way); the registry test now asserts Aberdeen. The synthetic Chester fixture in `test_bushel_agp.py` is kept as a parse test (its location comes from the fixture's own h2). If the page rotates its default location again, a later re-verification will catch it.

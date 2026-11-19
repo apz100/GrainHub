@@ -58,6 +58,13 @@ live — one polite GET, 200, standard 7-column ``.cbmod`` widget,
 parsed by the generic parser with no changes. The page carries a
 single location/row (Chester, NE, Soybeans, Nov 2026, USD/bu).
 
+Cycle 33 (2026-11-19) re-verified the same iframe target — 200,
+status ok, but the page no longer serves Chester: it now carries
+AGP Aberdeen, SD, 8 rows (Soybeans 3 + Soybean Meal 5, Nov 2026–
+Mar 2027), header dated Nov 19, 2026 01:50 AM. Site-side change,
+not a parser issue; the registry ``default_location`` was updated
+to Aberdeen (Chester survives only in the synthetic test fixture).
+
 Cycle 11 (2026-11-19) fixed the Wheaton Grain tabbed widget: the
 ``.cbmod`` div holds an easyResponsiveTabs block with NO
 ``div.cbCommodity`` wrappers — bare ``h3.fcControls`` commodity
@@ -417,15 +424,18 @@ BUSHEL_SITES: dict[str, BushelSite] = {
         company="AGP",
         url=AGP_URL,
         currency="USD",
-        default_location="Chester",
+        default_location="Aberdeen",
         verified=True,
         notes="Verified live 2026-11-19 (Cycle 7): 200, Bushel .cbmod "
         "widget in static HTML at the iframe target behind "
         "agp.com/grain/bids, parsed by the generic parser with no "
-        "changes (status ok). Only 1 row on the page: Chester, NE, "
+        "changes (status ok). Only 1 row on the page then: Chester, NE, "
         "Soybeans, Nov 2026, 7-col layout, USD/bu; widget header "
-        "dated Nov 18, 2026 11:40 PM. The iframe page shows a single "
-        "location — other AGP locations are not on this page.",
+        "dated Nov 18, 2026 11:40 PM. Re-verified 2026-11-19 (Cycle 33): "
+        "the same URL now serves AGP Aberdeen, SD — 8 rows (Soybeans 3 "
+        "+ Soybean Meal 5, Nov 2026–Mar 2027), header dated Nov 19, "
+        "2026 01:50 AM. Site-side change; the iframe page still shows "
+        "a single location.",
     ),
     "synergy": BushelSite(
         key="synergy",
@@ -1813,10 +1823,12 @@ def fetch_alliance_grain() -> dict[str, Any]:
 
 
 def fetch_agp() -> dict[str, Any]:
-    """Fetch AGP (Chester, NE) via the iframe target behind agp.com.
+    """Fetch AGP (Aberdeen, SD) via the iframe target behind agp.com.
 
     Verified live 2026-11-19 (Cycle 7): 200, Bushel .cbmod widget in
-    static HTML, 1 row (Soybeans, Nov 2026), USD/bu.
+    static HTML, 1 row (Chester, NE Soybeans, Nov 2026), USD/bu.
+    Re-verified 2026-11-19 (Cycle 33): the same URL now serves AGP
+    Aberdeen, SD — 8 rows (Soybeans 3 + Soybean Meal 5), USD/bu.
     """
     return fetch_bushel_site("agp")
 

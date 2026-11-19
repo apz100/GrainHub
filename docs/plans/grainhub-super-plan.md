@@ -547,6 +547,10 @@ Merge order, gates, and conflicts are in `docs/plans/merge-plan.md`.
   matches; Almota joins the staleness watch (first stale probe —
   watch list now five widgets); merge plan extended to Cycle 30
   (79 commits, 0 merges).
+- **Cycle 32** (`overnight/grainhub-cycle-32`, 710 tests, docs only):
+  Bushel samples #4 + Cycle 11/5 sites re-verified 12/12 exact
+  matches (all headers fresh; Wheaton Grain has no capturable
+  header date); merge plan extended to Cycle 31 (81 commits, 0 merges).
 
 **Remaining blockers that need Adam:** NASS API key (free) and FAS /
 data.gov key (free); LLM provider + key for Advisor `/ask`; Barchart /

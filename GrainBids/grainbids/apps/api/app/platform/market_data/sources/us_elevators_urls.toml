@@ -167,7 +167,7 @@ name    = "Ace Ethanol"
 url     = "https://www.aceethanol.com/cash-bids"
 
 [[us.elevators]]
-enabled = true  # enabled 2026-11-19 (Cycle 17 audit): verified live Cycle 7 — Bushel via iframe (agp.o.bushelsites.com/cash-bids), 1 row (Chester, NE Soybeans), parsed by generic bushel_source.py; registry + toggle already on; toml still said dtn/disabled
+enabled = true  # enabled 2026-11-19 (Cycle 17 audit): verified live Cycle 7 — Bushel via iframe (agp.o.bushelsites.com/cash-bids), 1 row (Chester, NE Soybeans), parsed by generic bushel_source.py; registry + toggle already on; toml still said dtn/disabled; re-verified Cycle 33: same URL now serves Aberdeen, SD, 8 rows (Soybeans 3 + Soybean Meal 5)
 type    = "bushel"  # reclassified 2026-11-19 (Cycle 17 audit): dtn → bushel (iframe)
 name    = "AGP"
 url     = "https://www.agp.com/grain/bids"

@@ -94,8 +94,13 @@ def _desired_company_id_for_row(
             current_key = canonical_key(canonical_source_name(current_company_name))
             if current_key == source_key:
                 return current_company_id
-        if source_key:
-            return trusted_company_lookup.get(source_key)
+        # Look up by the canonical company name first, then by the raw
+        # source alias (e.g. "glg"): lookup maps may be keyed either way.
+        for key in (source_key, canonical_key(source_name)):
+            if key:
+                resolved = trusted_company_lookup.get(key)
+                if resolved is not None:
+                    return resolved
         return None
     return trusted_location_company_id
 

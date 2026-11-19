@@ -50,6 +50,35 @@ def canonical_key(value: str | None) -> str | None:
     return normalized.casefold()
 
 
+def is_benchmark_location_label(value: str | None) -> bool:
+    """True for region / benchmark labels that are not a single elevator.
+
+    Restored in Cycle 1: ``location_company_seed_docx`` imports this name
+    but it was missing from this module, which broke test collection.
+    A label is a benchmark when it names a region aggregate (see
+    ``REGION_SOURCE_LABELS``) or contains a benchmark/average/index
+    marker. Town-level elevator labels such as "Mitchell GLG Corn"
+    do not match.
+    """
+    normalized = normalize_text(value)
+    if normalized is None:
+        return False
+    lowered = normalized.casefold()
+    if lowered in REGION_SOURCE_LABELS:
+        return True
+    return any(
+        token in lowered
+        for token in (
+            "benchmark",
+            "average",
+            "price index",
+            "regional price",
+            "regional",
+            "index",
+        )
+    )
+
+
 def canonical_source_name(source_name: str | None) -> str | None:
     normalized = normalize_text(source_name)
     if normalized is None:

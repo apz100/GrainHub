@@ -3427,3 +3427,22 @@ Notes: FMN's dropdown still lists more points than the 204 tables (known limitat
 ### Feed-error degradation implemented (mocked tests only, 0 GETs)
 
 Only the `_fetch_jsquote` call is now wrapped in its own `try/except`: a feed fetch that RAISES (HTTP error/timeout) degrades to basis-only rows, like the no-tag (Cycle 24) and empty-feed (Cycle 25) paths. A page fetch that raises still returns empty via the outer `except` (no HTML to parse, no invented rows). 5 new mocked tests (3 feed-raises, 2 page-raises); full suite 709 passed. This closes the last open follow-up from the Cycle 23 design note — all three degradation paths (no tag, empty feed, feed error) now behave the same way.
+
+## Cycle 27 — AgriCharts wrappers re-verification: all 10 exact matches (2026-11-19)
+
+Live re-verification sweep of the 10 working US AgriCharts wrappers (one call each, no retries). **All 10 returned `[US-AG OK]` with no warnings — no degraded/basis-only path, no jsquote failures — and row counts exactly matching Cycle 21.** 639 rows total, 0 zero-row results. Counts only, no values recorded.
+
+| Wrapper | Rows now | Cycle 21 | Locations |
+|---|---|---|---|
+| Ag Plus | 36 | 36 | 6 |
+| Farmers Win Coop | 171 | 171 | 18 |
+| Keller | 14 | 14 | 1 |
+| Kokomo Grain | 63 | 63 | 8 |
+| Legacy Farmers | 66 | 66 | 10 |
+| Pro Ag | 78 | 78 | 6 |
+| West-Con | 84 | 84 | 1 |
+| Wheaton Dumont | 43 | 43 | 8 |
+| Central Farmers Coop | 75 | 75 | 11 |
+| Anthony Farmers Co-op | 9 | 9 | 3 |
+
+Heritage was confirmed live in Cycle 23 (14 rows) and Heartland/Mulvane are closed for now — neither was re-probed. Together with Cycle 26's sweep (FMN 453, Five Star 299, TGM 362, USDA mirror 197, FAC 45), every live-verified collector has now been re-checked this morning with zero drift — the catalogue's verified counts stand.

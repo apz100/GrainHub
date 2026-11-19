@@ -329,12 +329,12 @@ branch to GitHub frequently.
 - Elevator Ops: which ERP first (Agris / Agvance / AgTrax)?
 - US scope: Corn Belt first, or Corn Belt + Gulf / PNW from day one?
 
-## 9. Progress — Cycles 1–25 (2026-11-18/19)
+## 9. Progress — Cycles 1–26 (2026-11-18/19)
 
-Twenty-five overnight autonomous cycles on branches `overnight/grainhub-cycle-1`
-through `overnight/grainhub-cycle-25`, none merged to master. Full API test
-suite grew **179 → 291 → 320 → 359 → 364 → 380 → 407 → 407 → 454 → 488 → 536 → 558 → 590 → 617 → 629 → 638 → 643 → 646 → 656 → 692 → 692 → 696 → 697 → 702 → 704 passed, 0 failed**
-across the twenty-five cycles. Full detail in `docs/plans/overnight-cycle-N-report.md`.
+Twenty-six overnight autonomous cycles on branches `overnight/grainhub-cycle-1`
+through `overnight/grainhub-cycle-26`, none merged to master. Full API test
+suite grew **179 → 291 → 320 → 359 → 364 → 380 → 407 → 407 → 454 → 488 → 536 → 558 → 590 → 617 → 629 → 638 → 643 → 646 → 656 → 692 → 692 → 696 → 697 → 702 → 704 → 709 passed, 0 failed**
+across the twenty-six cycles. Full detail in `docs/plans/overnight-cycle-N-report.md`.
 Merge order, gates, and conflicts are in `docs/plans/merge-plan.md`.
 
 - **Cycle 1** (`overnight/grainhub-cycle-1`, 179 tests): Phase 0 hardening,
@@ -515,6 +515,13 @@ Merge order, gates, and conflicts are in `docs/plans/merge-plan.md`.
   correction extended); feed-down degradation implemented (empty
   feed → basis-only rows), 2 new tests; Heartland/Mulvane closed
   for now; merge plan extended to Cycle 24 (67 commits, 0 merges).
+- **Cycle 26** (`overnight/grainhub-cycle-26`, 709 tests): feed-error
+  degradation implemented (feed fetch raising → basis-only rows;
+  page fetch raising still empty), 5 new tests — all three
+  degradation paths now behave the same way, design-note work
+  complete; live re-verification sweep of five key collectors, all
+  exact matches (FMN 453, Five Star 299, TGM 362, USDA mirror 197,
+  FAC 45); merge plan extended to Cycle 25 (69 commits, 0 merges).
 
 **Remaining blockers that need Adam:** NASS API key (free) and FAS /
 data.gov key (free); LLM provider + key for Advisor `/ask`; Barchart /
@@ -567,4 +574,7 @@ phrasing (tag present, empty symbols); staleness daytime re-check
 (no). **Cycle 25 additions:** Heartland filtered view still 0 rows
 (hypothesis closed); Mulvane re-checked 0 rows, tag correction
 extended; feed-down degradation implemented; Heartland/Mulvane
-closed for now.
+closed for now. **Cycle 26 additions:** feed-error degradation
+implemented — design-note work complete; live re-verification
+sweep of five key collectors, all exact matches (FMN 453, Five
+Star 299, TGM 362, USDA mirror 197, FAC 45).

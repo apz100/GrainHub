@@ -22,6 +22,7 @@ from app.models.raw_upload import RawUpload
 from app.models.source import Source
 from app.modules.imports.legacy_helpers import symbol_to_month_extended
 from app.services.canonical_resolver import resolve_canonical_rows_for_snapshot
+from app.services.currency_rules import currency_for_adapter
 from app.services.market_canonicalization import (
     canonical_key,
     canonical_commodity_name,
@@ -439,9 +440,16 @@ def persist_normalized_rows(
         futures_price = _parse_decimal(str(row.get(mapping.get("futures_price", ""), "") or ""))
         futures_change = _parse_decimal(str(row.get(mapping.get("futures_change", ""), "") or ""))
         # The collector's own recorded currency for this row, copied
-        # verbatim (migration 0022); rows whose source records none
-        # store NULL. Never converted, never defaulted.
+        # verbatim (migration 0022); never converted. When the source
+        # records none, Adam's country rule applies: the currency of
+        # the country the row's delivery location is in (Canada ->
+        # CAD, US -> USD), resolved from the source adapter — each
+        # adapter publishes bids for delivery points in one country.
+        # A stated currency is never overwritten by the country rule,
+        # and file / manual sources (no adapter) stay NULL.
         currency = _normalize_currency(row.get(mapping.get("currency", ""), ""))
+        if currency is None:
+            currency = currency_for_adapter(source.adapter_key or source.name)
         basis = _normalize_basis_value(_parse_decimal(str(row.get(mapping.get("basis", ""), "") or "")))
         cash_price_bu = _parse_decimal(str(row.get(mapping.get("cash_price_bu", ""), "") or ""))
         cash_price_mt = _parse_decimal(str(row.get(mapping.get("cash_price_mt", ""), "") or ""))

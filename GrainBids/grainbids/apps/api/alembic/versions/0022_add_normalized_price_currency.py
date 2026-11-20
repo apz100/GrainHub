@@ -16,9 +16,25 @@ Implements docs/plans/currency-design.md as approved by Adam on
    is unambiguous, with the rule recorded here; everything else stays
    NULL (unknown), never guessed.
 
+AMENDMENT (Adam, 2026-11-20, later the same day): the platform covers
+North America only, and a cash price is denominated in the currency
+of the country its delivery location is in — Canada -> CAD, US ->
+USD. So after the stated-currency backfill below, any row still NULL
+is filled from its delivery location's country. The schema records
+no country on the ``locations`` table; a location's country is a
+property of the elevator that publishes its bids, and every registry
+adapter serves delivery points in exactly one country, so the
+country step matches on the same snapshot -> source linkage and the
+adapter-country lists recorded below (derived from the collector
+code, same evidentiary standard as the stated lists). The stated
+backfill runs first and both steps only touch NULL rows, so a
+currency a collector stated is never overridden by the country rule.
+Only CA / US map; anything else stays NULL.
+
 Schema: nullable ``currency`` String(3) (ISO 4217) on
-``normalized_prices``. Nullable on purpose — a row whose source does
-not record a currency keeps NULL rather than a default.
+``normalized_prices``. Nullable on purpose — a row whose currency is
+neither stated nor derivable from its location's country (file /
+manual sources) keeps NULL rather than a default.
 
 BACKFILL RULE (this migration): a stored row is backfilled when the
 source that produced its snapshot — ``price_snapshots.source_id`` ->
@@ -43,14 +59,25 @@ collector code itself, not assumed:
   collector), and ``fmn_source`` (Farm Market News Ontario cash page,
   GFO bids in CAD).
 
-DELIBERATELY NOT BACKFILLED (rows stay NULL): adapter families whose
-collector code records no currency at all — the Playwright Ontario
-sources (agricharts, glg, hensall, lac, snobelen, wanstead,
-ganaraska, dg_global), andersons, bunge, the ``us_agricharts_source``
-and ``us_dtn_source`` families, and mapleview — plus every file /
-manual source. Their collectors also emit no currency today, so
-their rows stay NULL going forward; backfilling them would guess a
-currency the pipeline itself does not record.
+COUNTRY RULE (the amendment above): the remaining adapter families,
+whose collectors state no currency, are classified by the country of
+their delivery locations, from the collector code:
+
+* CA — the Ontario Playwright collectors (``agricharts`` — the FMN
+  Ontario cash page; ``dg_global`` — dgglobal.ca; ``ganaraska``;
+  ``glg`` — Great Lakes Grain; ``hensall`` — Hensall Co-op; ``lac``
+  — London Agricultural Commodities; ``snobelen`` — Snobelen Farms;
+  ``wanstead`` — Wanstead Farmers Co-op), ``mapleview`` (Mapleview
+  Grain, London ON), ``bunge`` (its four scraped locations are
+  Altona MB, Hamilton ON, Harrowby MB, Morden MB), and ``andersons``
+  (The Andersons Canada — dtn-api.andersonscanada.com, all-Ontario
+  locations: Blenheim, Granton, Hensall, Mitchell, Norwich, ...).
+* US — the ``us_dtn_source`` and ``us_agricharts_source`` families,
+  whose modules scrape US grain elevators exclusively.
+
+DELIBERATELY NOT BACKFILLED (rows stay NULL): every file / manual
+source (no adapter key, so no recorded location country) and any
+adapter not listed in this migration.
 
 Downgrade drops the column (the backfill lives only in the new
 column, so dropping it fully reverses this migration).
@@ -163,6 +190,57 @@ _CAD_ADAPTER_KEYS = (
     "north_gower",
 )
 
+# Country rule (Adam's amendment, 2026-11-20): adapter keys whose
+# collectors state no currency, classified by the country of their
+# delivery locations (see the module docstring). Applied only to
+# rows still NULL after the stated-currency backfill, so a stated
+# currency is never overridden. Mirror of
+# app/services/currency_rules.ADAPTER_COUNTRIES — a test asserts the
+# two copies agree.
+_CA_COUNTRY_ADAPTER_KEYS = (
+    "agricharts",
+    "andersons",
+    "bunge",
+    "dg_global",
+    "ganaraska",
+    "glg",
+    "hensall",
+    "lac",
+    "mapleview",
+    "snobelen",
+    "wanstead",
+)
+_US_COUNTRY_ADAPTER_KEYS = (
+    # us_dtn_source family.
+    "ag_partners",
+    "al_corn",
+    "allied_cooperative",
+    "aurora_coop",
+    "brubaker_grain",
+    "cfs",
+    "elite_octane",
+    "frontier_coop",
+    "green_plains",
+    "hoffman_ag",
+    "kanza_coop",
+    "sunrise",
+    "wilton_farmers_union_elevator",
+    # us_agricharts_source family.
+    "ag_plus",
+    "anthony_farmers_coop",
+    "central_farmers_coop",
+    "farmers_win_coop",
+    "heartland_coop",
+    "heritage_grain_cooperative",
+    "keller",
+    "kokomo_grain",
+    "legacy_farmers",
+    "mulvane_coop",
+    "pro_ag",
+    "west_con",
+    "wheaton_dumont",
+)
+
 
 def _backfill(bind: sa.engine.Connection, currency: str, adapter_keys: tuple[str, ...]) -> None:
     statement = sa.text(
@@ -187,8 +265,14 @@ def upgrade() -> None:
         sa.Column("currency", sa.String(length=3), nullable=True),
     )
     bind = op.get_bind()
+    # Step 1: the currency each collector states for its rows.
     _backfill(bind, "USD", _USD_ADAPTER_KEYS)
     _backfill(bind, "CAD", _CAD_ADAPTER_KEYS)
+    # Step 2: Adam's country rule — rows still NULL take the currency
+    # of their delivery location's country (CA -> CAD, US -> USD).
+    # _backfill only touches NULL rows, so step 1 is never overridden.
+    _backfill(bind, "CAD", _CA_COUNTRY_ADAPTER_KEYS)
+    _backfill(bind, "USD", _US_COUNTRY_ADAPTER_KEYS)
 
 
 def downgrade() -> None:

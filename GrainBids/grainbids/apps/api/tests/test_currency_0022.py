@@ -12,6 +12,13 @@ Covers the four approved decisions from docs/plans/currency-design.md:
 4. The migration backfills only unambiguous source -> currency
    mappings (recorded in the migration docstring); every other
    source's rows stay NULL.
+
+Plus Adam's country-rule amendment (2026-11-20, later the same day):
+rows still NULL after the stated-currency backfill take the currency
+of their delivery location's country (Canada -> CAD, US -> USD),
+resolved per adapter — each adapter's delivery points are in one
+country. A stated currency is never overridden, at migration time or
+at ingest.
 """
 
 from __future__ import annotations
@@ -48,6 +55,11 @@ from app.models.price_snapshot import PriceSnapshot  # noqa: E402
 from app.models.source import Source  # noqa: E402
 from app.services import fx_rates  # noqa: E402
 from app.services.basis_tracker import build_basis_history, rank_basis  # noqa: E402
+from app.services.currency_rules import (  # noqa: E402
+    ADAPTER_COUNTRIES,
+    currency_for_adapter,
+    currency_for_country,
+)
 from app.services.source_orchestration import _to_csv_bytes  # noqa: E402
 from app.services.upload_csv import persist_normalized_rows, process_csv_upload  # noqa: E402
 
@@ -130,19 +142,42 @@ def test_migration_0022_chain_and_recorded_rule() -> None:
     module = _load_migration()
     assert module.revision == "0022"
     assert module.down_revision == "0021"
-    # Anchor examples of the recorded backfill rule.
+    # Anchor examples of the recorded stated-currency backfill rule.
     assert "fac" in module._USD_ADAPTER_KEYS  # Bushel US site
     assert "usda_mirror_jvg" in module._USD_ADAPTER_KEYS
     assert "five_star_coop" in module._USD_ADAPTER_KEYS
     assert "collwest" in module._CAD_ADAPTER_KEYS
     assert "fmn" in module._CAD_ADAPTER_KEYS
-    # Families whose collectors record no currency are NOT backfilled.
-    for excluded in ("mapleview", "ag_partners", "hensall", "agricharts"):
-        assert excluded not in module._USD_ADAPTER_KEYS
-        assert excluded not in module._CAD_ADAPTER_KEYS
+    # Families whose collectors record no currency are NOT in the
+    # stated lists — they are covered by the country rule instead.
+    for country_key in ("hensall", "agricharts", "snobelen", "mapleview", "ag_partners"):
+        assert country_key not in module._USD_ADAPTER_KEYS
+        assert country_key not in module._CAD_ADAPTER_KEYS
+    # Country-rule anchors, each verified in the collector code:
+    # Andersons is Andersons CANADA (all-Ontario locations) and
+    # Bunge's scraped locations are all in MB / ON.
+    for ca_key in ("snobelen", "hensall", "lac", "glg", "wanstead", "ganaraska",
+                   "dg_global", "agricharts", "mapleview", "andersons", "bunge"):
+        assert ca_key in module._CA_COUNTRY_ADAPTER_KEYS
+    for us_key in ("green_plains", "kokomo_grain", "ag_partners", "mulvane_coop"):
+        assert us_key in module._US_COUNTRY_ADAPTER_KEYS
+    # The migration's inline country lists and the runtime table in
+    # app/services/currency_rules.py are two copies of one rule and
+    # must never drift apart.
+    assert set(module._CA_COUNTRY_ADAPTER_KEYS) == {
+        key for key, country in ADAPTER_COUNTRIES.items() if country == "CA"
+    }
+    assert set(module._US_COUNTRY_ADAPTER_KEYS) == {
+        key for key, country in ADAPTER_COUNTRIES.items() if country == "US"
+    }
+    # Stated and country lists are disjoint: the country step can
+    # only ever fill rows the stated step left NULL.
+    stated = set(module._USD_ADAPTER_KEYS) | set(module._CAD_ADAPTER_KEYS)
+    country = set(module._CA_COUNTRY_ADAPTER_KEYS) | set(module._US_COUNTRY_ADAPTER_KEYS)
+    assert stated.isdisjoint(country)
 
 
-def test_migration_upgrade_backfills_only_unambiguous_sources() -> None:
+def test_migration_upgrade_backfills_stated_then_country_rule() -> None:
     module = _load_migration()
     engine, sources, snapshots, prices = _pre_0022_schema()
     expected = {
@@ -157,13 +192,25 @@ def test_migration_upgrade_backfills_only_unambiguous_sources() -> None:
         _seed_price(engine, sources, snapshots, prices, name="fmn", adapter_key="fmn"): "CAD",
         _seed_price(engine, sources, snapshots, prices, name="mae_mart", adapter_key="mae_mart"): "CAD",
         _seed_price(engine, sources, snapshots, prices, name="north_gower", adapter_key="north_gower"): "CAD",
-        # Ambiguous / unrecorded sources stay NULL
-        _seed_price(engine, sources, snapshots, prices, name="mapleview", adapter_key="mapleview"): None,
-        _seed_price(engine, sources, snapshots, prices, name="ag_partners", adapter_key="ag_partners"): None,
-        _seed_price(engine, sources, snapshots, prices, name="hensall", adapter_key="hensall"): None,
+        # Country rule: Ontario Playwright sources state no currency,
+        # but their delivery locations are in Canada -> CAD
+        _seed_price(engine, sources, snapshots, prices, name="snobelen", adapter_key="snobelen"): "CAD",
+        _seed_price(engine, sources, snapshots, prices, name="hensall", adapter_key="hensall"): "CAD",
+        _seed_price(engine, sources, snapshots, prices, name="lac", adapter_key="lac"): "CAD",
+        _seed_price(engine, sources, snapshots, prices, name="mapleview", adapter_key="mapleview"): "CAD",
+        # Andersons Canada + Bunge's MB/ON locations -> CAD
+        _seed_price(engine, sources, snapshots, prices, name="andersons", adapter_key="andersons"): "CAD",
+        _seed_price(engine, sources, snapshots, prices, name="bunge", adapter_key="bunge"): "CAD",
+        # Country rule: the us_dtn / us_agricharts families -> USD
+        _seed_price(engine, sources, snapshots, prices, name="green_plains", adapter_key="green_plains"): "USD",
+        _seed_price(engine, sources, snapshots, prices, name="kokomo_grain", adapter_key="kokomo_grain"): "USD",
+        _seed_price(engine, sources, snapshots, prices, name="ag_partners", adapter_key="ag_partners"): "USD",
+        # No recorded country -> stays NULL
+        _seed_price(engine, sources, snapshots, prices, name="some_eu_coop", adapter_key="some_eu_coop"): None,
         _seed_price(engine, sources, snapshots, prices, name="Ontario Daily File", adapter_key=None): None,
         # Seeded before adapter_key existed: name fallback still matches
         _seed_price(engine, sources, snapshots, prices, name="fac", adapter_key=None): "USD",
+        _seed_price(engine, sources, snapshots, prices, name="snobelen", adapter_key=None): "CAD",
     }
 
     _run_migration(module, engine, "upgrade")
@@ -177,6 +224,36 @@ def test_migration_upgrade_backfills_only_unambiguous_sources() -> None:
             for row in conn.execute(sa.select(reflected.c.id, reflected.c.currency)).all()
         }
     assert stored == expected
+
+
+def test_migration_country_step_never_overrides_a_stated_currency() -> None:
+    """A row whose currency is already set (e.g. stated USD by a
+    Canadian-location collector) is untouched when the country step
+    runs; only NULL rows are filled."""
+    module = _load_migration()
+    engine, sources, snapshots, prices = _pre_0022_schema()
+    stated_id = _seed_price(engine, sources, snapshots, prices, name="snobelen", adapter_key="snobelen")
+    _run_migration(module, engine, "upgrade")
+
+    reflected = sa.Table("normalized_prices", sa.MetaData(), autoload_with=engine)
+    with engine.begin() as conn:
+        # Simulate a stated currency on the row, plus a fresh NULL row
+        # from the same source (inserted after the upgrade).
+        conn.execute(
+            reflected.update().where(reflected.c.id == stated_id).values(currency="USD")
+        )
+    fresh_id = _seed_price(engine, sources, snapshots, prices, name="snobelen", adapter_key="snobelen")
+
+    with engine.begin() as conn:
+        module._backfill(conn, "CAD", module._CA_COUNTRY_ADAPTER_KEYS)
+
+    with engine.connect() as conn:
+        stored = {
+            row.id: row.currency
+            for row in conn.execute(sa.select(reflected.c.id, reflected.c.currency)).all()
+        }
+    assert stored[stated_id] == "USD"  # stated wins over the country rule
+    assert stored[fresh_id] == "CAD"  # NULL row filled by the country rule
 
 
 def test_migration_downgrade_drops_currency_column() -> None:
@@ -233,9 +310,15 @@ def _make_session() -> Session:
     return session
 
 
-def _seed_source(session: Session, *, name: str = "fac") -> tuple[Source, Commodity]:
+def _seed_source(
+    session: Session, *, name: str = "fac", adapter_key: str | None = ...
+) -> tuple[Source, Commodity]:
     source = Source(
-        id=uuid.uuid4(), org_id=_ORG_ID, name=name, adapter_key=name, source_type="automated"
+        id=uuid.uuid4(),
+        org_id=_ORG_ID,
+        name=name,
+        adapter_key=name if adapter_key is ... else adapter_key,
+        source_type="automated",
     )
     commodity = Commodity(id=uuid.uuid4(), name="Corn")
     session.add_all([source, commodity])
@@ -323,6 +406,88 @@ def test_persist_without_currency_column_stores_unknown(monkeypatch) -> None:
     assert result.inserted_rows == 1
     price = session.execute(select(NormalizedPrice)).scalar_one()
     assert price.currency is None
+
+
+# ---------------------------------------------------------------------------
+# Ingestion: Adam's country rule fills rows whose collector states none
+# ---------------------------------------------------------------------------
+
+
+def test_country_currency_mapping() -> None:
+    assert currency_for_country("CA") == "CAD"
+    assert currency_for_country("Canada") == "CAD"
+    assert currency_for_country("us") == "USD"
+    assert currency_for_country("United States") == "USD"
+    # Only CA / US map — anything else stays unknown.
+    assert currency_for_country("MX") is None
+    assert currency_for_country("") is None
+    assert currency_for_country(None) is None
+    assert currency_for_adapter("snobelen") == "CAD"
+    assert currency_for_adapter("green_plains") == "USD"
+    # Stated-currency families are not in the country table (their
+    # stated value is used instead), and neither are file sources.
+    assert currency_for_adapter("fac") is None
+    assert currency_for_adapter("Ontario Daily File") is None
+    assert currency_for_adapter(None) is None
+
+
+def test_persist_derives_currency_from_location_country(monkeypatch) -> None:
+    """Ontario Playwright sources (snobelen-shaped) record no currency
+    on their rows; the country rule stores CAD because their delivery
+    locations are in Canada. US adapters likewise store USD."""
+    _stub_historical_changes(monkeypatch)
+
+    session = _make_session()
+    source, commodity = _seed_source(session, name="snobelen")
+    row = _csv_row("Brussels")
+    del row["currency"]
+    result = persist_normalized_rows(
+        session, source=source, commodity=commodity, rows=[row], headers=list(row.keys())
+    )
+    assert result.inserted_rows == 1
+    assert session.execute(select(NormalizedPrice)).scalar_one().currency == "CAD"
+
+    session = _make_session()
+    source, commodity = _seed_source(session, name="green_plains")
+    row = _csv_row("Ord")
+    del row["currency"]
+    result = persist_normalized_rows(
+        session, source=source, commodity=commodity, rows=[row], headers=list(row.keys())
+    )
+    assert result.inserted_rows == 1
+    assert session.execute(select(NormalizedPrice)).scalar_one().currency == "USD"
+
+
+def test_persist_country_rule_never_overrides_stated_currency(monkeypatch) -> None:
+    """A Canadian-location collector that states USD for a specific
+    bid keeps USD — the country rule only fills silence."""
+    _stub_historical_changes(monkeypatch)
+    session = _make_session()
+    source, commodity = _seed_source(session, name="snobelen")
+    result = persist_normalized_rows(
+        session,
+        source=source,
+        commodity=commodity,
+        rows=[_csv_row("Brussels", currency="USD")],
+        headers=list(_csv_row("Brussels").keys()),
+    )
+    assert result.inserted_rows == 1
+    assert session.execute(select(NormalizedPrice)).scalar_one().currency == "USD"
+
+
+def test_persist_file_source_without_currency_stays_unknown(monkeypatch) -> None:
+    """File / manual sources have no adapter, hence no recorded
+    location country — their rows stay NULL even under the rule."""
+    _stub_historical_changes(monkeypatch)
+    session = _make_session()
+    source, commodity = _seed_source(session, name="Ontario Daily File", adapter_key=None)
+    row = _csv_row("Winchester")
+    del row["currency"]
+    result = persist_normalized_rows(
+        session, source=source, commodity=commodity, rows=[row], headers=list(row.keys())
+    )
+    assert result.inserted_rows == 1
+    assert session.execute(select(NormalizedPrice)).scalar_one().currency is None
 
 
 def test_collector_row_csv_round_trip_stores_currency(monkeypatch) -> None:

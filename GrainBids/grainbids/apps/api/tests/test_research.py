@@ -11,8 +11,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from app.services.market_report import append_research_section, compile_market_report  # noqa: E402
 from app.services.research import (  # noqa: E402
     ResearchKeyRequired,
+    ResearchUpstreamError,
     fetch_fas_psd,
+    fetch_fas_psd_attribute_names,
+    fetch_fas_psd_unit_names,
+    fetch_fas_psd_world,
     fetch_nass_quick_stats,
+    parse_fas_psd_rows,
     parse_commitments_of_traders_text,
     parse_crop_production_text,
     parse_crop_progress_text,
@@ -58,6 +63,164 @@ def test_fas_psd_calls_commodities_with_trailing_slash(monkeypatch) -> None:
     assert captured["url"] == "https://api.fas.usda.gov/api/psd/commodities/"
     assert captured["params"] == {"commodityCode": "0440000"}
     assert rows == [{"commodityCode": "0440000", "commodityName": "Corn"}]
+
+
+def test_fas_psd_filters_catalogue_client_side(monkeypatch) -> None:
+    # The FAS server ignores ?commodityCode= and returns all 63 rows
+    # (verified live 2026-11-20), so fetch_fas_psd must filter itself.
+    import app.services.research as research
+
+    class FakeResponse:
+        status_code = 200
+
+        def json(self):
+            return [
+                {"commodityCode": "0577400", "commodityName": "Almonds, Shelled Basis"},
+                {"commodityCode": "0440000", "commodityName": "Corn"},
+            ]
+
+    monkeypatch.setattr(research.requests, "get", lambda url, **kw: FakeResponse())
+    rows = fetch_fas_psd(commodity_code="0440000", api_key="<redacted>")
+    assert rows == [{"commodityCode": "0440000", "commodityName": "Corn"}]
+
+
+def test_fas_psd_world_uses_verified_path_shape(monkeypatch) -> None:
+    # Verified live 2026-11-20: world PSD data lives at
+    # /api/psd/commodity/{code}/world/year/{marketYear} (path segments,
+    # no query params). The legacy /api/psd/worldData route 404s in
+    # every form — pin the live shape so nobody "restores" it.
+    import app.services.research as research
+
+    captured: dict[str, object] = {}
+
+    class FakeResponse:
+        status_code = 200
+
+        def json(self):
+            return [
+                {
+                    "attributeId": 28,
+                    "calendarYear": 2026,
+                    "commodityCode": "0440000",
+                    "countryCode": "00",
+                    "marketYear": "2026",
+                    "month": "11",
+                    "unitId": 8,
+                    "value": 1291550.0,
+                }
+            ]
+
+    def fake_get(url, **kwargs):
+        captured["url"] = url
+        captured["params"] = kwargs.get("params")
+        return FakeResponse()
+
+    monkeypatch.setattr(research.requests, "get", fake_get)
+    rows = fetch_fas_psd_world(commodity_code="0440000", market_year=2026, api_key="<redacted>")
+    assert captured["url"] == (
+        "https://api.fas.usda.gov/api/psd/commodity/0440000/world/year/2026"
+    )
+    assert captured["params"] is None
+    assert rows[0]["attributeId"] == 28
+
+
+def test_fas_psd_world_without_key_raises_key_required() -> None:
+    with pytest.raises(ResearchKeyRequired):
+        fetch_fas_psd_world(commodity_code="0440000", market_year=2026, api_key="")
+
+
+def test_fas_psd_world_http_error_raises_upstream(monkeypatch) -> None:
+    import app.services.research as research
+
+    class FakeResponse:
+        status_code = 500
+
+        def json(self):  # pragma: no cover - must not be reached
+            raise AssertionError("json() called on an error response")
+
+    monkeypatch.setattr(research.requests, "get", lambda url, **kw: FakeResponse())
+    with pytest.raises(ResearchUpstreamError):
+        fetch_fas_psd_world(commodity_code="0440000", market_year=2026, api_key="<redacted>")
+
+
+def test_fas_psd_lookups_build_id_maps(monkeypatch) -> None:
+    import app.services.research as research
+
+    payloads = {
+        "/commodityAttributes/": [
+            {"attributeId": 20, "attributeName": "Beginning Stocks"},
+            {"attributeId": 28, "attributeName": "Production"},
+        ],
+        "/unitsOfMeasure/": [
+            {"unitId": 8, "unitDescription": "(1000 MT)"},
+            {"unitId": 4, "unitDescription": "(1000 HA)"},
+        ],
+    }
+
+    class FakeResponse:
+        status_code = 200
+
+        def __init__(self, payload):
+            self._payload = payload
+
+        def json(self):
+            return self._payload
+
+    def fake_get(url, **kwargs):
+        for suffix, payload in payloads.items():
+            if url.endswith(suffix):
+                return FakeResponse(payload)
+        raise AssertionError(f"unexpected URL {url}")
+
+    monkeypatch.setattr(research.requests, "get", fake_get)
+    assert fetch_fas_psd_attribute_names(api_key="<redacted>") == {
+        20: "Beginning Stocks",
+        28: "Production",
+    }
+    assert fetch_fas_psd_unit_names(api_key="<redacted>") == {
+        8: "(1000 MT)",
+        4: "(1000 HA)",
+    }
+
+
+def test_parse_fas_psd_rows_decodes_ids() -> None:
+    rows = [
+        {
+            "attributeId": 176,
+            "commodityCode": "0440000",
+            "countryCode": "00",
+            "marketYear": "2026",
+            "month": "11",
+            "unitId": 8,
+            "value": 281938.0,
+        },
+        {
+            "attributeId": 999,  # unknown id: labelled fallback, row kept
+            "commodityCode": "0440000",
+            "countryCode": "00",
+            "marketYear": "2026",
+            "month": "11",
+            "unitId": 999,
+            "value": 1.0,
+        },
+    ]
+    parsed = parse_fas_psd_rows(
+        rows,
+        attribute_names={176: "Ending Stocks"},
+        unit_names={8: "(1000 MT)"},
+    )
+    assert parsed[0] == {
+        "commodity": "0440000",
+        "metric": "Ending Stocks",
+        "value": 281938.0,
+        "unit": "(1000 MT)",
+        "market_year": "2026",
+        "month": "11",
+        "country_code": "00",
+        "source": "USDA FAS PSD",
+    }
+    assert parsed[1]["metric"] == "attribute 999"
+    assert parsed[1]["unit"] == "unit 999"
 
 
 def test_research_status_reports_keys_as_absent_by_default() -> None:

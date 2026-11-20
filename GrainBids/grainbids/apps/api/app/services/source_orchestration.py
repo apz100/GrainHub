@@ -432,6 +432,7 @@ def seed_sources_from_registry(
     *,
     org_id: uuid.UUID,
     adapter_keys: list[str] | None = None,
+    dry_run: bool = False,
 ) -> SeedSourcesResult:
     existing_names = {
         (source.adapter_key or source.name.strip().lower())
@@ -464,7 +465,13 @@ def seed_sources_from_registry(
         db.add(source)
         created += 1
     if created:
-        db.commit()
+        # dry_run reports what would be created without persisting it
+        # (used by the seed CLI's --dry-run preview). Existing callers
+        # never pass dry_run, so their behaviour is unchanged.
+        if dry_run:
+            db.rollback()
+        else:
+            db.commit()
     return SeedSourcesResult(created=created, skipped_disabled=skipped_disabled)
 
 

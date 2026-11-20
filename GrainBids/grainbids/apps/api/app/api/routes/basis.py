@@ -33,7 +33,7 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import desc, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, defer
 
 from app.api.routes.market_search import parse_delivery_month
 from app.api.routes.source_health import build_source_health_rows
@@ -55,23 +55,52 @@ from app.services.basis_tracker import (
 router = APIRouter(prefix="/api/basis", tags=["basis"])
 
 
+# Upper bound on the (price, snapshot) pairs the basis endpoints load.
+# Both /tracker (latest basis per location) and /history answer from
+# the newest captures, and pairs arrive newest-first, so a cap only
+# binds for an org with more stored pairs than this — in which case
+# the routes say so in their data_quality note instead of pretending
+# the whole history was scanned. The cap exists because the load used
+# to be unbounded: on 2026-11-19 the production basis tracker took
+# the free-tier API instance down three times in a row (HTTP 502,
+# instance dead afterwards) while every other endpoint stayed up.
+MAX_PRICE_PAIRS = 100_000
+
+
 def _load_price_pairs(
     db: Session, *, org_id: uuid.UUID
 ) -> list[tuple[NormalizedPrice, PriceSnapshot | None]]:
-    """All (price, snapshot) pairs for the org, newest snapshot first."""
+    """(price, snapshot) pairs for the org, newest snapshot first.
+
+    Two deliberate bounds (see MAX_PRICE_PAIRS): the snapshot's
+    ``raw_payload_json`` is deferred — nothing in the basis paths
+    reads it, and it is the one unbounded-size field (a whole day
+    file per snapshot) — and the result is capped at the newest
+    MAX_PRICE_PAIRS pairs. The deferred attribute would still
+    lazy-load if anything ever accessed it, so behaviour is
+    unchanged apart from the cap.
+    """
     rows = db.execute(
         select(NormalizedPrice, PriceSnapshot)
         .join(PriceSnapshot, PriceSnapshot.id == NormalizedPrice.snapshot_id)
         .join(Source, Source.id == PriceSnapshot.source_id)
         .where(Source.org_id == org_id)
         .order_by(desc(PriceSnapshot.captured_at))
+        .options(defer(PriceSnapshot.raw_payload_json))
+        .limit(MAX_PRICE_PAIRS)
     ).all()
     pairs: list[tuple[NormalizedPrice, PriceSnapshot | None]] = []
     for item in rows:
-        if isinstance(item, tuple) and len(item) == 2:
-            pairs.append((item[0], item[1]))
-        elif isinstance(item, NormalizedPrice):
+        if isinstance(item, NormalizedPrice):
             pairs.append((item, None))
+        else:
+            # Real SQLAlchemy Rows are NOT tuple instances (checked
+            # 2026-11-20), so an isinstance(item, tuple) gate here
+            # silently discarded every row from a real database —
+            # the endpoint only ever "worked" against the fake
+            # sessions in tests, which return plain tuples. Rows and
+            # tuples both unpack by index, so index directly.
+            pairs.append((item[0], item[1]))
     return pairs
 
 
@@ -250,6 +279,12 @@ def basis_tracker(
         commodity=commodity,
         delivery_month_key=delivery_month_key,
     )
+    if len(pairs) >= MAX_PRICE_PAIRS:
+        ranked["data_quality"] = (
+            str(ranked["data_quality"])
+            + f" Note: only the newest {MAX_PRICE_PAIRS} stored price pairs "
+            "were scanned; older history exists beyond this bound."
+        )
     status_map = _load_source_status_map(db, org_id=context.org_id)
     ranked_statuses = _attach_source_status(ranked["ranked"], status_map)
     unranked_statuses = _attach_source_status(ranked["unranked"], status_map)
@@ -307,6 +342,12 @@ def basis_history(
         location_id=location_id,
         limit=limit,
     )
+    if len(pairs) >= MAX_PRICE_PAIRS:
+        history["data_quality"] = (
+            str(history["data_quality"])
+            + f" Note: only the newest {MAX_PRICE_PAIRS} stored price pairs "
+            "were scanned; older history exists beyond this bound."
+        )
     status_map = _load_source_status_map(db, org_id=context.org_id)
     _attach_source_status(history["rows"], status_map)
     return {

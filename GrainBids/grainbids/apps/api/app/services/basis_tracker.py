@@ -265,11 +265,19 @@ def build_basis_history(
     commodity: str | None = None,
     location_id: uuid.UUID | None = None,
     limit: int = 90,
+    missing_count_override: int | None = None,
 ) -> dict[str, object]:
     """Basis over time for one location + commodity, oldest quote first.
 
     Rows whose basis cannot be computed are kept in the series with
     ``basis=None`` and their ``missing_reason`` so gaps stay visible.
+
+    ``missing_count`` is counted over the pairs handed in, which the
+    caller may have bounded (the /history route loads a per-group
+    oldest-first candidate set). A caller that knows the true count
+    over the full stored history — the route counts it in SQL — can
+    pass ``missing_count_override`` so the reported count covers every
+    matching stored row, not just the candidates.
     """
     wanted_commodity = canonical_key(commodity) if commodity else None
     entries: list[dict[str, object]] = []
@@ -295,6 +303,8 @@ def build_basis_history(
 
     entries.sort(key=_sort_key)
     entries = entries[: max(1, limit)]
+    if missing_count_override is not None:
+        missing_count = missing_count_override
     if entries:
         quality = (
             f"Basis over time from stored normalized prices ({len(entries)} rows"

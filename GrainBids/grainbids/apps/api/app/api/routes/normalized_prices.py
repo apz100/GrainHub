@@ -172,7 +172,26 @@ def _build_filters(
     filters = []
 
     if commodity:
-        filters.append(NormalizedPrice.commodity_name.ilike(f"%{commodity.strip()}%"))
+        # Marathon Phase B: a query that names a canonical commodity
+        # ("HRW Wheat", "Hard Red Winter Wheat") expands to the raw
+        # labels sources actually stored ("HRW New Crop Wheat",
+        # "HARD RED WINTER", ...) — a plain substring search for the
+        # canonical name matches none of them. Unresolvable free-text
+        # queries keep the original substring behaviour.
+        from app.services.commodity_normalization import search_patterns_for_query
+
+        patterns = search_patterns_for_query(commodity)
+        if patterns:
+            filters.append(
+                or_(
+                    *(
+                        NormalizedPrice.commodity_name.ilike(f"%{pattern}%")
+                        for pattern in patterns
+                    )
+                )
+            )
+        else:
+            filters.append(NormalizedPrice.commodity_name.ilike(f"%{commodity.strip()}%"))
     if location:
         filters.append(NormalizedPrice.location.ilike(f"%{location.strip()}%"))
     if source_name:

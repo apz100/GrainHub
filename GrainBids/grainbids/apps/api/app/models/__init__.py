@@ -3,6 +3,7 @@ from app.models.alert_rule import AlertRule
 from app.models.company import Company
 from app.models.company_source_priority import CompanySourcePriority
 from app.models.commodity import Commodity
+from app.models.commodity_alias import CommodityAlias
 from app.models.contract import GrowerContract
 from app.models.crm_note import CrmNote
 from app.models.farm_profile import FarmProfile

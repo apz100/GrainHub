@@ -18,6 +18,7 @@ from app.models.price_snapshot import PriceSnapshot
 from app.models.quote_run import QuoteRun
 from app.models.raw_upload import RawUpload
 from app.models.research_report import ResearchReport
+from app.models.research_cache import ResearchCacheEntry
 from app.models.saved_search import SavedSearch
 from app.models.scale_ticket import ScaleTicket
 from app.models.signal_forecast import SignalForecast

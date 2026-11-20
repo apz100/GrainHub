@@ -1,0 +1,1 @@
+{"nass_configured":true,"fas_configured":true,"wasde_file_url":"https://www.usda.gov/sites/default/files/documents/wasde.txt","crop_progress_file_url":"https://downloads.usda.gov/esmis/nass-crop-progress/crop-progress.txt","note":"Keys are never returned. NASS / FAS collectors report 'key required' until a free key is configured in env."}

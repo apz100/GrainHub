@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { API_BASE, buildApiHeaders } from "@/lib/api";
+import { fetchResilient } from "@/lib/fetch-resilient";
 
 const headers = buildApiHeaders();
 
@@ -34,17 +35,17 @@ function rowsFrom(payload: unknown): BestBidRow[] {
   return [];
 }
 
-async function fetchBestBids() {
+async function fetchBestBids(): Promise<{ rows: BestBidRow[]; failed: boolean }> {
   try {
     // Public page: no login required. Headers only carry org/role env vars when set.
-    const res = await fetch(`${API_BASE}/api/best-bids?limit=100`, {
+    const res = await fetchResilient(`${API_BASE}/api/best-bids?limit=100`, {
       cache: "no-store",
       headers,
     });
-    if (!res.ok) return [];
-    return rowsFrom(await res.json());
+    if (!res.ok) return { rows: [], failed: true };
+    return { rows: rowsFrom(await res.json()), failed: false };
   } catch {
-    return [];
+    return { rows: [], failed: true };
   }
 }
 
@@ -54,7 +55,7 @@ function formatNumber(value: number | null | undefined): string {
 }
 
 export default async function BestBidsPage() {
-  const bids = await fetchBestBids();
+  const { rows: bids, failed: bidsFailed } = await fetchBestBids();
   const commodities = [...new Set(bids.map((b) => b.commodity_name ?? b.commodity ?? "Unknown"))];
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
@@ -68,7 +69,19 @@ export default async function BestBidsPage() {
         and capture time shown.
       </p>
 
-      {bids.length === 0 ? (
+      {bidsFailed ? (
+        <section className="mt-8 rounded-lg border border-amber-300 bg-amber-50 p-5">
+          <h2 className="text-lg font-semibold text-amber-900">Could not load best bids</h2>
+          <p className="mt-2 text-sm text-amber-900">
+            The API did not respond — it may be waking up (free tier, first load can take
+            up to a minute). This is different from “no bids”: the data could not be
+            checked at all.
+          </p>
+          <Link href="/best-bids" className="mt-4 inline-flex rounded-md border border-amber-400 bg-white px-3 py-2 text-sm font-medium text-amber-900 hover:border-amber-500">
+            Retry
+          </Link>
+        </section>
+      ) : bids.length === 0 ? (
         <section className="mt-8 rounded-lg border border-black/10 bg-white/65 p-5 backdrop-blur">
           <h2 className="text-lg font-semibold">No best bids yet</h2>
           <p className="mt-2 text-sm text-black/55">

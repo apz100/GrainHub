@@ -1,15 +1,17 @@
 import Link from "next/link";
 import { API_BASE, buildApiHeaders } from "@/lib/api";
+import { fetchResilient } from "@/lib/fetch-resilient";
 
 const headers = buildApiHeaders();
 
 async function fetchWasde() {
   try {
-    const res = await fetch(`${API_BASE}/api/research/wasde?limit=50`, { cache: "no-store", headers });
-    if (!res.ok) return { reports: [], count: 0 };
-    return await res.json();
+    const res = await fetchResilient(`${API_BASE}/api/research/wasde?limit=50`, { cache: "no-store", headers });
+    if (!res.ok) return { reports: [], count: 0, failed: true };
+    const json = await res.json();
+    return { ...json, failed: false };
   } catch {
-    return { reports: [], count: 0 };
+    return { reports: [], count: 0, failed: true };
   }
 }
 
@@ -28,7 +30,15 @@ export default async function WasdePage() {
       </p>
       <section className="mt-8 rounded-lg border border-black/10 bg-white/65 p-5 backdrop-blur">
         <h2 className="text-lg font-semibold">Ending stocks (as published)</h2>
-        {reports.length === 0 ? (
+        {data.failed ? (
+          <p className="mt-2 text-sm text-amber-900">
+            Could not load WASDE data — the API did not respond (it may be waking up; free
+            tier first load can take up to a minute).{" "}
+            <Link href="/research/wasde" className="font-medium underline">
+              Retry
+            </Link>
+          </p>
+        ) : reports.length === 0 ? (
           <p className="mt-2 text-sm text-black/55">
             No WASDE data ingested yet. Ingest a public WASDE file via the research API, or
             configure a free NASS key — no numbers are shown until a real source provides them.

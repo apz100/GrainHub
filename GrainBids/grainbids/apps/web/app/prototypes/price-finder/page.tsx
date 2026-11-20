@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 
 import { API_BASE, buildApiHeaders, getApiConfigError } from "@/lib/api";
+import { fetchResilient } from "@/lib/fetch-resilient";
+import { useSlowLoad, WakingApiNotice } from "../../_components/fetch-states";
 import PrototypeBanner from "../_components/prototype-banner";
 
 /**
@@ -192,9 +194,14 @@ export default function PriceFinderPrototypePage() {
   const [error, setError] = useState("");
   const [bestBids, setBestBids] = useState<BidRow[]>([]);
   const [groups, setGroups] = useState<SearchGroup[]>([]);
+  const slowSearch = useSlowLoad(loading);
 
   async function runSearch(event: React.FormEvent) {
     event.preventDefault();
+    await performSearch();
+  }
+
+  async function performSearch() {
     const configError = getApiConfigError({ requireOrg: false });
     if (configError) {
       setError(configError);
@@ -211,7 +218,7 @@ export default function PriceFinderPrototypePage() {
       // Best bids: public endpoint, commodity filter only.
       const bestParams = new URLSearchParams({ limit: "30" });
       if (grain) bestParams.set("commodity", grain);
-      const bestRes = await fetch(`${API_BASE}/api/best-bids?${bestParams}`, {
+      const bestRes = await fetchResilient(`${API_BASE}/api/best-bids?${bestParams}`, {
         cache: "no-store",
         headers,
       });
@@ -226,13 +233,13 @@ export default function PriceFinderPrototypePage() {
       if (location.trim()) searchParams.set("location", location.trim());
       if (deliveryMonth) searchParams.set("delivery_month", deliveryMonth);
       if (radius) searchParams.set("radius_km", radius);
-      let searchRes = await fetch(`${API_BASE}/api/market-search?${searchParams}`, {
+      let searchRes = await fetchResilient(`${API_BASE}/api/market-search?${searchParams}`, {
         cache: "no-store",
         headers,
       });
       if (!searchRes.ok && radius) {
         searchParams.delete("radius_km");
-        searchRes = await fetch(`${API_BASE}/api/market-search?${searchParams}`, {
+        searchRes = await fetchResilient(`${API_BASE}/api/market-search?${searchParams}`, {
           cache: "no-store",
           headers,
         });
@@ -336,9 +343,11 @@ export default function PriceFinderPrototypePage() {
           disabled={loading}
           className="w-full rounded-md bg-black px-4 py-3 text-base font-medium text-white disabled:opacity-50"
         >
-          {loading ? "Searching…" : "Search bids"}
+          {loading ? (slowSearch ? "Waking the API…" : "Searching…") : "Search bids"}
         </button>
       </form>
+
+      {loading && slowSearch ? <WakingApiNotice className="mt-4" /> : null}
 
       {radiusNote ? (
         <p className="mt-4 rounded border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
@@ -350,11 +359,20 @@ export default function PriceFinderPrototypePage() {
         <div className="mt-6 space-y-6">
           {apiUnreachable ? (
             <section>
-              <p className="rounded border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                The GrainBids API could not be reached{error ? ` (${error})` : ""}, so no
-                real bids are shown. The rows below are <strong>example data only</strong> —
-                synthetic prices at synthetic locations, shown just to preview the layout.
-              </p>
+              <div className="rounded border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                <p>
+                  The GrainBids API could not be reached{error ? ` (${error})` : ""}, so no
+                  real bids are shown. The rows below are <strong>example data only</strong> —
+                  synthetic prices at synthetic locations, shown just to preview the layout.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => void performSearch()}
+                  className="mt-3 rounded-md border border-amber-400 bg-white px-3 py-1.5 text-sm font-medium text-amber-900 hover:border-amber-500"
+                >
+                  Retry search
+                </button>
+              </div>
               <h2 className="mt-6 text-lg font-semibold">Example results — not real bids</h2>
               <div className="mt-3 space-y-3">
                 {EXAMPLE_ROWS.map((row) => (

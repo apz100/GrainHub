@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { API_BASE, buildApiHeaders } from "@/lib/api";
+import { fetchResilient } from "@/lib/fetch-resilient";
 
 const headers = buildApiHeaders();
 
@@ -17,20 +18,21 @@ type ResearchReport = {
 
 async function fetchReports(reportType: string) {
   try {
-    const res = await fetch(`${API_BASE}/api/research/reports?report_type=${reportType}&limit=50`, {
+    const res = await fetchResilient(`${API_BASE}/api/research/reports?report_type=${reportType}&limit=50`, {
       cache: "no-store",
       headers,
     });
-    if (!res.ok) return { reports: [], count: 0 };
-    return await res.json();
+    if (!res.ok) return { reports: [], count: 0, failed: true };
+    const json = await res.json();
+    return { ...json, failed: false };
   } catch {
-    return { reports: [], count: 0 };
+    return { reports: [], count: 0, failed: true };
   }
 }
 
 async function fetchStatus() {
   try {
-    const res = await fetch(`${API_BASE}/api/research/status`, { cache: "no-store", headers });
+    const res = await fetchResilient(`${API_BASE}/api/research/status`, { cache: "no-store", headers });
     if (!res.ok) return null;
     return await res.json();
   } catch {
@@ -93,6 +95,9 @@ export default async function ResearchIndexPage() {
     fetchReports("export_sales"),
     fetchReports("commitments_of_traders"),
   ]);
+  const anyFailed = [wasde, cropProgress, grainStocks, exportSales, commitments].some(
+    (result) => result.failed
+  );
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
       <p className="text-xs uppercase tracking-[0.16em] text-black/50">GrainBids / Research</p>
@@ -104,6 +109,16 @@ export default async function ResearchIndexPage() {
         and delay. NASS Quick Stats: {status?.nass_configured ? "key configured" : "key required"}.
         FAS PSD: {status?.fas_configured ? "key configured" : "key required"}.
       </p>
+      {anyFailed ? (
+        <div role="alert" className="mt-4 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Some research data could not be loaded — the API did not respond (it may be
+          waking up; free tier first load can take up to a minute). Counts below may be
+          incomplete.{" "}
+          <Link href="/research" className="font-medium underline">
+            Retry
+          </Link>
+        </div>
+      ) : null}
       <section className="mt-8 grid gap-4 md:grid-cols-2">
         <Link href="/research/wasde" className="rounded-lg border border-black/10 bg-white/65 p-5 backdrop-blur hover:border-black/40">
           <h2 className="text-lg font-semibold">WASDE — Supply &amp; Demand</h2>
@@ -129,6 +144,11 @@ export default async function ResearchIndexPage() {
           <h2 className="text-lg font-semibold">Commitments of Traders</h2>
           <p className="mt-1 text-sm text-black/65">Weekly, Fridays 3:30pm ET, CFTC. Trader positioning in CBOT futures.</p>
           <p className="mt-2 text-sm">{commitments.count} report(s) ingested · value parser not built yet</p>
+        </Link>
+        <Link href="/research/psd" className="rounded-lg border border-black/10 bg-white/65 p-5 backdrop-blur hover:border-black/40">
+          <h2 className="text-lg font-semibold">World Supply &amp; Demand (PSD)</h2>
+          <p className="mt-1 text-sm text-black/65">USDA FAS Production, Supply &amp; Distribution. World balance sheets, fetched live and cached for 24 hours.</p>
+          <p className="mt-2 text-sm">Live from FAS PSD — corn, soybeans, wheat</p>
         </Link>
       </section>
       <section className="mt-8 rounded-lg border border-black/10 bg-white/65 p-5 backdrop-blur">

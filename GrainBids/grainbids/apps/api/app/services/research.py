@@ -184,10 +184,17 @@ def fetch_fas_psd(
     commodity_code: str,
     api_key: str | None = None,
 ) -> list[dict[str, object]]:
-    """Fetch FAS PSD (Production, Supply & Distribution) rows.
+    """Fetch the FAS PSD commodity catalogue (metadata, not PSD data).
 
     Key-gated via a free data.gov key (FAS_DATA_GOV_API_KEY, header
     ``X-Api-Key``). Raises ResearchKeyRequired when unconfigured.
+
+    Despite the historical name, this returns the 63-row commodity
+    list from ``/api/psd/commodities/`` — the server ignores the
+    ``commodityCode`` query param and returns every commodity
+    (verified live 2026-11-19/20), so the requested code is filtered
+    client-side below. For actual Production, Supply & Distribution
+    numbers use :func:`fetch_fas_psd_world`.
     """
     key = (api_key if api_key is not None else settings.fas_data_gov_api_key).strip()
     if not key:
@@ -216,10 +223,144 @@ def fetch_fas_psd(
     except ValueError as exc:
         raise ResearchUpstreamError("FAS PSD did not return JSON.") from exc
     if isinstance(payload, list):
+        rows = payload
+    elif isinstance(payload, dict):
+        rows = [payload]
+    else:
+        raise ResearchUpstreamError("FAS PSD returned an unexpected payload.")
+    # The server ignores the commodityCode param (see docstring), so
+    # honour the caller's filter here. Rows without a commodityCode
+    # are kept — dropping them would hide an upstream shape change.
+    return [
+        row
+        for row in rows
+        if not isinstance(row, dict)
+        or row.get("commodityCode") in (None, commodity_code)
+    ]
+
+
+def _fas_psd_get_json(path: str, *, api_key: str | None) -> object:
+    """GET one FAS PSD path and return the decoded JSON payload.
+
+    Shared by the world-data and metadata fetchers below. Same key
+    handling and error behaviour as :func:`fetch_fas_psd`.
+    """
+    key = (api_key if api_key is not None else settings.fas_data_gov_api_key).strip()
+    if not key:
+        raise ResearchKeyRequired(
+            "FAS PSD needs a free data.gov API key (FAS_DATA_GOV_API_KEY). "
+            "Get one at https://api.data.gov/signup/ — no key is stored in git."
+        )
+    try:
+        response = requests.get(
+            f"{FAS_PSD_BASE_URL}{path}",
+            headers={**_headers(), "X-Api-Key": key},
+            timeout=settings.research_http_timeout_seconds,
+        )
+    except requests.RequestException as exc:
+        raise ResearchUpstreamError(f"Request to FAS PSD failed: {exc}") from exc
+    if response.status_code == 429:
+        raise ResearchUpstreamError("Rate limited (429) by FAS PSD; back off and retry later.")
+    if response.status_code >= 400:
+        raise ResearchUpstreamError(f"FAS PSD returned HTTP {response.status_code}.")
+    try:
+        return response.json()
+    except ValueError as exc:
+        raise ResearchUpstreamError("FAS PSD did not return JSON.") from exc
+
+
+def _fas_psd_rows(payload: object, *, what: str) -> list[dict[str, object]]:
+    if isinstance(payload, list):
         return payload
     if isinstance(payload, dict):
         return [payload]
-    raise ResearchUpstreamError("FAS PSD returned an unexpected payload.")
+    raise ResearchUpstreamError(f"FAS PSD {what} returned an unexpected payload.")
+
+
+def fetch_fas_psd_world(
+    *,
+    commodity_code: str,
+    market_year: int,
+    api_key: str | None = None,
+) -> list[dict[str, object]]:
+    """Fetch world PSD rows for one commodity + marketing year.
+
+    Verified live 2026-11-20: the live shape is path segments —
+    ``GET /api/psd/commodity/{code}/world/year/{marketYear}`` (corn
+    0440000, year 2026 → 200, 15 rows). The legacy
+    ``/api/psd/worldData`` route is dead (404 in every form tried).
+    Rows are coded: ``attributeId`` / ``unitId`` need the lookups from
+    :func:`fetch_fas_psd_attribute_names` / :func:`fetch_fas_psd_unit_names`;
+    decode with :func:`parse_fas_psd_rows`. World rows carry
+    ``countryCode == "00"``.
+    """
+    payload = _fas_psd_get_json(
+        f"/commodity/{commodity_code}/world/year/{market_year}", api_key=api_key
+    )
+    return _fas_psd_rows(payload, what="world data")
+
+
+def fetch_fas_psd_attribute_names(*, api_key: str | None = None) -> dict[int, str]:
+    """Map PSD ``attributeId`` → attribute name (85 rows, live-verified).
+
+    Never hardcode attribute ids from third-party docs — they do not
+    match the live API (live: 20 = Beginning Stocks, 28 = Production,
+    176 = Ending Stocks). Fetch this table and join at runtime.
+    """
+    rows = _fas_psd_rows(
+        _fas_psd_get_json("/commodityAttributes/", api_key=api_key),
+        what="commodity attributes",
+    )
+    return {
+        int(row["attributeId"]): str(row["attributeName"])
+        for row in rows
+        if isinstance(row, dict) and row.get("attributeId") is not None
+    }
+
+
+def fetch_fas_psd_unit_names(*, api_key: str | None = None) -> dict[int, str]:
+    """Map PSD ``unitId`` → unit description (42 rows, live-verified)."""
+    rows = _fas_psd_rows(
+        _fas_psd_get_json("/unitsOfMeasure/", api_key=api_key),
+        what="units of measure",
+    )
+    return {
+        int(row["unitId"]): str(row["unitDescription"])
+        for row in rows
+        if isinstance(row, dict) and row.get("unitId") is not None
+    }
+
+
+def parse_fas_psd_rows(
+    rows: list[dict[str, object]],
+    *,
+    attribute_names: dict[int, str],
+    unit_names: dict[int, str],
+) -> list[dict[str, object]]:
+    """Decode coded PSD rows into labelled rows (cf. parse_nass_records).
+
+    Unknown ids fall back to ``attribute <id>`` / ``unit <id>`` rather
+    than dropping the row, so an upstream table change stays visible.
+    """
+    output: list[dict[str, object]] = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        attribute_id = row.get("attributeId")
+        unit_id = row.get("unitId")
+        output.append(
+            {
+                "commodity": row.get("commodityCode"),
+                "metric": attribute_names.get(attribute_id, f"attribute {attribute_id}"),
+                "value": row.get("value"),
+                "unit": unit_names.get(unit_id, f"unit {unit_id}"),
+                "market_year": row.get("marketYear"),
+                "month": row.get("month"),
+                "country_code": row.get("countryCode"),
+                "source": "USDA FAS PSD",
+            }
+        )
+    return output
 
 
 def fetch_public_file_text(url: str) -> str:

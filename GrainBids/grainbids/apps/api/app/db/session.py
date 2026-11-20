@@ -11,6 +11,22 @@ _engine: Engine | None = None
 _SessionLocal: sessionmaker | None = None
 
 
+def normalize_database_url(url: str) -> str:
+    """Pin the psycopg v3 driver for bare Postgres URLs.
+
+    requirements.txt ships psycopg v3 (``psycopg[binary]``), but a bare
+    ``postgresql://`` URL makes SQLAlchemy select the psycopg2 dialect,
+    which is not installed — the app crashed on boot on Render with
+    ``ModuleNotFoundError: No module named 'psycopg2'`` (first deploy,
+    2026-11-19). Providers hand out bare URLs, so normalize here.
+    """
+    if url.startswith("postgresql://"):
+        return "postgresql+psycopg://" + url[len("postgresql://") :]
+    if url.startswith("postgres://"):
+        return "postgresql+psycopg://" + url[len("postgres://") :]
+    return url
+
+
 def get_engine() -> Engine:
     global _engine
     if _engine is None:
@@ -20,7 +36,7 @@ def get_engine() -> Engine:
             )
         # Supabase transaction pooler (PgBouncer) is incompatible with psycopg prepared statements.
         _engine = create_engine(
-            settings.database_url,
+            normalize_database_url(settings.database_url),
             pool_pre_ping=True,
             connect_args={"prepare_threshold": None},
         )

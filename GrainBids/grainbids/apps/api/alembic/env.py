@@ -8,6 +8,7 @@ from sqlalchemy import engine_from_config, pool
 
 from app.core.config import settings
 from app.db.base import Base
+from app.db.session import normalize_database_url
 
 # Import models so Base.metadata is populated
 from app import models  # noqa: F401
@@ -20,7 +21,7 @@ if config.config_file_name is not None:
 
 def get_url() -> str:
     # Prefer DATABASE_URL env var when running alembic directly
-    return os.getenv("DATABASE_URL") or settings.database_url
+    return normalize_database_url(os.getenv("DATABASE_URL") or settings.database_url)
 
 
 target_metadata = Base.metadata

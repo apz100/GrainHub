@@ -128,7 +128,10 @@ def _latest_price(
     )
     if location:
         query = query.where(NormalizedPrice.location.ilike(f"%{location.strip()}%"))
-    rows = db.execute(query).scalars().all()
+    # Phase A audit (2026-11-20): only the first row is used — bound
+    # the query instead of loading every matching price row for the
+    # org+commodity (the table grows with every ingestion run).
+    rows = db.execute(query.limit(1)).scalars().all()
     return rows[0] if rows else None
 
 

@@ -2,7 +2,14 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
+import {
+  FetchErrorNotice,
+  SkeletonTableRows,
+  useSlowLoad,
+  WakingApiNotice,
+} from "../_components/fetch-states";
 import { API_BASE, buildApiHeaders, getApiConfigError, isAdminRole } from "@/lib/api";
+import { fetchResilient } from "@/lib/fetch-resilient";
 
 type IngestionRun = {
   id: string;
@@ -143,29 +150,36 @@ export default function SourcesPage() {
   const [coverageRows, setCoverageRows] = useState<CanonicalCoverageRow[]>([]);
   const [priorityCandidates, setPriorityCandidates] = useState<CompanyPriorityCandidateRow[]>([]);
   const [loadingCandidates, setLoadingCandidates] = useState(false);
+  const [dataLoading, setDataLoading] = useState(false);
+  const slowDataLoad = useSlowLoad(dataLoading);
 
   async function loadData() {
-    const openOnlyQuery = openAlertsOnly ? "&open_only=true" : "";
-    const [runsRes, sourcesRes, slaRes, alertsRes, facetsRes, coverageRes] = await Promise.all([
-      fetch(`${API_BASE}/api/ingestion/runs?limit=25`, { cache: "no-store", headers }),
-      fetch(`${API_BASE}/api/sources`, { cache: "no-store", headers }),
-      fetch(`${API_BASE}/api/ingestion/sla`, { cache: "no-store", headers }),
-      fetch(`${API_BASE}/api/alerts/recent?limit=10${openOnlyQuery}`, { cache: "no-store", headers }),
-      fetch(`${API_BASE}/api/normalized-prices/facets`, { cache: "no-store", headers }),
-      fetch(`${API_BASE}/api/sources/canonical-coverage?days=7`, { cache: "no-store", headers }),
-    ]);
-    const runsJson = runsRes.ok ? await runsRes.json() : { rows: [] };
-    const sourcesJson = sourcesRes.ok ? await sourcesRes.json() : { rows: [] };
-    const slaJson = slaRes.ok ? await slaRes.json() : null;
-    const alertsJson = alertsRes.ok ? await alertsRes.json() : { rows: [] };
-    const facetsJson: FacetsResponse = facetsRes.ok ? await facetsRes.json() : { company_rows: [] };
-    const coverageJson = coverageRes.ok ? await coverageRes.json() : { rows: [] };
-    setRuns(runsJson.rows || []);
-    setSources(sourcesJson.rows || []);
-    setSla(slaJson);
-    setAlerts(alertsJson.rows || []);
-    setCompanyRows(Array.isArray(facetsJson.company_rows) ? facetsJson.company_rows : []);
-    setCoverageRows(Array.isArray(coverageJson.rows) ? coverageJson.rows : []);
+    setDataLoading(true);
+    try {
+      const openOnlyQuery = openAlertsOnly ? "&open_only=true" : "";
+      const [runsRes, sourcesRes, slaRes, alertsRes, facetsRes, coverageRes] = await Promise.all([
+        fetchResilient(`${API_BASE}/api/ingestion/runs?limit=25`, { cache: "no-store", headers }),
+        fetchResilient(`${API_BASE}/api/sources`, { cache: "no-store", headers }),
+        fetchResilient(`${API_BASE}/api/ingestion/sla`, { cache: "no-store", headers }),
+        fetchResilient(`${API_BASE}/api/alerts/recent?limit=10${openOnlyQuery}`, { cache: "no-store", headers }),
+        fetchResilient(`${API_BASE}/api/normalized-prices/facets`, { cache: "no-store", headers }),
+        fetchResilient(`${API_BASE}/api/sources/canonical-coverage?days=7`, { cache: "no-store", headers }),
+      ]);
+      const runsJson = runsRes.ok ? await runsRes.json() : { rows: [] };
+      const sourcesJson = sourcesRes.ok ? await sourcesRes.json() : { rows: [] };
+      const slaJson = slaRes.ok ? await slaRes.json() : null;
+      const alertsJson = alertsRes.ok ? await alertsRes.json() : { rows: [] };
+      const facetsJson: FacetsResponse = facetsRes.ok ? await facetsRes.json() : { company_rows: [] };
+      const coverageJson = coverageRes.ok ? await coverageRes.json() : { rows: [] };
+      setRuns(runsJson.rows || []);
+      setSources(sourcesJson.rows || []);
+      setSla(slaJson);
+      setAlerts(alertsJson.rows || []);
+      setCompanyRows(Array.isArray(facetsJson.company_rows) ? facetsJson.company_rows : []);
+      setCoverageRows(Array.isArray(coverageJson.rows) ? coverageJson.rows : []);
+    } finally {
+      setDataLoading(false);
+    }
   }
 
   useEffect(() => {
@@ -193,7 +207,7 @@ export default function SourcesPage() {
     }
 
     try {
-      const res = await fetch(`${API_BASE}/api/ingestion/source-file/run?${params.toString()}`, { method: "POST", headers });
+      const res = await fetchResilient(`${API_BASE}/api/ingestion/source-file/run?${params.toString()}`, { method: "POST", headers, retries: 0 });
       const json = await res.json();
       if (!res.ok) {
         throw new Error(typeof json.detail === "string" ? json.detail : "Ingestion failed");
@@ -212,7 +226,7 @@ export default function SourcesPage() {
     setMessage("");
     setError("");
     try {
-      const res = await fetch(`${API_BASE}/api/sources/${sourceId}/refresh`, { method: "POST", headers });
+      const res = await fetchResilient(`${API_BASE}/api/sources/${sourceId}/refresh`, { method: "POST", headers, retries: 0 });
       const json = await res.json();
       if (!res.ok) {
         throw new Error(typeof json.detail === "string" ? json.detail : "Source refresh failed");
@@ -234,7 +248,7 @@ export default function SourcesPage() {
     setMessage("");
     setError("");
     try {
-      const res = await fetch(`${API_BASE}/api/sources/seed?scope=pilot`, { method: "POST", headers });
+      const res = await fetchResilient(`${API_BASE}/api/sources/seed?scope=pilot`, { method: "POST", headers, retries: 0 });
       const json = await res.json();
       if (!res.ok) {
         throw new Error(typeof json.detail === "string" ? json.detail : "Seed failed");
@@ -253,7 +267,7 @@ export default function SourcesPage() {
     setMessage("");
     setError("");
     try {
-      const res = await fetch(`${API_BASE}/api/ingestion/source-files/run?max_attempts=2`, { method: "POST", headers });
+      const res = await fetchResilient(`${API_BASE}/api/ingestion/source-files/run?max_attempts=2`, { method: "POST", headers, retries: 0 });
       const json = await res.json();
       if (!res.ok) {
         throw new Error(typeof json.detail === "string" ? json.detail : "Scheduled cycle failed");
@@ -280,8 +294,8 @@ export default function SourcesPage() {
     setError("");
     try {
       const [priorityRes, candidatesRes] = await Promise.all([
-        fetch(`${API_BASE}/api/sources/priority?company_id=${companyId}`, { cache: "no-store", headers }),
-        fetch(`${API_BASE}/api/sources/priority/candidates?company_id=${companyId}`, { cache: "no-store", headers }),
+        fetchResilient(`${API_BASE}/api/sources/priority?company_id=${companyId}`, { cache: "no-store", headers }),
+        fetchResilient(`${API_BASE}/api/sources/priority/candidates?company_id=${companyId}`, { cache: "no-store", headers }),
       ]);
 
       const priorityJson = await priorityRes.json();
@@ -315,9 +329,9 @@ export default function SourcesPage() {
         .map((item) => item.trim())
         .filter(Boolean)
         .join(",");
-      const res = await fetch(
+      const res = await fetchResilient(
         `${API_BASE}/api/sources/priority?company_id=${selectedCompanyId}&source_keys=${encodeURIComponent(sourceKeys)}`,
-        { method: "PUT", headers }
+        { method: "PUT", headers, retries: 0 }
       );
       const json = await res.json();
       if (!res.ok) {
@@ -337,9 +351,10 @@ export default function SourcesPage() {
     setMessage("");
     setError("");
     try {
-      const res = await fetch(`${API_BASE}/api/sources/priority/seed-defaults`, {
+      const res = await fetchResilient(`${API_BASE}/api/sources/priority/seed-defaults`, {
         method: "POST",
         headers,
+        retries: 0,
       });
       const json = await res.json();
       if (!res.ok) {
@@ -372,7 +387,7 @@ export default function SourcesPage() {
     setMessage("");
     setError("");
     try {
-      const res = await fetch(`${API_BASE}/api/alerts/${alertId}/status?status=${status}`, { method: "PATCH", headers });
+      const res = await fetchResilient(`${API_BASE}/api/alerts/${alertId}/status?status=${status}`, { method: "PATCH", headers, retries: 0 });
       const json = await res.json();
       if (!res.ok) {
         throw new Error(typeof json.detail === "string" ? json.detail : "Alert update failed");
@@ -411,11 +426,25 @@ export default function SourcesPage() {
         <p className="mt-2 text-sm text-black/65">Run and monitor source adapters, ingestion SLA, and configured file ingestion.</p>
       </header>
 
-      <section className="mt-6 grid gap-4 md:grid-cols-4">
-        <MetricCard label="Active Sources" value={sla?.active_sources ?? 0} />
-        <MetricCard label="Fresh Sources" value={sla?.fresh_sources ?? 0} />
-        <MetricCard label="Stale Sources" value={sla?.stale_sources ?? 0} />
-        <MetricCard label="Failing Sources" value={sla?.failing_sources ?? 0} />
+      {slowDataLoad ? <WakingApiNotice className="mt-6" /> : null}
+      {error && !dataLoading ? (
+        <FetchErrorNotice
+          className="mt-6"
+          message={error}
+          onRetry={() => loadData().catch((err) => setError(String(err)))}
+        />
+      ) : null}
+      {dataLoading && !slowDataLoad ? (
+        <p role="status" className="mt-6 text-sm text-black/60">
+          Loading source data…
+        </p>
+      ) : null}
+
+      <section className="mt-6 grid gap-4 md:grid-cols-4" aria-busy={dataLoading}>
+        <MetricCard label="Active Sources" value={dataLoading && !sla ? "…" : sla?.active_sources ?? 0} />
+        <MetricCard label="Fresh Sources" value={dataLoading && !sla ? "…" : sla?.fresh_sources ?? 0} />
+        <MetricCard label="Stale Sources" value={dataLoading && !sla ? "…" : sla?.stale_sources ?? 0} />
+        <MetricCard label="Failing Sources" value={dataLoading && !sla ? "…" : sla?.failing_sources ?? 0} />
       </section>
 
       <section className="mt-8 rounded-lg border border-black/10 bg-white/65 p-5 backdrop-blur">
@@ -435,7 +464,9 @@ export default function SourcesPage() {
               </tr>
             </thead>
             <tbody>
-              {coverageRows.length === 0 ? (
+              {dataLoading && coverageRows.length === 0 ? (
+                <SkeletonTableRows columns={5} rows={3} />
+              ) : coverageRows.length === 0 ? (
                 <tr>
                   <td className="px-2 py-4 text-black/55" colSpan={5}>
                     No coverage data yet.
@@ -464,8 +495,9 @@ export default function SourcesPage() {
         </p>
         <div className="mt-4 grid gap-3 md:grid-cols-[320px_1fr]">
           <div>
-            <label className="text-xs uppercase tracking-wide text-black/55">Company</label>
+            <label htmlFor="sources-company" className="text-xs uppercase tracking-wide text-black/55">Company</label>
             <select
+              id="sources-company"
               value={selectedCompanyId}
               onChange={(event) => {
                 const nextCompanyId = event.target.value;
@@ -484,8 +516,9 @@ export default function SourcesPage() {
             <p className="mt-2 text-xs text-black/55">Available source keys from adapter names and canonical source labels.</p>
           </div>
           <div>
-            <label className="text-xs uppercase tracking-wide text-black/55">Ordered source keys (one per line)</label>
+            <label htmlFor="sources-priority-keys" className="text-xs uppercase tracking-wide text-black/55">Ordered source keys (one per line)</label>
             <textarea
+              id="sources-priority-keys"
               value={priorityKeysInput}
               onChange={(event) => setPriorityKeysInput(event.target.value)}
               placeholder="agricharts&#10;glg&#10;andersons"
@@ -616,7 +649,9 @@ export default function SourcesPage() {
               </tr>
             </thead>
             <tbody>
-              {sources.length === 0 ? (
+              {dataLoading && sources.length === 0 ? (
+                <SkeletonTableRows columns={10} rows={4} />
+              ) : sources.length === 0 ? (
                 <tr>
                   <td className="px-2 py-4 text-black/55" colSpan={10}>
                     No sources configured yet.
@@ -723,7 +758,9 @@ export default function SourcesPage() {
               </tr>
             </thead>
             <tbody>
-              {runs.length === 0 ? (
+              {dataLoading && runs.length === 0 ? (
+                <SkeletonTableRows columns={14} rows={4} />
+              ) : runs.length === 0 ? (
                 <tr>
                   <td className="px-2 py-4 text-black/55" colSpan={14}>
                     No ingestion runs yet.
@@ -781,7 +818,9 @@ export default function SourcesPage() {
               </tr>
             </thead>
             <tbody>
-              {alerts.length === 0 ? (
+              {dataLoading && alerts.length === 0 ? (
+                <SkeletonTableRows columns={5} rows={3} />
+              ) : alerts.length === 0 ? (
                 <tr>
                   <td className="px-2 py-4 text-black/55" colSpan={5}>
                     No alerts triggered yet.

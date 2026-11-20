@@ -1,18 +1,20 @@
 import Link from "next/link";
 import { API_BASE, buildApiHeaders } from "@/lib/api";
+import { fetchResilient } from "@/lib/fetch-resilient";
 
 const headers = buildApiHeaders();
 
 async function fetchReports(reportType: string) {
   try {
-    const res = await fetch(`${API_BASE}/api/research/reports?report_type=${reportType}&limit=50`, {
+    const res = await fetchResilient(`${API_BASE}/api/research/reports?report_type=${reportType}&limit=50`, {
       cache: "no-store",
       headers,
     });
-    if (!res.ok) return { reports: [], count: 0 };
-    return await res.json();
+    if (!res.ok) return { reports: [], count: 0, failed: true };
+    const json = await res.json();
+    return { ...json, failed: false };
   } catch {
-    return { reports: [], count: 0 };
+    return { reports: [], count: 0, failed: true };
   }
 }
 
@@ -31,7 +33,15 @@ export default async function CommitmentsPage() {
       </p>
       <section className="mt-8 rounded-lg border border-black/10 bg-white/65 p-5 backdrop-blur">
         <h2 className="text-lg font-semibold">Trader positioning (as published)</h2>
-        {reports.length === 0 ? (
+        {data.failed ? (
+          <p className="mt-2 text-sm text-amber-900">
+            Could not load Commitments of Traders data — the API did not respond (it may be waking up; free
+            tier first load can take up to a minute). 
+            <Link href="/research/commitments-of-traders" className="font-medium underline">
+              Retry
+            </Link>
+          </p>
+        ) : reports.length === 0 ? (
           <p className="mt-2 text-sm text-black/55">
             No Commitments of Traders data ingested yet. A value parser for the CFTC release
             format is not built yet — the ingest endpoint accepts the file and records its

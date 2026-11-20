@@ -1,0 +1,95 @@
+{
+  "issue_key": "2026-W47",
+  "subject": "GrainBids Eastern Ontario Market Report \u2014 November 20, 2026",
+  "region": "Eastern Ontario",
+  "generated_at": "2026-11-20T12:00:00+00:00",
+  "data_as_of": "2026-11-20T13:00:00+00:00",
+  "sections": [
+    {
+      "commodity": "Corn",
+      "market_count": 4,
+      "top_bids": [
+        {
+          "cash_price_bu": 7.38,
+          "basis": 1.42,
+          "location": "Winchester",
+          "company_name": "Sample Grain Co.",
+          "delivery_label": "November 2026",
+          "futures_month": "Dec 2026",
+          "captured_at": "2026-11-20T13:00:00+00:00"
+        },
+        {
+          "cash_price_bu": 7.31,
+          "basis": 1.35,
+          "location": "Embrun",
+          "company_name": "Valley Grains Ltd.",
+          "delivery_label": "November 2026",
+          "futures_month": "Dec 2026",
+          "captured_at": "2026-11-20T13:00:00+00:00"
+        },
+        {
+          "cash_price_bu": 7.22,
+          "basis": 1.28,
+          "location": "Prescott",
+          "company_name": "River Terminal Inc.",
+          "delivery_label": "November 2026",
+          "futures_month": "Dec 2026",
+          "captured_at": "2026-11-20T13:00:00+00:00"
+        }
+      ],
+      "median_cash_price_bu": 7.265,
+      "cash_spread_bu": 0.4299999999999997,
+      "average_basis": 1.275,
+      "data_as_of": "2026-11-20T13:00:00+00:00"
+    },
+    {
+      "commodity": "Soybeans",
+      "market_count": 2,
+      "top_bids": [
+        {
+          "cash_price_bu": 15.62,
+          "basis": 0.88,
+          "location": "Winchester",
+          "company_name": "Sample Grain Co.",
+          "delivery_label": "November 2026",
+          "futures_month": "Jan 2027",
+          "captured_at": "2026-11-20T13:00:00+00:00"
+        },
+        {
+          "cash_price_bu": 15.41,
+          "basis": 0.71,
+          "location": "Chesterville",
+          "company_name": "Valley Grains Ltd.",
+          "delivery_label": "November 2026",
+          "futures_month": "Jan 2027",
+          "captured_at": "2026-11-20T13:00:00+00:00"
+        }
+      ],
+      "median_cash_price_bu": 15.515,
+      "cash_spread_bu": 0.20999999999999908,
+      "average_basis": 0.7949999999999999,
+      "data_as_of": "2026-11-20T13:00:00+00:00"
+    },
+    {
+      "commodity": "Wheat",
+      "market_count": 1,
+      "top_bids": [
+        {
+          "cash_price_bu": 8.94,
+          "basis": 0.62,
+          "location": "Embrun",
+          "company_name": "Valley Grains Ltd.",
+          "delivery_label": "December 2026",
+          "futures_month": "Mar 2027",
+          "captured_at": "2026-11-20T13:00:00+00:00"
+        }
+      ],
+      "median_cash_price_bu": 8.94,
+      "cash_spread_bu": null,
+      "average_basis": 0.62,
+      "data_as_of": "2026-11-20T13:00:00+00:00"
+    }
+  ],
+  "text": "GrainBids Eastern Ontario Market Report \u2014 November 20, 2026\n\nData as of: November 20, 2026 at 13:00 UTC\n\nCorn\n-\n\u2022 Sample Grain Co. \u2014 Winchester \u2014 $7.38/bu; basis +1.42/bu; November 2026 delivery / Dec 2026 futures\n\u2022 Valley Grains Ltd. \u2014 Embrun \u2014 $7.31/bu; basis +1.35/bu; November 2026 delivery / Dec 2026 futures\n\u2022 River Terminal Inc. \u2014 Prescott \u2014 $7.22/bu; basis +1.28/bu; November 2026 delivery / Dec 2026 futures\nListed markets: 4; cash median across listed delivery periods: $7.26/bu; listed range: $0.43/bu before freight.\n\nSoybeans\n-\n\u2022 Sample Grain Co. \u2014 Winchester \u2014 $15.62/bu; basis +0.88/bu; November 2026 delivery / Jan 2027 futures\n\u2022 Valley Grains Ltd. \u2014 Chesterville \u2014 $15.41/bu; basis +0.71/bu; November 2026 delivery / Jan 2027 futures\nListed markets: 2; cash median across listed delivery periods: $15.52/bu; listed range: $0.21/bu before freight.\n\nWheat\n-\n\u2022 Valley Grains Ltd. \u2014 Embrun \u2014 $8.94/bu; basis +0.62/bu; December 2026 delivery / Mar 2027 futures\nListed markets: 1; cash median across listed delivery periods: $8.94/bu; listed range: n/a before freight.\n\nView current bids: https://grainbids.com\n\nPosted-bid snapshot only, not a delivered-netback recommendation. Freight is not included. Verify prices, grades, delivery periods, futures contracts, and freight before making a sale.",
+  "html": "<!doctype html><html><body style='margin:0;background:#f3f4f6;font-family:Arial,sans-serif;color:#111827'><div style='max-width:680px;margin:0 auto;background:white;padding:32px'><h1 style='margin-top:0'>GrainBids Eastern Ontario Market Report \u2014 November 20, 2026</h1><p style='color:#4b5563'>Data as of November 20, 2026 at 13:00 UTC</p><h2 style='margin-top:28px'>Corn</h2><table style='width:100%;border-collapse:collapse;font-size:14px'><thead><tr><th align='left'>Buyer / location</th><th align='left'>Delivery</th><th align='right'>Basis</th><th align='right'>Cash</th></tr></thead><tbody><tr><td style='padding:8px;border-bottom:1px solid #e5e7eb'>Sample Grain Co. \u2014 Winchester</td><td style='padding:8px;border-bottom:1px solid #e5e7eb'>November 2026 delivery / Dec 2026 futures</td><td style='padding:8px;border-bottom:1px solid #e5e7eb;text-align:right'>+1.42/bu</td><td style='padding:8px;border-bottom:1px solid #e5e7eb;text-align:right;font-weight:700'>$7.38/bu</td></tr><tr><td style='padding:8px;border-bottom:1px solid #e5e7eb'>Valley Grains Ltd. \u2014 Embrun</td><td style='padding:8px;border-bottom:1px solid #e5e7eb'>November 2026 delivery / Dec 2026 futures</td><td style='padding:8px;border-bottom:1px solid #e5e7eb;text-align:right'>+1.35/bu</td><td style='padding:8px;border-bottom:1px solid #e5e7eb;text-align:right;font-weight:700'>$7.31/bu</td></tr><tr><td style='padding:8px;border-bottom:1px solid #e5e7eb'>River Terminal Inc. \u2014 Prescott</td><td style='padding:8px;border-bottom:1px solid #e5e7eb'>November 2026 delivery / Dec 2026 futures</td><td style='padding:8px;border-bottom:1px solid #e5e7eb;text-align:right'>+1.28/bu</td><td style='padding:8px;border-bottom:1px solid #e5e7eb;text-align:right;font-weight:700'>$7.22/bu</td></tr></tbody></table><p style='font-size:13px;color:#4b5563'>4 listed markets. Cash median across listed delivery periods $7.26/bu; listed range $0.43/bu before freight.</p><h2 style='margin-top:28px'>Soybeans</h2><table style='width:100%;border-collapse:collapse;font-size:14px'><thead><tr><th align='left'>Buyer / location</th><th align='left'>Delivery</th><th align='right'>Basis</th><th align='right'>Cash</th></tr></thead><tbody><tr><td style='padding:8px;border-bottom:1px solid #e5e7eb'>Sample Grain Co. \u2014 Winchester</td><td style='padding:8px;border-bottom:1px solid #e5e7eb'>November 2026 delivery / Jan 2027 futures</td><td style='padding:8px;border-bottom:1px solid #e5e7eb;text-align:right'>+0.88/bu</td><td style='padding:8px;border-bottom:1px solid #e5e7eb;text-align:right;font-weight:700'>$15.62/bu</td></tr><tr><td style='padding:8px;border-bottom:1px solid #e5e7eb'>Valley Grains Ltd. \u2014 Chesterville</td><td style='padding:8px;border-bottom:1px solid #e5e7eb'>November 2026 delivery / Jan 2027 futures</td><td style='padding:8px;border-bottom:1px solid #e5e7eb;text-align:right'>+0.71/bu</td><td style='padding:8px;border-bottom:1px solid #e5e7eb;text-align:right;font-weight:700'>$15.41/bu</td></tr></tbody></table><p style='font-size:13px;color:#4b5563'>2 listed markets. Cash median across listed delivery periods $15.52/bu; listed range $0.21/bu before freight.</p><h2 style='margin-top:28px'>Wheat</h2><table style='width:100%;border-collapse:collapse;font-size:14px'><thead><tr><th align='left'>Buyer / location</th><th align='left'>Delivery</th><th align='right'>Basis</th><th align='right'>Cash</th></tr></thead><tbody><tr><td style='padding:8px;border-bottom:1px solid #e5e7eb'>Valley Grains Ltd. \u2014 Embrun</td><td style='padding:8px;border-bottom:1px solid #e5e7eb'>December 2026 delivery / Mar 2027 futures</td><td style='padding:8px;border-bottom:1px solid #e5e7eb;text-align:right'>+0.62/bu</td><td style='padding:8px;border-bottom:1px solid #e5e7eb;text-align:right;font-weight:700'>$8.94/bu</td></tr></tbody></table><p style='font-size:13px;color:#4b5563'>1 listed markets. Cash median across listed delivery periods $8.94/bu; listed range n/a before freight.</p><p><a style='color:#166534' href='https://grainbids.com'>View current GrainBids</a></p><p style='font-size:12px;color:#6b7280'>Posted-bid snapshot only, not a delivered-netback recommendation. Freight is not included. Verify prices, grades, delivery periods, futures contracts, and freight before making a sale.</p></div></body></html>"
+}

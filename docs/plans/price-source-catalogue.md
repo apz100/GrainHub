@@ -3784,3 +3784,61 @@ Verified directly with `tomllib` + the real toggle loader (not from memory):
 | Seedable (adapters − disabled) | 102 |
 
 The AGP (Cycle 33) and Alliance Grain (Cycle 34) comment edits introduced no drift: both toml files still agree entry-for-entry, and the toggle-disabled set is unchanged.
+
+## Marathon Phase D — full HTTP re-verification + FMN filter sweep (2026-11-20)
+
+One polite GET per source (contact User-Agent), HTTP-level only —
+no browser. Every registry adapter that can run over plain HTTP
+was executed live through `source_registry.fetch_with_adapter`
+(96 adapters); the 8 Ontario Playwright catalogue URLs were
+re-checked by raw GET; the 13 DTN adapters (toggled off, JS-only)
+were not probed, and the parked Andersons DTN host was not probed
+(Cycle 40 rule). Full per-source table:
+`docs/marathon/phase-d-notes.md`.
+
+### Counts
+
+| Status | Count | Meaning |
+|---|---|---|
+| Adapters executed live | 96 | 93 returned rows, 0 errors |
+| Zero rows (all previously known) | 3 | `mapleview` stub; `heartland_coop` + `mulvane_coop` closed (re-confirmed: page served, `jsquote.php` tag still missing) |
+| Ontario Playwright URLs still serving | 8 of 9 | GLG, LAC, Snobelen feed, Hensall, DG Global, Wanstead, Ganaraska, Ingredion all HTTP 200 with expected widget markers; Bunge Hamilton still **404** |
+| Shape changes requiring a parser fix | **0** | Every live row count matches its Cycle 35–37 count except the three site-side content changes below |
+
+### Site-side changes
+
+- `ag_state`: 21 rows (was 11, Cycle 35) — more rows on the same
+  `cashbids-js.php` route; parser unchanged.
+- `agp`: 1 row (was 8, Cycle 33; was 1 in Cycle 7) — the Bushel
+  iframe page's content fluctuates site-side; parser unchanged.
+- USDA mirrors (James Valley + FS Grain): 182 rows each (was
+  197 for report id 7730) — new daily AMS report; both mirrors
+  still agree exactly.
+- `north_gower`: 15 rows — first row count recorded (verified
+  Cycle 3 without a count).
+
+### FMN location_filter — resolved over plain HTTP (all eight towns)
+
+Cycle 3 tested Winchester only. Phase D probed location-level
+IDs for Winchester (2523), Sarnia (35807), Goderich (4426),
+Durham (652), Wellington (84074) and Chatham (24090);
+commodity-level IDs for Winchester Corn (1965), Kintore Corn
+(4196) and Maxville Corn (3439) — Kintore and Maxville have no
+location-level option, only Corn/Soybeans options — plus the
+page's own `print=true` variant of the Winchester view. The
+default view was re-verified the same night: HTTP 200, 353,938
+bytes, 204 quoteboard tables, 454 `writeBidRow(` occurrences
+(453 rows), 335 named options in the `locationFilter` select.
+
+**Every filtered view returned HTTP 200 as an empty shell**
+(~50 KB; print view 29.5 KB): 0 quoteboard tables, exactly 1
+`writeBidRow(` occurrence (the function definition), empty
+`jsquote.php symbols=`, no `var bids` JSON, no other static data
+endpoint. The parameter is accepted (the Winchester view marks
+`<option selected value="2523">`) but no bid rows are embedded.
+
+**Conclusion: no dropdown-only FMN location is reachable with
+bid data over plain HTTP.** FMN coverage stays the default
+view's 453 rows / 87 delivery points. The only remaining route
+is the open Playwright render check — do not build a
+335-location sweep until it proves rows render.

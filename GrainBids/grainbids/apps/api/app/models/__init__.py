@@ -3,6 +3,7 @@ from app.models.alert_rule import AlertRule
 from app.models.company import Company
 from app.models.company_source_priority import CompanySourcePriority
 from app.models.commodity import Commodity
+from app.models.commodity_alias import CommodityAlias
 from app.models.contract import GrowerContract
 from app.models.crm_note import CrmNote
 from app.models.farm_profile import FarmProfile
@@ -17,6 +18,7 @@ from app.models.price_snapshot import PriceSnapshot
 from app.models.quote_run import QuoteRun
 from app.models.raw_upload import RawUpload
 from app.models.research_report import ResearchReport
+from app.models.research_cache import ResearchCacheEntry
 from app.models.saved_search import SavedSearch
 from app.models.scale_ticket import ScaleTicket
 from app.models.signal_forecast import SignalForecast

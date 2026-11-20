@@ -124,14 +124,14 @@ def canonical_commodity_name(commodity_name: str | None) -> str | None:
     normalized = normalize_text(commodity_name)
     if normalized is None:
         return None
-    aliases = {
-        "corn": "Corn",
-        "white corn": "White Corn",
-        "soybean": "Soybeans",
-        "soybeans": "Soybeans",
-        "wheat": "Wheat",
-    }
-    return aliases.get(normalized.casefold(), normalized)
+    # Marathon Phase B (2026-11-20): resolution lives in
+    # app.services.commodity_normalization — a conservative rule set
+    # (crop-tag aware) plus optional commodity_aliases DB overrides.
+    # Ambiguous labels (bare "Wheat", "Hard Red Wheat", "GLG Cash")
+    # deliberately fall through with their raw label unchanged.
+    from app.services.commodity_normalization import canonical_display_name
+
+    return canonical_display_name(normalized) or normalized
 
 
 def canonical_location_name(location_name: str | None) -> str | None:

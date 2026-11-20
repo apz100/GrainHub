@@ -4,7 +4,15 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
 import OpenAlertsPanel from "./open-alerts-panel";
+import {
+  FetchErrorNotice,
+  SkeletonCards,
+  SkeletonTableRows,
+  useSlowLoad,
+  WakingApiNotice,
+} from "../_components/fetch-states";
 import { API_BASE, buildApiHeaders, getApiConfigError, isAdminRole } from "@/lib/api";
+import { fetchResilient, readApiFailure } from "@/lib/fetch-resilient";
 
 type SummaryResponse = {
   average_basis: number | null;
@@ -182,6 +190,8 @@ export default function DashboardPage() {
   const [watchlistPreviewRows, setWatchlistPreviewRows] = useState<PreviewRow[]>([]);
   const [watchlistPreviewLoading, setWatchlistPreviewLoading] = useState(false);
   const [watchlistPreviewError, setWatchlistPreviewError] = useState("");
+  const isSlowLoad = useSlowLoad(loadingPreview || loadingMeta);
+  const watchlistSlow = useSlowLoad(watchlistPreviewLoading);
   const canUseDebugView = canManageAlerts;
 
   useEffect(() => {
@@ -212,14 +222,14 @@ export default function DashboardPage() {
     setLoadingMeta(true);
     setError((prev) => (prev.startsWith("Missing NEXT_PUBLIC_") ? prev : ""));
     try {
-      const slaRes = await fetch(`${API_BASE}/api/ingestion/sla`, { cache: "no-store", headers });
+      const slaRes = await fetchResilient(`${API_BASE}/api/ingestion/sla`, { cache: "no-store", headers });
       if (slaRes.ok) {
         setSla(await slaRes.json());
       } else {
         setError(`SLA unavailable: ${await readFailure(slaRes)}`);
       }
 
-      const facetsRes = await fetch(`${API_BASE}/api/normalized-prices/facets`, { cache: "no-store", headers });
+      const facetsRes = await fetchResilient(`${API_BASE}/api/normalized-prices/facets`, { cache: "no-store", headers });
       if (!facetsRes.ok) {
         setError(`Facets unavailable: ${await readFailure(facetsRes)}`);
       } else {
@@ -257,13 +267,13 @@ export default function DashboardPage() {
       const query = buildMarketQuery(filters, selectedLocationName);
       let previewRowsRaw: PreviewRow[] = [];
       if (!enforceEasternOntarioDefault) {
-        const previewRes = await fetch(`${API_BASE}/api/normalized-prices/preview${query}&limit=250`, { cache: "no-store", headers });
+        const previewRes = await fetchResilient(`${API_BASE}/api/normalized-prices/preview${query}&limit=250`, { cache: "no-store", headers });
         if (!previewRes.ok) throw new Error(await readFailure(previewRes));
         previewRowsRaw = (await previewRes.json()).rows ?? [];
       } else {
         const previewRequests = EASTERN_ONTARIO_LOCATION_SEARCH_TERMS.map((location) => {
           const locationQuery = appendQueryParam(query, "location", location);
-          return fetch(`${API_BASE}/api/normalized-prices/preview${locationQuery}&limit=80`, { cache: "no-store", headers });
+          return fetchResilient(`${API_BASE}/api/normalized-prices/preview${locationQuery}&limit=80`, { cache: "no-store", headers });
         });
         const previewResponses = await Promise.all(previewRequests);
         const batches: PreviewRow[] = [];
@@ -288,9 +298,9 @@ export default function DashboardPage() {
       setPreviewRows(sortPreviewRowsForDisplay(preview));
 
       const [groupedRes, moversRes, summaryRes] = await Promise.all([
-        fetch(`${API_BASE}/api/normalized-prices/preview-grouped${query}&limit=250&rows_per_group=8`, { cache: "no-store", headers }),
-        fetch(`${API_BASE}/api/normalized-prices/top-movers${query}&limit=40`, { cache: "no-store", headers }),
-        fetch(`${API_BASE}/api/normalized-prices/summary${query}`, { cache: "no-store", headers }),
+        fetchResilient(`${API_BASE}/api/normalized-prices/preview-grouped${query}&limit=250&rows_per_group=8`, { cache: "no-store", headers }),
+        fetchResilient(`${API_BASE}/api/normalized-prices/top-movers${query}&limit=40`, { cache: "no-store", headers }),
+        fetchResilient(`${API_BASE}/api/normalized-prices/summary${query}`, { cache: "no-store", headers }),
       ]);
       if (groupedRes.ok) {
         const grouped = (await groupedRes.json()).groups ?? [];
@@ -327,6 +337,11 @@ export default function DashboardPage() {
     }
   }
 
+  function retryDashboardLoads() {
+    void loadMeta();
+    void loadMarketData();
+  }
+
   function setCommodityTab(tab: (typeof COMMODITY_TABS)[number]) {
     setFilters((prev) => ({ ...prev, commodity: tab === "All" ? "" : tab }));
   }
@@ -345,7 +360,7 @@ export default function DashboardPage() {
     setWatchlistPreviewLoading(true);
     setWatchlistPreviewError("");
     try {
-      const res = await fetch(`${API_BASE}/api/watchlists/${watchlistId}/preview?limit=30`, {
+      const res = await fetchResilient(`${API_BASE}/api/watchlists/${watchlistId}/preview?limit=30`, {
         cache: "no-store",
         headers,
       });
@@ -361,7 +376,7 @@ export default function DashboardPage() {
   }
 
   async function loadWatchlists(preferredId?: string) {
-    const watchlistsRes = await fetch(`${API_BASE}/api/watchlists`, { cache: "no-store", headers });
+    const watchlistsRes = await fetchResilient(`${API_BASE}/api/watchlists`, { cache: "no-store", headers });
     if (!watchlistsRes.ok) {
       setWatchlists([]);
       setSelectedWatchlistId("");
@@ -397,6 +412,8 @@ export default function DashboardPage() {
         </div>
       </header>
 
+      {isSlowLoad ? <WakingApiNotice className="mb-4" /> : null}
+
       <section className="sticky top-14 z-20 rounded-xl border border-black/10 bg-white/90 p-4 shadow-sm backdrop-blur">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
@@ -406,6 +423,7 @@ export default function DashboardPage() {
                 <button
                   key={tab}
                   type="button"
+                  aria-pressed={active}
                   onClick={() => setCommodityTab(tab)}
                   className={`rounded-md border px-3 py-1.5 text-xs font-medium ${
                     active ? "border-black bg-black text-white" : "border-black/20 bg-white text-black/70"
@@ -427,6 +445,7 @@ export default function DashboardPage() {
 
         <div className="mt-3 grid gap-2 md:grid-cols-[1fr_1fr_1fr_1fr_160px_160px]">
           <select
+            aria-label="Location"
             value={filters.location_id}
             onChange={(event) => setFilters((prev) => ({ ...prev, location_id: event.target.value }))}
             className="rounded-md border border-black/15 bg-white px-3 py-2 text-sm"
@@ -439,6 +458,7 @@ export default function DashboardPage() {
             ))}
           </select>
           <select
+            aria-label="Company"
             value={filters.company_id}
             onChange={(event) => setFilters((prev) => ({ ...prev, company_id: event.target.value }))}
             className="rounded-md border border-black/15 bg-white px-3 py-2 text-sm"
@@ -451,6 +471,7 @@ export default function DashboardPage() {
             ))}
           </select>
           <select
+            aria-label="Region"
             value={filters.region}
             onChange={(event) => setFilters((prev) => ({ ...prev, region: event.target.value }))}
             className="rounded-md border border-black/15 bg-white px-3 py-2 text-sm"
@@ -463,6 +484,7 @@ export default function DashboardPage() {
             ))}
           </select>
           <select
+            aria-label="Sort order"
             value={filters.sort}
             onChange={(event) => setFilters((prev) => ({ ...prev, sort: event.target.value as FilterState["sort"] }))}
             className="rounded-md border border-black/15 bg-white px-3 py-2 text-sm"
@@ -474,6 +496,7 @@ export default function DashboardPage() {
           </select>
           <input
             type="date"
+            aria-label="Captured date"
             value={filters.captured_date}
             onChange={(event) => setFilters((prev) => ({ ...prev, captured_date: event.target.value }))}
             className="rounded-md border border-black/15 bg-white px-3 py-2 text-sm"
@@ -500,9 +523,17 @@ export default function DashboardPage() {
       <section className="mt-4 rounded-xl border border-black/10 bg-white/85 shadow-sm">
         <div className="flex items-center justify-between border-b border-black/10 px-4 py-3">
           <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-black/70">Live Price Preview</h2>
-          {loadingPreview ? <span className="text-xs text-black/60">Refreshing...</span> : null}
+          {loadingPreview ? (
+            <span role="status" className="text-xs text-black/60">
+              {isSlowLoad ? "Waking the API…" : "Loading…"}
+            </span>
+          ) : null}
         </div>
-        {error ? <p className="px-4 py-2 text-sm text-red-700">{error}</p> : null}
+        {error && !loadingPreview && !loadingMeta ? (
+          <div className="px-4 py-3">
+            <FetchErrorNotice message={error} onRetry={retryDashboardLoads} />
+          </div>
+        ) : null}
         <div className="max-h-[520px] overflow-auto">
           <table className="min-w-full text-left text-sm">
             <thead className="sticky top-0 bg-white">
@@ -523,10 +554,14 @@ export default function DashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {previewRows.length === 0 ? (
+              {loadingPreview && previewRows.length === 0 ? (
+                <SkeletonTableRows columns={13} rows={6} />
+              ) : previewRows.length === 0 ? (
                 <tr>
                   <td colSpan={13} className="px-3 py-8 text-center text-sm text-black/55">
-                    No rows for the selected filters.
+                    {error
+                      ? "Could not load prices — use Retry above to try again."
+                      : "No rows for the selected filters."}
                   </td>
                 </tr>
               ) : (
@@ -561,7 +596,9 @@ export default function DashboardPage() {
         <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-black/70">Top Bids by Delivery Month</h2>
         <p className="mt-1 text-xs text-black/55">Best cash bids after filters, grouped by delivery month.</p>
         <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {monthlyPreview.length === 0 ? (
+          {loadingPreview && monthlyPreview.length === 0 ? (
+            <SkeletonCards count={3} />
+          ) : monthlyPreview.length === 0 ? (
             <p className="text-sm text-black/55">No monthly preview data available.</p>
           ) : (
             monthlyPreview.map((group) => (
@@ -617,6 +654,7 @@ export default function DashboardPage() {
                 <h3 className="text-sm font-medium">Add to watchlist</h3>
                 <div className="mt-2 flex gap-2">
                   <input
+                    aria-label="Watchlist name"
                     value={watchlistName}
                     onChange={(event) => setWatchlistName(event.target.value)}
                     placeholder="Watchlist name"
@@ -637,9 +675,10 @@ export default function DashboardPage() {
                           commodity_name: selectedRow.commodity_name,
                           source_name: selectedRow.company_name || "",
                         });
-                        const res = await fetch(`${API_BASE}/api/watchlists?${params.toString()}`, {
+                        const res = await fetchResilient(`${API_BASE}/api/watchlists?${params.toString()}`, {
                           method: "POST",
                           headers,
+                          retries: 0,
                         });
                         if (!res.ok) throw new Error(await readFailure(res));
                         const createdWatchlist = await res.json();
@@ -669,6 +708,7 @@ export default function DashboardPage() {
                 ) : (
                   <div className="mt-2 grid gap-2 md:grid-cols-[1fr_1fr_1fr_auto]">
                     <select
+                      aria-label="Alert metric"
                       value={alertMetric}
                       onChange={(event) => {
                         const metric = event.target.value as "cash_price_bu" | "basis";
@@ -682,6 +722,7 @@ export default function DashboardPage() {
                       <option value="basis">Basis</option>
                     </select>
                     <select
+                      aria-label="Alert comparison operator"
                       value={alertOperator}
                       onChange={(event) => setAlertOperator(event.target.value)}
                       className="rounded-md border border-black/15 px-2 py-2 text-sm"
@@ -693,6 +734,7 @@ export default function DashboardPage() {
                     </select>
                     <input
                       type="number"
+                      aria-label="Alert threshold"
                       step="0.01"
                       value={alertThreshold}
                       onChange={(event) => setAlertThreshold(event.target.value)}
@@ -714,9 +756,10 @@ export default function DashboardPage() {
                             comparison_operator: alertOperator,
                             location: selectedRow.location,
                           });
-                          const res = await fetch(`${API_BASE}/api/alerts/rules?${params.toString()}`, {
+                          const res = await fetchResilient(`${API_BASE}/api/alerts/rules?${params.toString()}`, {
                             method: "POST",
                             headers,
+                            retries: 0,
                           });
                           if (!res.ok) throw new Error(await readFailure(res));
                           setActionMessage(`Alert rule created: ${alertMetric} ${alertOperator} ${alertThreshold}`);
@@ -749,6 +792,7 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-center gap-2">
             <select
+              aria-label="Watchlist"
               value={selectedWatchlistId}
               onChange={(event) => setSelectedWatchlistId(event.target.value)}
               className="rounded-md border border-black/15 bg-white px-3 py-2 text-sm"
@@ -771,7 +815,14 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {watchlistPreviewError ? <p className="mt-2 text-sm text-rose-700">{watchlistPreviewError}</p> : null}
+        {watchlistSlow ? <WakingApiNotice className="mt-3" /> : null}
+        {watchlistPreviewError && !watchlistPreviewLoading ? (
+          <FetchErrorNotice
+            className="mt-3"
+            message={watchlistPreviewError}
+            onRetry={() => void runWatchlistPreview()}
+          />
+        ) : null}
 
         <div className="mt-3 max-h-[320px] overflow-auto rounded-md border border-black/10 bg-white">
           <table className="min-w-full text-left text-sm">
@@ -786,7 +837,9 @@ export default function DashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {watchlistPreviewRows.length === 0 ? (
+              {watchlistPreviewLoading && watchlistPreviewRows.length === 0 ? (
+                <SkeletonTableRows columns={6} rows={3} />
+              ) : watchlistPreviewRows.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-3 py-6 text-center text-sm text-black/55">
                     {selectedWatchlistId ? "No rows for selected watchlist." : "Select a watchlist and click Run now."}
@@ -812,7 +865,9 @@ export default function DashboardPage() {
       <section className="mt-4 rounded-xl border border-black/10 bg-white/85 p-4 shadow-sm">
         <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-black/70">Top Basis Movers</h2>
         <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          {movers.length === 0 ? (
+          {loadingPreview && movers.length === 0 ? (
+            <SkeletonCards count={4} />
+          ) : movers.length === 0 ? (
             <p className="text-sm text-black/55">No mover data available for the current filters.</p>
           ) : (
             movers.map((mover) => (
@@ -1058,13 +1113,7 @@ function dedupeRowsById(rows: PreviewRow[]): PreviewRow[] {
 }
 
 async function readFailure(res: Response): Promise<string> {
-  try {
-    const body = await res.json();
-    if (typeof body.detail === "string") return body.detail;
-    return JSON.stringify(body.detail || body);
-  } catch {
-    return `${res.status} ${res.statusText}`;
-  }
+  return readApiFailure(res);
 }
 
 function toneForDelta(value: number | null | undefined): string {

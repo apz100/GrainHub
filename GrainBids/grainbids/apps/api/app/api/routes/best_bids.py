@@ -21,7 +21,7 @@ from datetime import timezone
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import desc, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, defer
 
 from app.api.routes.normalized_prices import (
     _canonical_month_label,
@@ -71,6 +71,9 @@ def best_bids(
         .join(PriceSnapshot, PriceSnapshot.id == NormalizedPrice.snapshot_id)
         .where(NormalizedPrice.cash_price_bu.is_not(None))
         .order_by(desc(NormalizedPrice.cash_price_bu), desc(PriceSnapshot.captured_at))
+        # Phase A audit (2026-11-20): only snapshot.captured_at is
+        # read; defer the unbounded raw_payload_json.
+        .options(defer(PriceSnapshot.raw_payload_json))
     )
     rows = db.execute(query.limit(_BEST_BIDS_FETCH_LIMIT)).all()
 

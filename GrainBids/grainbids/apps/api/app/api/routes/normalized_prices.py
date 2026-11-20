@@ -9,7 +9,7 @@ import uuid
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import Select, String, and_, case, cast, desc, false, func, or_, select
-from sqlalchemy.orm import Session, aliased
+from sqlalchemy.orm import Session, aliased, defer
 
 from app.core.config import settings
 from app.core.request_context import RequestContext, get_request_context
@@ -172,7 +172,26 @@ def _build_filters(
     filters = []
 
     if commodity:
-        filters.append(NormalizedPrice.commodity_name.ilike(f"%{commodity.strip()}%"))
+        # Marathon Phase B: a query that names a canonical commodity
+        # ("HRW Wheat", "Hard Red Winter Wheat") expands to the raw
+        # labels sources actually stored ("HRW New Crop Wheat",
+        # "HARD RED WINTER", ...) — a plain substring search for the
+        # canonical name matches none of them. Unresolvable free-text
+        # queries keep the original substring behaviour.
+        from app.services.commodity_normalization import search_patterns_for_query
+
+        patterns = search_patterns_for_query(commodity)
+        if patterns:
+            filters.append(
+                or_(
+                    *(
+                        NormalizedPrice.commodity_name.ilike(f"%{pattern}%")
+                        for pattern in patterns
+                    )
+                )
+            )
+        else:
+            filters.append(NormalizedPrice.commodity_name.ilike(f"%{commodity.strip()}%"))
     if location:
         filters.append(NormalizedPrice.location.ilike(f"%{location.strip()}%"))
     if source_name:
@@ -684,11 +703,18 @@ def _snapshot_freshness_filters(*, enforce_latest: bool) -> list:
 
 
 def _base_query(context: RequestContext, *, enforce_latest: bool) -> Select:
+    # Phase A audit (2026-11-20): ``PriceSnapshot.raw_payload_json``
+    # is deferred — it is the one unbounded-size field on the snapshot
+    # (a whole day file per file-ingestion snapshot) and nothing in
+    # the price paths reads it in Python; the freshness filters use it
+    # in SQL only, which defer does not affect. Same pattern as the
+    # basis-tracker fix (2026-11-19 prod OOM on the 512 MB instance).
     query = (
         select(NormalizedPrice, PriceSnapshot)
         .join(PriceSnapshot, PriceSnapshot.id == NormalizedPrice.snapshot_id)
         .join(Source, Source.id == PriceSnapshot.source_id)
         .where(Source.org_id == context.org_id)
+        .options(defer(PriceSnapshot.raw_payload_json))
     )
     freshness_filters = _snapshot_freshness_filters(enforce_latest=enforce_latest)
     if freshness_filters:
@@ -1166,18 +1192,15 @@ def top_movers(
     db: Session = Depends(get_db),
 ):
     enforce_latest = captured_date is None
+    # Via _base_query so the raw_payload_json deferral applies here
+    # too (Phase A audit, 2026-11-20); _base_query applies the same
+    # freshness filters this handler used to add by hand.
     query: Select = (
-        select(NormalizedPrice, PriceSnapshot)
-        .join(PriceSnapshot, PriceSnapshot.id == NormalizedPrice.snapshot_id)
-        .join(Source, Source.id == PriceSnapshot.source_id)
-        .where(Source.org_id == context.org_id)
+        _base_query(context, enforce_latest=enforce_latest)
         .where(NormalizedPrice.basis_change.is_not(None))
         .where(*_user_visible_market_filters(include_non_canonical))
         .order_by(desc(func.abs(NormalizedPrice.basis_change)), desc(PriceSnapshot.captured_at))
     )
-    freshness_filters = _snapshot_freshness_filters(enforce_latest=enforce_latest)
-    if freshness_filters:
-        query = query.where(*freshness_filters)
 
     filters = _build_filters(
         commodity=commodity,

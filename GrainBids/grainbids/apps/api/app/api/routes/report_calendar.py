@@ -39,7 +39,7 @@ from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, defer
 
 from app.db.session import get_sessionmaker
 from app.models.research_report import ResearchReport
@@ -376,7 +376,15 @@ def report_calendar(year: int = Query(SUPPORTED_YEAR), db: Session | None = Depe
         statuses = _unknown_ingestion_statuses()
         ingestion_note = _NO_DATABASE_NOTE
     else:
-        rows = db.execute(select(ResearchReport)).scalars().all()
+        # Phase A audit (2026-11-20): build_ingestion_status reads
+        # only report_type / report_date / vintage / source /
+        # created_at — defer the full ``payload`` JSON instead of
+        # transferring it for every stored report row, unbounded.
+        rows = (
+            db.execute(select(ResearchReport).options(defer(ResearchReport.payload)))
+            .scalars()
+            .all()
+        )
         reports = [row for row in rows if isinstance(row, ResearchReport)]
         statuses = build_ingestion_status(reports)
         ingestion_note = (

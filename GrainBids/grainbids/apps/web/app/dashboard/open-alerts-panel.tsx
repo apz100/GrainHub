@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+  FetchErrorNotice,
+  SkeletonTableRows,
+  useSlowLoad,
+  WakingApiNotice,
+} from "../_components/fetch-states";
 import { API_BASE, buildApiHeaders, getApiConfigError } from "@/lib/api";
+import { fetchResilient } from "@/lib/fetch-resilient";
 
 type RecentAlert = {
   id: string;
@@ -23,6 +30,7 @@ export default function OpenAlertsPanel() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [activeAlertId, setActiveAlertId] = useState("");
+  const slowLoad = useSlowLoad(loading);
 
   async function loadAlerts() {
     if (configError) {
@@ -33,7 +41,7 @@ export default function OpenAlertsPanel() {
     setError("");
     try {
       const openOnlyQuery = openOnly ? "&open_only=true" : "";
-      const res = await fetch(`${API_BASE}/api/alerts/recent?limit=12${openOnlyQuery}`, { cache: "no-store", headers });
+      const res = await fetchResilient(`${API_BASE}/api/alerts/recent?limit=12${openOnlyQuery}`, { cache: "no-store", headers });
       const json = await res.json();
       if (!res.ok) {
         throw new Error(typeof json.detail === "string" ? json.detail : "Failed to load alerts");
@@ -51,7 +59,7 @@ export default function OpenAlertsPanel() {
     setMessage("");
     setError("");
     try {
-      const res = await fetch(`${API_BASE}/api/alerts/${alertId}/status?status=${status}`, { method: "PATCH", headers });
+      const res = await fetchResilient(`${API_BASE}/api/alerts/${alertId}/status?status=${status}`, { method: "PATCH", headers, retries: 0 });
       const json = await res.json();
       if (!res.ok) {
         throw new Error(typeof json.detail === "string" ? json.detail : "Failed to update alert");
@@ -85,7 +93,7 @@ export default function OpenAlertsPanel() {
           onClick={() => loadAlerts()}
           className="rounded-md border border-black/20 bg-white px-3 py-2 text-xs disabled:opacity-50"
         >
-          Refresh
+          {loading ? "Loading…" : "Refresh"}
         </button>
       </div>
       <label className="mt-3 inline-flex items-center gap-2 text-xs text-black/70">
@@ -99,7 +107,10 @@ export default function OpenAlertsPanel() {
       </label>
 
       {message ? <p className="mt-3 text-sm text-emerald-700">{message}</p> : null}
-      {error ? <p className="mt-3 text-sm text-red-700">{error}</p> : null}
+      {slowLoad ? <WakingApiNotice className="mt-3" /> : null}
+      {error && !loading ? (
+        <FetchErrorNotice className="mt-3" message={error} onRetry={() => void loadAlerts()} />
+      ) : null}
 
       <div className="mt-4 overflow-x-auto">
         <table className="min-w-full text-left text-sm">
@@ -113,10 +124,12 @@ export default function OpenAlertsPanel() {
             </tr>
           </thead>
           <tbody>
-            {alerts.length === 0 ? (
+            {loading && alerts.length === 0 ? (
+              <SkeletonTableRows columns={5} rows={3} />
+            ) : alerts.length === 0 ? (
               <tr>
                 <td className="px-2 py-4 text-black/55" colSpan={5}>
-                  No alerts.
+                  {error ? "Alerts could not be loaded — use Retry above." : "No alerts."}
                 </td>
               </tr>
             ) : (

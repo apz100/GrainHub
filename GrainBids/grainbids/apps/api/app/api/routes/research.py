@@ -13,17 +13,23 @@ from app.services.research import (
     REPORT_TYPES,
     ResearchKeyRequired,
     ResearchUpstreamError,
+    fetch_fas_psd,
+    fetch_fas_psd_attribute_names,
+    fetch_fas_psd_unit_names,
+    fetch_fas_psd_world,
     fetch_nass_quick_stats,
     fetch_public_file_text,
     parse_commitments_of_traders_text,
     parse_crop_production_text,
     parse_crop_progress_text,
     parse_export_sales_text,
+    parse_fas_psd_rows,
     parse_grain_stocks_text,
     parse_nass_records,
     parse_wasde_text,
     research_status,
 )
+from app.services.research_cache import get_or_fetch
 
 router = APIRouter(prefix="/api/research", tags=["research"])
 
@@ -110,6 +116,150 @@ def nass(
         "year": year,
         "source": "USDA NASS Quick Stats",
         "records": parse_nass_records(records),
+    }
+
+
+def _cache_envelope(cached) -> dict[str, object]:
+    return {
+        "state": cached.cache_state,
+        "fetched_at": cached.fetched_at.isoformat() if cached.fetched_at else None,
+    }
+
+
+def _psd_names(db: Session, kind: str) -> dict[int, str]:
+    """PSD attribute/unit name tables, cached for a week.
+
+    Payloads store {str(id): name} (JSON keys are strings); the
+    decoder wants {int(id): name}, so keys are converted back here.
+    """
+    if kind == "attributes":
+        dataset, fetcher = "fas_psd_attributes", fetch_fas_psd_attribute_names
+    else:
+        dataset, fetcher = "fas_psd_units", fetch_fas_psd_unit_names
+    cached = get_or_fetch(
+        db,
+        dataset=dataset,
+        cache_key="all",
+        source="USDA FAS PSD",
+        fetcher=lambda: {"names": {str(k): v for k, v in fetcher().items()}},
+    )
+    return {int(k): str(v) for k, v in cached.payload.get("names", {}).items()}
+
+
+@router.get("/fas-psd/commodities")
+def fas_psd_commodities(
+    commodity_code: str = Query(...),
+    context: RequestContext = Depends(get_request_context),
+    db: Session = Depends(get_db),
+):
+    """PSD commodity catalogue rows for one commodity code (cached 24 h)."""
+    try:
+        cached = get_or_fetch(
+            db,
+            dataset="fas_psd_commodities",
+            cache_key=commodity_code,
+            source="USDA FAS PSD",
+            fetcher=lambda: {"rows": fetch_fas_psd(commodity_code=commodity_code)},
+        )
+    except ResearchKeyRequired as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except ResearchUpstreamError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    return {
+        "commodity_code": commodity_code,
+        "source": "USDA FAS PSD",
+        "rows": cached.payload.get("rows", []),
+        "cache": _cache_envelope(cached),
+    }
+
+
+@router.get("/fas-psd/world")
+def fas_psd_world(
+    commodity_code: str = Query("0440000"),
+    year: int = Query(2026),
+    context: RequestContext = Depends(get_request_context),
+    db: Session = Depends(get_db),
+):
+    """Decoded world PSD table for one commodity + marketing year.
+
+    Live shape verified 2026-11-20: /api/psd/commodity/{code}/world/
+    year/{year}; rows are decoded with the runtime attribute/unit
+    lookups (never hardcoded ids). Cached 24 h; the response carries
+    the cache state and fetch time so staleness is never hidden.
+    """
+
+    def _fetch_world() -> dict[str, object]:
+        raw_rows = fetch_fas_psd_world(commodity_code=commodity_code, market_year=year)
+        attributes = _psd_names(db, "attributes")
+        units = _psd_names(db, "units")
+        return {
+            "rows": parse_fas_psd_rows(
+                raw_rows, attribute_names=attributes, unit_names=units
+            )
+        }
+
+    try:
+        cached = get_or_fetch(
+            db,
+            dataset="fas_psd_world",
+            cache_key=f"{commodity_code}/{year}",
+            source="USDA FAS PSD",
+            fetcher=_fetch_world,
+        )
+    except ResearchKeyRequired as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except ResearchUpstreamError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    return {
+        "commodity_code": commodity_code,
+        "market_year": year,
+        "source": "USDA FAS PSD",
+        "rows": cached.payload.get("rows", []),
+        "cache": _cache_envelope(cached),
+    }
+
+
+@router.get("/nass/series")
+def nass_series(
+    commodity: str = Query(...),
+    year: int = Query(...),
+    limit: int = Query(500, ge=1, le=5000),
+    context: RequestContext = Depends(get_request_context),
+    db: Session = Depends(get_db),
+):
+    """Cached variant of /nass (24 h) with a bounded record count.
+
+    /nass stays the always-live passthrough; this route exists for
+    pages that reload often. ``truncated`` says plainly when the
+    parsed series was cut to ``limit``.
+    """
+
+    def _fetch_series() -> dict[str, object]:
+        records = parse_nass_records(fetch_nass_quick_stats(commodity=commodity, year=year))
+        return {"records": records, "total_records": len(records)}
+
+    try:
+        cached = get_or_fetch(
+            db,
+            dataset="nass_series",
+            cache_key=f"{commodity.upper()}/{year}",
+            source="USDA NASS Quick Stats",
+            fetcher=_fetch_series,
+        )
+    except ResearchKeyRequired as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except ResearchUpstreamError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    records = cached.payload.get("records", [])
+    total = cached.payload.get("total_records", len(records))
+    return {
+        "commodity": commodity,
+        "year": year,
+        "source": "USDA NASS Quick Stats",
+        "records": records[:limit],
+        "total_records": total,
+        "truncated": total > limit,
+        "cache": _cache_envelope(cached),
     }
 
 

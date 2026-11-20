@@ -10,13 +10,16 @@ Rules, by design:
 * If the cash price or the futures price is missing (or non-finite), the
   basis is ``None`` and an explicit ``missing_reason`` is returned. A basis
   is never invented or estimated.
-* ``NormalizedPrice`` rows carry no currency or unit column (the commodity
-  table defaults to ``bu``). Responses therefore report ``currency=None``
-  with a data-quality note saying so, and ``unit="bu"``. If a caller
+* ``NormalizedPrice`` rows store their source currency (migration
+  0022, ISO 4217) when the collector records one; rows whose source
+  records none keep ``currency=None`` with ``currency_unknown=True``
+  and a data-quality note saying so. The unit is not stored (the
+  commodity table defaults to ``bu``), so ``unit="bu"``. If a caller
   supplies per-row currency/unit metadata that disagrees with the expected
   currency/unit, the row is refused with a ``unit_mismatch`` /
   ``currency_mismatch`` reason instead of being computed across mismatched
-  units.
+  units. Prices are never converted: a basis is computed only from a
+  row's own stored cash and futures prices, in its own currency.
 * The stored ``basis`` column is only a cross-check: it is compared with
   the recomputed value (applying the same legacy cents-per-bushel
   normalisation the preview route uses) and any disagreement is flagged in
@@ -52,9 +55,10 @@ DEFAULT_LOCATION_NAMES = ("testville", "test elevator co.")
 BASIS_MATCH_TOLERANCE = 0.005
 
 CURRENCY_NOT_STORED_NOTE = (
-    "Currency is not stored on normalized price rows; cash and futures "
-    "prices are per-bushel values as stored, so only compare basis values "
-    "within the same currency."
+    "Currency is not stored on every price row: rows whose source does "
+    "not record a currency report currency null (currency_unknown true). "
+    "Cash and futures prices are per-bushel values as stored, so only "
+    "compare basis values within the same currency."
 )
 
 
@@ -83,6 +87,7 @@ class BasisComputation:
             "basis_matches_stored": self.basis_matches_stored,
             "missing_reason": self.missing_reason,
             "currency": self.currency,
+            "currency_unknown": self.currency is None,
             "unit": self.unit,
             "data_quality": self.data_quality,
         }
@@ -99,10 +104,9 @@ def compute_basis_for_row(
     """Compute basis = cash_price_bu - futures_price for one row.
 
     ``row_unit`` / ``row_currency`` are optional per-row metadata supplied
-    by the caller (the model stores neither today, so they are normally
-    ``None``); a stored ``unit`` / ``currency`` attribute on the row, if one
-    ever exists, is picked up the same way. A mismatch is refused, never
-    silently converted.
+    by the caller; the currency stored on the row itself (migration
+    0022) is picked up the same way when the caller passes neither. A
+    mismatch is refused, never silently converted.
     """
     effective_unit = row_unit if row_unit is not None else getattr(row, "unit", None)
     effective_currency = (
@@ -211,6 +215,36 @@ def compute_basis_for_row(
     )
 
 
+def _currency_summary(
+    entries: list[dict[str, object]],
+) -> tuple[str | None, list[str], int]:
+    """Summarize the currencies across serialized basis rows.
+
+    Returns (single_currency, distinct_currencies, unknown_count):
+    ``single_currency`` is set only when every row carries the same
+    one currency — a mixed or partially unknown set reports None at
+    the top level rather than picking a winner, with the distinct
+    currencies listed alongside.
+    """
+    distinct = sorted(
+        {str(entry["currency"]) for entry in entries if entry.get("currency")}
+    )
+    unknown_count = sum(1 for entry in entries if entry.get("currency") is None)
+    single = distinct[0] if len(distinct) == 1 and unknown_count == 0 else None
+    return single, distinct, unknown_count
+
+
+def _currency_quality_suffix(entries: list[dict[str, object]]) -> str:
+    """Data-quality sentence about currency for a set of basis rows."""
+    _single, _distinct, unknown_count = _currency_summary(entries)
+    if not entries or unknown_count:
+        return CURRENCY_NOT_STORED_NOTE
+    return (
+        "Currencies are the stored source currencies of each row; "
+        "no conversion is applied."
+    )
+
+
 def quote_date_for_row(
     row: NormalizedPrice, snapshot: PriceSnapshot | None
 ) -> datetime | None:
@@ -235,6 +269,7 @@ def serialize_basis_row(
         "commodity_name": row.commodity_name,
         "source": normalize_text(row.source_name),
         "currency": computed.currency,
+        "currency_unknown": computed.currency is None,
         "unit": computed.unit,
         "quote_date": quote_date.date().isoformat() if quote_date is not None else None,
         "futures_month": computed.futures_month,
@@ -305,12 +340,13 @@ def build_basis_history(
     entries = entries[: max(1, limit)]
     if missing_count_override is not None:
         missing_count = missing_count_override
+    single_currency, currencies, unknown_count = _currency_summary(entries)
     if entries:
         quality = (
             f"Basis over time from stored normalized prices ({len(entries)} rows"
             + (f", {missing_count} without a computable basis" if missing_count else "")
             + "). "
-            + CURRENCY_NOT_STORED_NOTE
+            + _currency_quality_suffix(entries)
         )
     else:
         quality = (
@@ -320,7 +356,9 @@ def build_basis_history(
     return {
         "commodity": commodity,
         "location_id": str(location_id) if location_id else None,
-        "currency": None,
+        "currency": single_currency,
+        "currencies": currencies,
+        "currency_unknown_count": unknown_count,
         "unit": "bu",
         "row_count": len(entries),
         "missing_count": missing_count,
@@ -381,8 +419,11 @@ def rank_basis(
 ) -> dict[str, object]:
     """Rank latest basis per location for a commodity + delivery month.
 
-    Rank 1 is the strongest (highest) basis. Only the latest quote per
-    location is ranked. Rows that cannot produce a basis go to ``unranked``
+    Rank 1 is the strongest (highest) basis within its currency
+    group: when the ranked rows span more than one stored currency
+    they are grouped by currency (unknown currency last) and ranked
+    within each group, never compared across currencies. Only the
+    latest quote per location is ranked. Rows that cannot produce a basis go to ``unranked``
     with their reason. When ``radius_km`` is set, rows without stored
     coordinates are excluded and counted (``excluded_unknown_distance``)
     and rows beyond the radius are counted (``excluded_outside_radius``).
@@ -446,6 +487,15 @@ def rank_basis(
 
     ranked.sort(
         key=lambda item: (
+            # Group by currency first (currency decision, 2026-11-20):
+            # known currencies in ISO order, unknown-currency rows
+            # last; strongest basis first within each currency group.
+            # A single-currency (or all-unknown) set therefore orders
+            # exactly as a plain basis ranking. Basis values are never
+            # compared across currencies — each row's basis is in its
+            # own stored currency.
+            item.get("currency") is None,
+            str(item.get("currency") or ""),
             -(float(item["basis"]) if isinstance(item.get("basis"), (int, float)) else 0.0),
             str(item.get("location") or "").casefold(),
         )
@@ -454,21 +504,23 @@ def rank_basis(
         entry["rank"] = index
     unranked.sort(key=lambda item: str(item.get("location") or "").casefold())
 
+    currency_suffix = _currency_quality_suffix(ranked + unranked)
+    single_currency, currencies, unknown_count = _currency_summary(ranked + unranked)
     if origin is None:
         quality = (
             "No origin coordinates resolved (no location_id/location supplied "
             "and no stored Testville pilot location with coordinates); "
-            "ranked across all locations with a basis. " + CURRENCY_NOT_STORED_NOTE
+            "ranked across all locations with a basis. " + currency_suffix
         )
     elif radius_km is not None:
         quality = (
             f"Ranked locations within {radius_km} km of the origin. "
-            + CURRENCY_NOT_STORED_NOTE
+            + currency_suffix
         )
     else:
         quality = (
             "Ranked across all locations; distances are from the resolved "
-            "origin. " + CURRENCY_NOT_STORED_NOTE
+            "origin. " + currency_suffix
         )
     return {
         "ranked": ranked,
@@ -477,7 +529,9 @@ def rank_basis(
         "unranked_count": len(unranked),
         "excluded_unknown_distance": excluded_unknown_distance,
         "excluded_outside_radius": excluded_outside_radius,
-        "currency": None,
+        "currency": single_currency,
+        "currencies": currencies,
+        "currency_unknown_count": unknown_count,
         "unit": "bu",
         "data_quality": quality,
     }

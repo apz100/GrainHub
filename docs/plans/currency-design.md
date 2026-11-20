@@ -1,7 +1,18 @@
 # Currency design note — GrainHub (Cycle 10, design only)
 
-**Status:** proposal for Adam's decision. No migration landed, no code
-changed. The `currency: null` gap found in Cycle 2 is still open.
+**Status:** APPROVED by Adam 2026-11-20 ("go with the recommendations"
+on all four decisions below) and implemented on branch
+`feature/currency-0022`: migration `0022` (the migration number moved
+from the proposed `0020` because 0020/0021 shipped first) adds the
+nullable `currency` column with the unambiguous backfill recorded in
+the migration; ingestion copies each collector's row currency at
+insert; best-bids, price history, market search / price previews and
+the basis tracker/history return the stored currency (or `null` with
+`currency_unknown: true`); mixed-currency lists group by currency,
+and best-bids converts only via the explicit `convert_to` toggle
+labelled with the Bank of Canada daily noon rate and its as-of date
+(`app/services/fx_rates.py`). The web UI toggle for `convert_to` is
+not built yet. The original proposal follows, unchanged.
 
 ## The problem
 

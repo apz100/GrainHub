@@ -57,6 +57,7 @@ CANONICAL_COLUMNS = {
     "basis",
     "cash_price_bu",
     "cash_price_mt",
+    "currency",
 }
 
 BUSHELS_PER_METRIC_TONNE = {
@@ -138,6 +139,7 @@ COLUMN_ALIASES = {
         "price / (tonnes)",
         "converted price",
     ],
+    "currency": ["currency"],
 }
 
 
@@ -257,6 +259,25 @@ def _derive_delivery_month_from_futures_month(futures_month: str | None) -> str 
         return f"December {year_value - 1}"
     previous_month = month_number - 1
     return f"{MONTH_NUMBER_TO_NAME[previous_month]} {year_value}"
+
+
+def _normalize_currency(value: object) -> str | None:
+    """A row's currency as an ISO 4217 code, or None when not recorded.
+
+    Collectors that know their currency emit it on every row (Bushel
+    per-site config, Collwest / FMN / Mae-Mart / North Gower CAD,
+    USDA mirrors USD, ...); it is copied verbatim — upper-cased —
+    into the stored column. Anything that is not a three-letter code
+    (blank, "US dollars", a stray marker) is not a currency we can
+    stand behind, so the row stores NULL (unknown) instead. A
+    currency is never defaulted or guessed here.
+    """
+    if value is None:
+        return None
+    text = str(value).strip().upper()
+    if len(text) == 3 and text.isalpha():
+        return text
+    return None
 
 
 def _normalize_basis_value(basis: Decimal | None) -> Decimal | None:
@@ -417,6 +438,10 @@ def persist_normalized_rows(
 
         futures_price = _parse_decimal(str(row.get(mapping.get("futures_price", ""), "") or ""))
         futures_change = _parse_decimal(str(row.get(mapping.get("futures_change", ""), "") or ""))
+        # The collector's own recorded currency for this row, copied
+        # verbatim (migration 0022); rows whose source records none
+        # store NULL. Never converted, never defaulted.
+        currency = _normalize_currency(row.get(mapping.get("currency", ""), ""))
         basis = _normalize_basis_value(_parse_decimal(str(row.get(mapping.get("basis", ""), "") or "")))
         cash_price_bu = _parse_decimal(str(row.get(mapping.get("cash_price_bu", ""), "") or ""))
         cash_price_mt = _parse_decimal(str(row.get(mapping.get("cash_price_mt", ""), "") or ""))
@@ -504,6 +529,7 @@ def persist_normalized_rows(
             delivery_end=delivery_end or None,
             delivery_label=delivery_label or None,
             futures_month=futures_month or None,
+            currency=currency,
             futures_price=futures_price,
             futures_change=futures_change,
             basis=basis,

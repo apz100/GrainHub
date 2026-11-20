@@ -410,6 +410,8 @@ def _serialize_preview_row(
         "cash_price_bu_change": cash_price_bu_change if cash_price_bu_change is not None else 0.0,
         "cash_price_mt": _to_float(price.cash_price_mt),
         "cash_price_mt_change": cash_price_mt_change if cash_price_mt_change is not None else 0.0,
+        "currency": (getattr(price, "currency", None) or "").strip().upper() or None,
+        "currency_unknown": not (getattr(price, "currency", None) or "").strip(),
         "composite_key": price.composite_key,
         "candidate_count": candidate_counts.get(str(price.composite_key), 1),
         "selected_source_key": canonical_key(canonical_source_name(price.source_name)),
@@ -890,6 +892,8 @@ def list_normalized_prices(
                 "basis": _to_basis_float(price.basis),
                 "cash_price_bu": _to_float(price.cash_price_bu),
                 "cash_price_mt": _to_float(price.cash_price_mt),
+                "currency": (getattr(price, "currency", None) or "").strip().upper() or None,
+                "currency_unknown": not (getattr(price, "currency", None) or "").strip(),
                 "basis_change": _coalesce_zero(_to_basis_float(price.basis_change)),
                 "basis_last_changed_at": price.basis_last_changed_at.isoformat() if price.basis_last_changed_at else None,
                 "cash_price_bu_change": _coalesce_zero(_to_float(price.cash_price_bu_change)),
@@ -1246,6 +1250,8 @@ def top_movers(
                 "cash_price_bu_change": _coalesce_zero(_to_float(price.cash_price_bu_change)),
                 "cash_price_mt": _to_float(price.cash_price_mt),
                 "cash_price_mt_change": _coalesce_zero(_to_float(price.cash_price_mt_change)),
+                "currency": (getattr(price, "currency", None) or "").strip().upper() or None,
+                "currency_unknown": not (getattr(price, "currency", None) or "").strip(),
             }
             for price, snapshot in filtered_rows
         ]

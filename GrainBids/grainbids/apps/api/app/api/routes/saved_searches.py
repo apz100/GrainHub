@@ -4,7 +4,7 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import Select, desc, or_, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, defer
 
 from app.core.request_context import RequestContext, get_request_context
 from app.db.session import get_db
@@ -48,6 +48,9 @@ def preview_saved_search(
         .join(Source, Source.id == PriceSnapshot.source_id)
         .where(Source.org_id == context.org_id)
         .order_by(PriceSnapshot.captured_at.desc(), NormalizedPrice.location.asc())
+        # Phase A audit (2026-11-20): only snapshot.captured_at is
+        # read; defer the unbounded raw_payload_json.
+        .options(defer(PriceSnapshot.raw_payload_json))
     )
     query = _apply_saved_search_filters(query, row)
     rows = db.execute(query.limit(limit)).all()

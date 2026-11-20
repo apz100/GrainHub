@@ -26,7 +26,7 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import desc, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, defer
 
 from app.api.routes.normalized_prices import (
     _canonical_month_label,
@@ -92,6 +92,11 @@ def _load_price_rows(
         select(NormalizedPrice, PriceSnapshot)
         .join(PriceSnapshot, PriceSnapshot.id == NormalizedPrice.snapshot_id)
         .order_by(desc(PriceSnapshot.captured_at))
+        # Phase A audit (2026-11-20): only snapshot.captured_at is
+        # read here; defer the unbounded raw_payload_json (whole day
+        # file per snapshot) instead of transferring up to
+        # _HISTORY_FETCH_LIMIT copies of it per request.
+        .options(defer(PriceSnapshot.raw_payload_json))
     )
     rows = db.execute(query.limit(_HISTORY_FETCH_LIMIT)).all()
     wanted = (commodity or "").strip().casefold()

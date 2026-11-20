@@ -6,7 +6,7 @@ import math
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import desc, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, defer
 
 from app.core.request_context import RequestContext, get_request_context
 from app.db.session import get_db
@@ -179,6 +179,9 @@ def preview_watchlist(
         .join(PriceSnapshot, PriceSnapshot.id == NormalizedPrice.snapshot_id)
         .join(Source, Source.id == PriceSnapshot.source_id)
         .where(Source.org_id == context.org_id)
+        # Phase A audit (2026-11-20): only snapshot.captured_at is
+        # read; defer the unbounded raw_payload_json.
+        .options(defer(PriceSnapshot.raw_payload_json))
     )
 
     location = str(filters.get("location", "") or "").strip()

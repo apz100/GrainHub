@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import FileResponse
 import pandas as pd
 from sqlalchemy import Select, and_, desc, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, defer
 
 from app.core.request_context import RequestContext, get_request_context, require_admin
 from app.db.session import get_db
@@ -181,6 +181,10 @@ def _load_quote_rows(
         .join(Source, Source.id == PriceSnapshot.source_id)
         .where(Source.org_id == org_id)
         .order_by(desc(PriceSnapshot.captured_at), NormalizedPrice.location)
+        # Phase A audit (2026-11-20): the export serializer reads
+        # only snapshot.captured_at; defer the unbounded
+        # raw_payload_json (up to 20,000 rows per export).
+        .options(defer(PriceSnapshot.raw_payload_json))
     )
     if commodity:
         query = query.where(NormalizedPrice.commodity_name.ilike(f"%{commodity.strip()}%"))

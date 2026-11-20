@@ -4,18 +4,31 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
 from app.api.routes.alerts import router as alerts_router
+from app.api.routes.advisor import router as advisor_router
+from app.api.routes.basis import router as basis_router
+from app.api.routes.best_bids import router as best_bids_router
 from app.api.routes.bids import router as bids_router
+from app.api.routes.daily_newsletter import router as daily_newsletter_router
+from app.api.routes.email_bids import router as email_bids_router
+from app.api.routes.elevator_ops import router as elevator_ops_router
+from app.api.routes.futures import router as futures_router
 from app.api.routes.ingestion import router as ingestion_router
 from app.api.routes.market_data import router as market_data_router
+from app.api.routes.market_search import router as market_search_router
 from app.api.routes.market_report import router as market_report_router
 from app.api.routes.newsletter import router as newsletter_router
 from app.api.routes.normalized_prices import router as normalized_prices_router
+from app.api.routes.price_history import router as price_history_router
 from app.api.routes.quotes import router as quotes_router
 from app.api.routes.reference import router as reference_router
+from app.api.routes.report_calendar import router as report_calendar_router
+from app.api.routes.research import router as research_router
 from app.api.routes.saved_searches import router as saved_searches_router
 from app.api.routes.settings import router as settings_router
 from app.api.routes.signals import router as signals_router
+from app.api.routes.source_health import router as source_health_router
 from app.api.routes.sources import router as sources_router
+from app.api.routes.uploads import router as uploads_router
 from app.api.routes.watchlists import router as watchlists_router
 from app.core.config import settings
 from app.db.session import get_engine
@@ -60,20 +73,33 @@ def create_app() -> FastAPI:
             return {"ok": True, "database": "connected", "env": settings.app_env}
         return JSONResponse(status_code=503, content={"ok": False, "database": "error", "error": details, "env": settings.app_env})
 
+    app.include_router(advisor_router)
+    app.include_router(daily_newsletter_router)
+    app.include_router(email_bids_router)
+    app.include_router(elevator_ops_router)
     app.include_router(reference_router)
+    app.include_router(report_calendar_router)
+    app.include_router(research_router)
+    app.include_router(basis_router)
+    app.include_router(best_bids_router)
     app.include_router(bids_router)
+    app.include_router(source_health_router)
     app.include_router(sources_router)
+    app.include_router(futures_router)
     app.include_router(ingestion_router)
     app.include_router(market_data_router)
+    app.include_router(market_search_router)
     app.include_router(market_report_router)
     app.include_router(newsletter_router)
     app.include_router(normalized_prices_router)
     app.include_router(alerts_router)
+    app.include_router(price_history_router)
     app.include_router(quotes_router)
     app.include_router(watchlists_router)
     app.include_router(saved_searches_router)
     app.include_router(signals_router)
     app.include_router(settings_router)
+    app.include_router(uploads_router)
     return app
 
 

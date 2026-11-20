@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html><head><title>Synthetic cashbids-js.php response — groupby=ccommodity</title></head>
+<body>
+<!--
+  SYNTHETIC fixture for tests/test_cashbids_embed_collector.py.
+  Modeled on the Ag State / Superior Ag cashbids-js.php response shape
+  (verified live 2026-11-19): groups are named after the COMMODITY
+  (groupby=ccommodity), so the row location must come from each
+  cashbid's location_name, never from the group name.
+  ALL values below are invented test data, not live prices.
+-->
+<script type="text/javascript" language="javascript" nonce="ac-sites-inline-js" id="cb-functions" is-independent="true">var bids = [{"id":"84205","customer":"999","name":"Corn","display_name":"Corn (#2 Yellow)","short_name":"Corn","cashbids":[{"id":"11","commodity":"97230","symbol":"ZCZ26","delivery_start":"11/01/2026","delivery_end":"11/30/2026","basis":-25,"require_login":false,"active":true,"unitvalue":1,"unitweight":56,"sym_root":"ZC","basismonth":"Dec 2026","futures":"500-0","futureschange":"-2-4","timestamp":1795044628,"realtime":false,"cashpricebushel":"$4.75","price":"$4.75","pricetonne":"$175.25","change":"$-0.03","rawchange":-0.03,"cashprice":"$4.75","cashpricetonne":"$175.25","futuresprice":"500-0","name":"#2 Yellow Corn","location_id":"84205","location_name":"A.C.","location":"84205"},{"id":"12","commodity":"97230","symbol":"ZCH27","delivery_start":"01/01/2027","delivery_end":"01/31/2027","basis":-35,"require_login":false,"active":true,"unitvalue":1,"unitweight":56,"sym_root":"ZC","basismonth":"Mar 2027","futures":"515-2","futureschange":"-1-4","timestamp":1795044628,"realtime":false,"cashpricebushel":"$4.80","price":"$4.80","pricetonne":"$177.10","change":"$-0.01","rawchange":-0.01,"cashprice":"$4.80","cashpricetonne":"$177.10","futuresprice":"515-2","name":"Corn","location_id":"84205","location_name":"A.C.","location":"84205"}]},{"id":"84206","customer":"999","name":"Soybeans","display_name":"Soybeans (#2 Yellow)","short_name":"Soybeans","cashbids":[{"id":"13","commodity":"97231","symbol":"ZSF27","delivery_start":"11/01/2026","delivery_end":"11/30/2026","basis":-40,"require_login":false,"active":true,"unitvalue":1,"unitweight":60,"sym_root":"ZS","basismonth":"Jan 2027","futures":"1212-4","futureschange":"-4-0","timestamp":1795044628,"realtime":false,"cashpricebushel":"$11.73","price":"$11.73","pricetonne":"$431.05","change":"$-0.05","rawchange":-0.05,"cashprice":"$11.73","cashpricetonne":"$431.05","futuresprice":"1212-4","name":"Soybeans","location_id":"84205","location_name":"A.C.","location":"84205"}]}];</script>
+<div class="ac-table-holder"><table cellspacing="0" cellpadding="0" border="0" width="100%" class="cashbid_table cashbid_fulltable"><thead><tr class="cashbid_group"><td class="cashbid_groupheader" colspan="6">Corn</td></tr></thead><tbody><tr><td>11/30/2026</td><td>Dec 2026</td><td>$4.75</td><td>500-0</td><td>-2-4</td><td>-0.25</td></tr></tbody></table></div>
+</body></html>

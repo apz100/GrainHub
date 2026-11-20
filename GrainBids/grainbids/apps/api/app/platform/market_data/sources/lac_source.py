@@ -21,7 +21,13 @@ from bs4 import BeautifulSoup
 from playwright.sync_api import Playwright
 from urllib.parse import urlencode
 
-LAC_BASE_URL = "https://dtn.londonag.com/index.cfm"
+LAC_BASE_URL = "https://www.londonag-dtn.com/index.cfm"
+# NOTE (Cycle 3, 2026-11-19): old base https://dtn.londonag.com is dead.
+# New domain verified live (HTTP 200, "Cash Bid" content, Location
+# dropdown present) via one polite GET of
+# https://www.londonag-dtn.com/index.cfm?show=11&mid=3&layout=19&cmid=all
+# The Location options and bid tables are JS-rendered, so the Playwright
+# fetch path is unchanged — only the domain moved.
 DEFAULT_PARAMS = {"show": "11", "mid": "3", "layout": "19", "cmid": "all"}
 
 NUM_RE = re.compile(r"[-+]?\d*\.\d+|[-+]?\d+")

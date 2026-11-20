@@ -17,7 +17,7 @@ name    = "Ag Plus"
 url     = "https://www.agplusinc.com/markets/cash.php"
 
 [[us.elevators]]
-enabled = true
+enabled = false  # verified dead 2026-11-19 (HTTP 404) - disabled in Cycle 1
 type    = "agricharts"
 name    = "Cardinal Ethanol"
 url     = "https://www.cardinalethanol.com/markets/cash.php"
@@ -29,7 +29,7 @@ name    = "Farmers Win Coop"
 url     = "https://www.farmerswin.com/markets/cash.php"
 
 [[us.elevators]]
-enabled = true
+enabled = false  # verified dead 2026-11-19 (HTTP 404) - disabled in Cycle 1
 type    = "agricharts"
 name    = "Gold Eagle Coop"
 url     = "https://goldeaglecoop.com/markets/cash.php"
@@ -65,7 +65,7 @@ name    = "Legacy Farmers"
 url     = "https://www.legacyfarmers.com/markets/cash.php"
 
 [[us.elevators]]
-enabled = true
+enabled = false  # verified dead 2026-11-19 (HTTP 404) - disabled in Cycle 1
 type    = "agricharts"
 name    = "POET"
 url     = "https://www.poet.com/markets/cash.php"
@@ -80,7 +80,7 @@ url     = "https://agpartners.net/cash-bids"
 
 [[us.elevators]]
 enabled = true
-type    = "dtn"
+type    = "agricharts-embed"
 name    = "Agtegra"
 url     = "https://www.agtegra.com/cash-bids"
 
@@ -128,7 +128,7 @@ url     = "https://gpreinc.com/corn-bids/"
 
 [[us.elevators]]
 enabled = true
-type    = "dtn"
+type    = "agricharts-embed"
 name    = "Heritage Cooperative"
 url     = "https://www.heritagecooperative.com/grain/cash-bids"
 
@@ -140,19 +140,19 @@ url     = "https://www.kanzacoop.com/services/grain"
 
 [[us.elevators]]
 enabled = true
-type    = "dtn"
+type    = "agricharts-embed"
 name    = "Linn Coop"
 url     = "https://www.linncoop.com/grain/cash-bids"
 
 [[us.elevators]]
-enabled = true
+enabled = false  # verified dead 2026-11-19 (HTTP 404) - disabled in Cycle 1
 type    = "dtn"
 name    = "Luckey Farmers"
 url     = "https://www.luckeyfarmers.com/markets/cash.php"
 
 [[us.elevators]]
 enabled = true
-type    = "dtn"
+type    = "agricharts-embed"
 name    = "Midway Coop"
 url     = "https://www.midwaycoop.com/grain/cash-bids"
 
@@ -161,32 +161,32 @@ url     = "https://www.midwaycoop.com/grain/cash-bids"
 # from static HTML (data loads via JS). Try "dtn" first, then "agricharts".
 
 [[us.elevators]]
-enabled = false
-type    = "unknown"
+enabled = true  # enabled 2026-11-19 (Cycle 17 audit): verified live Cycle 6 — Bushel .cbmod widget, 11 Corn rows, parsed by generic bushel_source.py; registry + toggle already on; toml still said unknown/disabled on the stale Cycle 1 note
+type    = "bushel"  # reclassified 2026-11-19 (Cycle 17 audit): unknown → bushel
 name    = "Ace Ethanol"
 url     = "https://www.aceethanol.com/cash-bids"
 
 [[us.elevators]]
-enabled = false
-type    = "unknown"
+enabled = true  # enabled 2026-11-19 (Cycle 17 audit): verified live Cycle 7 — Bushel via iframe (agp.o.bushelsites.com/cash-bids), 1 row (Chester, NE Soybeans), parsed by generic bushel_source.py; registry + toggle already on; toml still said dtn/disabled; re-verified Cycle 33: same URL now serves Aberdeen, SD, 8 rows (Soybeans 3 + Soybean Meal 5)
+type    = "bushel"  # reclassified 2026-11-19 (Cycle 17 audit): dtn → bushel (iframe)
 name    = "AGP"
 url     = "https://www.agp.com/grain/bids"
 
 [[us.elevators]]
-enabled = false
-type    = "unknown"
+enabled = true
+type    = "agricharts-embed"
 name    = "Ag State"
 url     = "https://www.agstate.org/grain"
 
 [[us.elevators]]
-enabled = false
-type    = "unknown"
+enabled = true
+type    = "agricharts-embed"
 name    = "ALCIVIA"
 url     = "https://www.alcivia.com/cash-bids"
 
 [[us.elevators]]
-enabled = false
-type    = "unknown"
+enabled = true  # enabled 2026-11-19 (Cycle 17 audit): verified live Cycle 6 — Bushel .cbmod widget, 10 rows (Corn 5 + Soybeans 5, Gibson City - West), parsed by generic bushel_source.py; registry + toggle already on; toml still said unknown/disabled on the stale Cycle 1 note; re-verified Cycle 34: same URL now serves Anchor/Cropsey/Colfax, still 10 rows
+type    = "bushel"  # reclassified 2026-11-19 (Cycle 17 audit): unknown → bushel
 name    = "Alliance Grain"
 url     = "https://www.alliance-grain.com/cash-bids"
 
@@ -198,13 +198,13 @@ url     = "https://www.bungeag.com/cash-bids"
 
 [[us.elevators]]
 enabled = false
-type    = "unknown"
+type    = "stonex"  # reclassified 2026-11-19 (Cycle 17 audit): homepage Cash Bids section holds a lazy-loaded StoneX component iframe (no static bid rows) — same StoneX family as Frontier Coop / UFC per the catalogue (Cycles 9–10); no static route, render check only
 name    = "CRC"
 url     = "https://www.centralregioncoop.com/grain"
 
 [[us.elevators]]
 enabled = false
-type    = "unknown"
+type    = "unreachable"  # reclassified 2026-11-19 (Cycle 10): HTTP 202, empty body (same as Cycle 1); re-checked 2026-11-19 (Cycle 18): still HTTP 202, 0 bytes — no change
 name    = "CVA"
 url     = "https://www.cvacoop.com/cash-bids"
 
@@ -215,32 +215,32 @@ name    = "CGB"
 url     = "https://cgb.com/cgb-grain/"
 
 [[us.elevators]]
-enabled = false
-type    = "unknown"
+enabled = true
+type    = "wpdatatables"  # reclassified 2026-11-19 (Cycle 9): static wpDataTables bid table, verified live
 name    = "Five Star Coop"
 url     = "https://www.fivestarcoop.com/cash-bids"
 
 [[us.elevators]]
 enabled = false
-type    = "unknown"
+type    = "dtn"  # reclassified 2026-11-19: DTN refs in HTML
 name    = "Gateway FS"
 url     = "https://www.gatewayfs.com/markets/cash.php"
 
 [[us.elevators]]
-enabled = false
-type    = "unknown"
+enabled = true  # enabled 2026-11-19 (Cycle 12): cashbids-js.php 200, var-bids JSON, 1 location (Hull, IA), 12 rows (Corn 6, Soybeans 6), groupby=ccommodity — collector-ready; registry wiring is the coordinator's step
+type    = "agricharts-embed"  # verified 2026-11-19 (Cycle 12): loader-derived cashbids-js.php URL (hullcoopresp.agricharts.com) serves the var-bids payload; reclassified agricharts-embed in Cycle 11, now proven
 name    = "Hull Coop"
-url     = "https://www.hullcoop.com/cash-bids"
+url     = "https://www.hullcoop.com/cashbids"
 
 [[us.elevators]]
 enabled = false
-type    = "unknown"
+type    = "unreachable"  # reclassified 2026-11-19 (Cycle 10): HTTP 429, Vercel Security Checkpoint page (browser verification, JS required) — blocked, no retry; re-checked 2026-11-19 (Cycle 18): still HTTP 429, Vercel Security Checkpoint page (25,097 bytes, no bid widget) — no change
 name    = "Landus"
 url     = "https://www.landus.ag/businesses/grain/grain-bids"
 
 [[us.elevators]]
 enabled = false
-type    = "unknown"
+type    = "unreachable"  # reclassified 2026-11-19 (Cycle 10): HTTP 522, empty body (same as Cycle 1); re-checked 2026-11-19 (Cycle 18): still HTTP 522, 0 bytes — no change
 name    = "Mercer Landmark"
 url     = "https://www.mercerlandmark.com/cash-bids"
 
@@ -248,76 +248,340 @@ url     = "https://www.mercerlandmark.com/cash-bids"
 # Official sites confirmed; cash bid sub-pages need verification
 
 [[us.elevators]]
-enabled = false
-type    = "unknown"
+enabled = true  # enabled 2026-11-19 (Cycle 11): 78 static writeBidRow rows at /markets/cash.php (Corn / Soybeans / Wheat, 6 h4 locations), all 78 match the existing us_agricharts_source.py _WRITEBIDROW_RX (verified against saved HTML) — collector-ready; registry wiring is the coordinator's step
+type    = "agricharts"  # reclassified 2026-11-19 (Cycle 11): classic AgriCharts writeBidRow pattern at /markets/cash.php
 name    = "Pro Ag"
-url     = "https://www.proagfarmers.com"
+url     = "https://www.proagfarmers.com/markets/cash.php"
 
 [[us.elevators]]
-enabled = false
-type    = "unknown"
+enabled = true
+type    = "agricharts-embed"  # verified 2026-11-19 (Cycle 11): cashbids-js.php 200, var-bids JSON, 1 location (AYRSHIRE.IA), 6 Corn rows — location 21297 embed only; the two location-21302 embeds on the same homepage: first (fields with delivery_end) verified live 2026-11-19 (Cycle 12) as the separate pro_coop_21302 registry entry (MANSON.IA, 12 rows: CORN 6, SOYBEANS 6); the second 21302 embed (fields without delivery_end) verified live 2026-11-19 (Cycle 13) as the separate pro_coop_21302b registry entry (MANSON.IA, 12 rows — same Manson view; the payload still carries delivery_end on every row)
 name    = "PRO Coop"
 url     = "https://procooperative.com"
 
 [[us.elevators]]
 enabled = false
-type    = "unknown"
+type    = "dtn"  # reclassified 2026-11-19 (Cycle 10): DTN index.cfm iframes (show=87, combined_table_by_location; corn / soybeans / SRW wheat / milo); no static bid rows on homepage
 name    = "Ray Carroll"
 url     = "https://www.ray-carroll.com"
 
 [[us.elevators]]
-enabled = false
-type    = "unknown"
+enabled = true
+type    = "bushel"  # Cycle 11: HTTP 200 at /cashbidssingle- (the nav link target is literally '/cashbidssingle-' with an empty ID) — serves a 14-location picker AND a static 7-col .cbmod widget for the default location (Cunningham Area), 6 rows (Corn 2, Milo 1, Red Wheat 2, Soybeans 1); coordinator re-check corrected the sweep worker's "no widget" report. Registry entry added in Cycle 11; per-location targets /cashbidssingle-<id> verified one per cycle: 2730 in Cycle 12, 2731 / 2734 / 2740 / 2742 / 2754 / 2761 in Cycle 13, 2763 / 2766 / 2770 / 2771 / 2778 / 3370 / 3621 in Cycle 14 — all 14 picker IDs now verified
 name    = "Skyland Grain"
-url     = "https://www.skylandgrain.com"
+url     = "https://www.skylandgrain.com/cashbidssingle-"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 12): HTTP 200 at the per-location target /cashbidssingle-2730 — static Bushel .cbmod widget, 6 rows (Corn 2, Milo 1, Red Wheat 2, Soybeans 1, Cunningham Area), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; 2730 is Cunningham Area's own per-location ID, so the rows duplicate the default /cashbidssingle- page — BUSHEL_SITES registry entry + fetch_skyland_2730() added in Cycle 12
+type    = "bushel"
+name    = "Skyland Grain — Cunningham Area (2730)"
+url     = "https://www.skylandgrain.com/cashbidssingle-2730"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 13): HTTP 200 at the per-location target /cashbidssingle-2731 — static Bushel .cbmod widget, 5 rows (Corn 2, Milo 1, Red Wheat 2, Conlen - Hartley), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 5 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_skyland_2731() added in Cycle 13
+type    = "bushel"
+name    = "Skyland Grain — Conlen - Hartley (2731)"
+url     = "https://www.skylandgrain.com/cashbidssingle-2731"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 13): HTTP 200 at the per-location target /cashbidssingle-2734 — static Bushel .cbmod widget, 5 rows (Corn 2, Milo 1, Red Wheat 2, Etter), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 5 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_skyland_2734() added in Cycle 13
+type    = "bushel"
+name    = "Skyland Grain — Etter (2734)"
+url     = "https://www.skylandgrain.com/cashbidssingle-2734"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 13): HTTP 200 at the per-location target /cashbidssingle-2740 — static Bushel .cbmod widget, 7 rows (Corn 2, Milo 1, Red Wheat 2, Soybeans 1, White Wheat 1; Moscow, Dermot, Kismet, Pleasant Valley), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 7 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_skyland_2740() added in Cycle 13
+type    = "bushel"
+name    = "Skyland Grain — Moscow, Dermot, Kismet, Pleasant Valley (2740)"
+url     = "https://www.skylandgrain.com/cashbidssingle-2740"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 13): HTTP 200 at the per-location target /cashbidssingle-2742 — static Bushel .cbmod widget, 7 rows (Corn 2, Milo 1, Red Wheat 2, White Wheat 2; Johnson - Ulysses - N Sublette), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 7 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_skyland_2742() added in Cycle 13
+type    = "bushel"
+name    = "Skyland Grain — Johnson - Ulysses - N Sublette (2742)"
+url     = "https://www.skylandgrain.com/cashbidssingle-2742"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 13): HTTP 200 at the per-location target /cashbidssingle-2754 — static Bushel .cbmod widget, 5 rows (Corn 2, Milo 1, Red Wheat 2, Olton Area), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 5 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_skyland_2754() added in Cycle 13
+type    = "bushel"
+name    = "Skyland Grain — Olton Area (2754)"
+url     = "https://www.skylandgrain.com/cashbidssingle-2754"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 13): HTTP 200 at the per-location target /cashbidssingle-2761 — static Bushel .cbmod widget, 6 rows (Corn 2, Milo 1, Red Wheat 2, White Wheat 1; Elkhart - Hough - Rolla Area), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 6 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_skyland_2761() added in Cycle 13
+type    = "bushel"
+name    = "Skyland Grain — Elkhart - Hough - Rolla Area (2761)"
+url     = "https://www.skylandgrain.com/cashbidssingle-2761"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 14): HTTP 200 at the per-location target /cashbidssingle-2763 — static Bushel .cbmod widget, 6 rows (Corn 2, Milo 1, Red Wheat 2, White Wheat 1; Satanta - Ryus), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 6 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_skyland_2763() added in Cycle 14
+type    = "bushel"
+name    = "Skyland Grain — Satanta - Ryus (2763)"
+url     = "https://www.skylandgrain.com/cashbidssingle-2763"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 14): HTTP 200 at the per-location target /cashbidssingle-2766 — static Bushel .cbmod widget, 5 rows (Corn 2, Milo 1, Red Wheat 2; Spearman - Gruver - Texline), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 5 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_skyland_2766() added in Cycle 14
+type    = "bushel"
+name    = "Skyland Grain — Spearman - Gruver - Texline (2766)"
+url     = "https://www.skylandgrain.com/cashbidssingle-2766"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 14): HTTP 200 at the per-location target /cashbidssingle-2770 — static Bushel .cbmod widget, 5 rows (Corn 2, Milo 1, Red Wheat 2; Sunray Area), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 5 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_skyland_2770() added in Cycle 14
+type    = "bushel"
+name    = "Skyland Grain — Sunray Area (2770)"
+url     = "https://www.skylandgrain.com/cashbidssingle-2770"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 14): HTTP 200 at the per-location target /cashbidssingle-2771 — static Bushel .cbmod widget, 6 rows (Corn 2, Milo 1, Red Wheat 2, White Wheat 1; Kendall - Midway - Lydia), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 6 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_skyland_2771() added in Cycle 14
+type    = "bushel"
+name    = "Skyland Grain — Kendall - Midway - Lydia (2771)"
+url     = "https://www.skylandgrain.com/cashbidssingle-2771"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 14): HTTP 200 at the per-location target /cashbidssingle-2778 — static Bushel .cbmod widget, 6 rows (Corn 2, Milo 1, Red Wheat 2, White Wheat 1; Buckeye - Syracuse), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 6 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_skyland_2778() added in Cycle 14
+type    = "bushel"
+name    = "Skyland Grain — Buckeye - Syracuse (2778)"
+url     = "https://www.skylandgrain.com/cashbidssingle-2778"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 14): HTTP 200 at the per-location target /cashbidssingle-3370 — static Bushel .cbmod widget, 6 rows (Corn 2, Milo 2, Red Wheat 2; Hugoton), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 6 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_skyland_3370() added in Cycle 14; location h2 'Hugoton, KS' mapped to 'Hugoton'
+type    = "bushel"
+name    = "Skyland Grain — Hugoton (3370)"
+url     = "https://www.skylandgrain.com/cashbidssingle-3370"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 14): HTTP 200 at the per-location target /cashbidssingle-3621 — static Bushel .cbmod widget, 5 rows (Corn 2, Milo 1, Red Wheat 2; Vilas - Walsh), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 5 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_skyland_3621() added in Cycle 14
+type    = "bushel"
+name    = "Skyland Grain — Vilas - Walsh (3621)"
+url     = "https://www.skylandgrain.com/cashbidssingle-3621"
 
 [[us.elevators]]
 enabled = false
-type    = "unknown"
+type    = "bushel"  # Cycle 11: HTTP 200 at /fccp-cash-bids-east-region-20249 — a per-location link list (NC / IN / OH / SC / VA, ~30 locations), no static bid rows; each location links /cashbidssingle-<id> and page JS iframes that target per location; probe one per-location target next (e.g. /cashbidssingle-1666, Bentonville); still disabled. Cycle 12 (2026-11-19): 1666 probed — 200, static .cbmod widget, 3 rows (Bentonville, NC) — enabled as a separate per-location entry below; this East Region link-list entry stays disabled. Cycle 13 (2026-11-19): 1725, 1667, 2294, 1668 probed — 200 each, static .cbmod widgets — enabled as separate per-location entries below; 26 of the 31 East Region locations still open
 name    = "Smithfield"
 url     = "https://smithfieldgrain.com"
 
 [[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 12): HTTP 200 at the per-location target /cashbidssingle-1666 (Bentonville, from the East Region per-location list) — static Bushel .cbmod widget, 3 rows (Soybeans 1, Wheat 1, Corn 1), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 3 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_smithfield_bentonville() added in Cycle 12; first Smithfield location verified, the other ~29 East Region locations still open
+type    = "bushel"
+name    = "Smithfield Grain — Bentonville (1666)"
+url     = "https://smithfieldgrain.com/cashbidssingle-1666"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 13): HTTP 200 at the per-location target /cashbidssingle-1725 (Bladenboro Elevator, from the East Region per-location list) — static Bushel .cbmod widget, 1 row (Soybeans), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 1 row, against saved HTML — BUSHEL_SITES registry entry + fetch_smithfield_bladenboro() added in Cycle 13
+type    = "bushel"
+name    = "Smithfield Grain — Bladenboro (1725)"
+url     = "https://smithfieldgrain.com/cashbidssingle-1725"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 13): HTTP 200 at the per-location target /cashbidssingle-1667 (Bladenboro Feed Mill, from the East Region per-location list) — static Bushel .cbmod widget, 2 rows (Corn 1, Wheat 1), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 2 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_smithfield_bladenboro_feed_mill() added in Cycle 13; distinct from the Bladenboro Elevator target (1725)
+type    = "bushel"
+name    = "Smithfield Grain — Bladenboro Feed Mill (1667)"
+url     = "https://smithfieldgrain.com/cashbidssingle-1667"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 13): HTTP 200 at the per-location target /cashbidssingle-2294 (Chadbourn Elevator, from the East Region per-location list) — static Bushel .cbmod widget, 1 row (Soybeans), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 1 row, against saved HTML — BUSHEL_SITES registry entry + fetch_smithfield_chadbourn() added in Cycle 13; widget header dated Nov 18, 2026, a day older than the other Cycle 13 pages
+type    = "bushel"
+name    = "Smithfield Grain — Chadbourn (2294)"
+url     = "https://smithfieldgrain.com/cashbidssingle-2294"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 13): HTTP 200 at the per-location target /cashbidssingle-1668 (Clarkton Elevator, from the East Region per-location list) — static Bushel .cbmod widget, 1 row (Soybeans), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 1 row, against saved HTML — BUSHEL_SITES registry entry + fetch_smithfield_clarkton() added in Cycle 13
+type    = "bushel"
+name    = "Smithfield Grain — Clarkton (1668)"
+url     = "https://smithfieldgrain.com/cashbidssingle-1668"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 14): HTTP 200 at the per-location target /cashbidssingle-1669 (Clinton Elevator, from the East Region per-location list) — static Bushel .cbmod widget, 3 rows (Corn 1, Soybeans 1, Wheat 1), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 3 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_smithfield_clinton() added in Cycle 14
+type    = "bushel"
+name    = "Smithfield Grain — Clinton (1669)"
+url     = "https://smithfieldgrain.com/cashbidssingle-1669"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 14): HTTP 200 at the per-location target /cashbidssingle-1670 (Hobbsville Elevator, from the East Region per-location list) — static Bushel .cbmod widget, 3 rows (Corn 1, Soybeans 1, Wheat 1), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 3 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_smithfield_hobbsville() added in Cycle 14
+type    = "bushel"
+name    = "Smithfield Grain — Hobbsville (1670)"
+url     = "https://smithfieldgrain.com/cashbidssingle-1670"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 14): HTTP 200 at the per-location target /cashbidssingle-1671 (Kinston Elevator, from the East Region per-location list) — static Bushel .cbmod widget, 3 rows (Corn 1, Soybeans 1, Wheat 1), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 3 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_smithfield_kinston() added in Cycle 14
+type    = "bushel"
+name    = "Smithfield Grain — Kinston (1671)"
+url     = "https://smithfieldgrain.com/cashbidssingle-1671"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 14): HTTP 200 at the per-location target /cashbidssingle-1672 (LaGrange Elevator, from the East Region per-location list) — static Bushel .cbmod widget, 3 rows (Corn 1, Soybeans 1, Wheat 1), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 3 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_smithfield_lagrange() added in Cycle 14
+type    = "bushel"
+name    = "Smithfield Grain — LaGrange (1672)"
+url     = "https://smithfieldgrain.com/cashbidssingle-1672"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 14): HTTP 200 at the per-location target /cashbidssingle-1673 (Morgan's Corner Elevator, from the East Region per-location list) — static Bushel .cbmod widget, 2 rows (Soybeans 1, Wheat 1), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 2 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_smithfield_morgans_corner() added in Cycle 14; live location h2 is "Morgans Corner, NC" (no apostrophe)
+type    = "bushel"
+name    = "Smithfield Grain — Morgan's Corner (1673)"
+url     = "https://smithfieldgrain.com/cashbidssingle-1673"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 14): HTTP 200 at the per-location target /cashbidssingle-1674 (Mount Olive Elevator, from the East Region per-location list) — static Bushel .cbmod widget, 3 rows (Corn 1, Soybeans 1, Wheat 1), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 3 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_smithfield_mount_olive() added in Cycle 14
+type    = "bushel"
+name    = "Smithfield Grain — Mount Olive (1674)"
+url     = "https://smithfieldgrain.com/cashbidssingle-1674"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 15): HTTP 200 at the per-location target /cashbidssingle-1683 (Creswell Feed Mill, from the East Region per-location list) — static Bushel .cbmod widget, 2 rows (Corn 2), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 2 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_smithfield_creswell() added in Cycle 15; live location h2 is "Creswell, NC" (the list page calls it Creswell Feed Mill)
+type    = "bushel"
+name    = "Smithfield Grain — Creswell (1683)"
+url     = "https://smithfieldgrain.com/cashbidssingle-1683"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 15): HTTP 200 at the per-location target /cashbidssingle-1684 (Warsaw Feed Mill, from the East Region per-location list) — static Bushel .cbmod widget, 2 rows (Corn 1, Wheat 1), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 2 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_smithfield_warsaw() added in Cycle 15
+type    = "bushel"
+name    = "Smithfield Grain — Warsaw (1684)"
+url     = "https://smithfieldgrain.com/cashbidssingle-1684"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 15): HTTP 200 at the per-location target /cashbidssingle-1685 (Harpster Elevator, OH, from the East Region per-location list) — static Bushel .cbmod widget, 1 row (Corn), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 1 row, against saved HTML — BUSHEL_SITES registry entry + fetch_smithfield_harpster() added in Cycle 15; live location h2 is bare "Harpster" (no state suffix)
+type    = "bushel"
+name    = "Smithfield Grain — Harpster (1685)"
+url     = "https://smithfieldgrain.com/cashbidssingle-1685"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 15): HTTP 200 at the per-location target /cashbidssingle-1686 (Morral Elevator, OH, from the East Region per-location list) — static Bushel .cbmod widget, 1 row (Soybeans), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 1 row, against saved HTML — BUSHEL_SITES registry entry + fetch_smithfield_morral() added in Cycle 15
+type    = "bushel"
+name    = "Smithfield Grain — Morral (1686)"
+url     = "https://smithfieldgrain.com/cashbidssingle-1686"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 15): HTTP 200 at the per-location target /cashbidssingle-1687 (Darlington Elevator, SC, from the East Region per-location list) — static Bushel .cbmod widget, 1 row (Soybeans), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 1 row, against saved HTML — BUSHEL_SITES registry entry + fetch_smithfield_darlington() added in Cycle 15
+type    = "bushel"
+name    = "Smithfield Grain — Darlington (1687)"
+url     = "https://smithfieldgrain.com/cashbidssingle-1687"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 15 batch A): HTTP 200 at the per-location target /cashbidssingle-1688 (Lake City Elevator, SC, from the East Region per-location list) — static Bushel .cbmod widget, 1 row (Soybeans), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 1 row, against saved HTML — BUSHEL_SITES registry entry + fetch_smithfield_lake_city() added in Cycle 15
+type    = "bushel"
+name    = "Smithfield Grain — Lake City (1688)"
+url     = "https://smithfieldgrain.com/cashbidssingle-1688"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 15 batch A): HTTP 200 at the per-location target /cashbidssingle-1676 (Red Springs Elevator, from the East Region per-location list) — static Bushel .cbmod widget, 1 row (Soybeans), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 1 row, against saved HTML — BUSHEL_SITES registry entry + fetch_smithfield_red_springs() added in Cycle 15 batch A
+type    = "bushel"
+name    = "Smithfield Grain — Red Springs (1676)"
+url     = "https://smithfieldgrain.com/cashbidssingle-1676"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 15 batch A): HTTP 200 at the per-location target /cashbidssingle-1678 (Walstonburg Elevator, from the East Region per-location list) — static Bushel .cbmod widget, 3 rows (Corn 1, Soybeans 1, Wheat 1), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 3 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_smithfield_walstonburg() added in Cycle 15 batch A
+type    = "bushel"
+name    = "Smithfield Grain — Walstonburg (1678)"
+url     = "https://smithfieldgrain.com/cashbidssingle-1678"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 15 batch A): HTTP 200 at the per-location target /cashbidssingle-1679 (Weeksville Elevator, from the East Region per-location list) — static Bushel .cbmod widget, 2 rows (Soybeans 1, Wheat 1), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 2 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_smithfield_weeksville() added in Cycle 15 batch A
+type    = "bushel"
+name    = "Smithfield Grain — Weeksville (1679)"
+url     = "https://smithfieldgrain.com/cashbidssingle-1679"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 15 batch A): HTTP 200 at the per-location target /cashbidssingle-1681 (The Chief Feed Mill, from the East Region per-location list) — static Bushel .cbmod widget, 2 rows (Corn 1, Wheat 1), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 2 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_smithfield_chief_feed_mill() added in Cycle 15 batch A; live location h2 is "Rose Hill, NC" (the mill's town)
+type    = "bushel"
+name    = "Smithfield Grain — The Chief Feed Mill (1681)"
+url     = "https://smithfieldgrain.com/cashbidssingle-1681"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 15 batch A): HTTP 200 at the per-location target /cashbidssingle-1682 (Laurinburg Feed Mill, from the East Region per-location list) — static Bushel .cbmod widget, 2 rows (Corn 1, Wheat 1), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 2 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_smithfield_laurinburg_feed_mill() added in Cycle 15 batch A
+type    = "bushel"
+name    = "Smithfield Grain — Laurinburg Feed Mill (1682)"
+url     = "https://smithfieldgrain.com/cashbidssingle-1682"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 16): HTTP 200 at the per-location target /cashbidssingle-1689 (Nichols Elevator, SC, from the East Region per-location list) — static Bushel .cbmod widget, 1 row (Soybeans), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 1 row, against saved HTML — BUSHEL_SITES registry entry + fetch_smithfield_nichols() added in Cycle 16
+type    = "bushel"
+name    = "Smithfield Grain — Nichols (1689)"
+url     = "https://smithfieldgrain.com/cashbidssingle-1689"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 16): HTTP 200 at the per-location target /cashbidssingle-1690 (Petersburg Elevator, VA, from the East Region per-location list) — static Bushel .cbmod widget, 4 rows (Corn 1, Wheat 1, Soybeans 2), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 4 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_smithfield_petersburg() added in Cycle 16
+type    = "bushel"
+name    = "Smithfield Grain — Petersburg (1690)"
+url     = "https://smithfieldgrain.com/cashbidssingle-1690"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 16): HTTP 200 at the per-location target /cashbidssingle-1691 (Waverly Feed Mill, VA, from the East Region per-location list) — static Bushel .cbmod widget, 7 rows (Corn 3, Wheat 2, Grain Sorghum 2), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 7 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_smithfield_waverly() added in Cycle 16; first Smithfield page to carry Grain Sorghum
+type    = "bushel"
+name    = "Smithfield Grain — Waverly (1691)"
+url     = "https://smithfieldgrain.com/cashbidssingle-1691"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 16): HTTP 200 at the per-location target /cashbidssingle-2064 (JCH - Kinston Elevator, NC, from the East Region per-location list) — static Bushel .cbmod widget, 3 rows (Corn 1, Wheat 1, Soybeans 1), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 3 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_smithfield_kinston_jch() added in Cycle 16; live location h2 is "Kinston JCH, NC", distinct from smithfield_kinston (1671)
+type    = "bushel"
+name    = "Smithfield Grain — Kinston JCH (2064)"
+url     = "https://smithfieldgrain.com/cashbidssingle-2064"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 16): HTTP 200 at the per-location target /cashbidssingle-2065 (JCH - Jones County Elevator, NC, from the East Region per-location list) — static Bushel .cbmod widget, 3 rows (Corn 1, Wheat 1, Soybeans 1), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 3 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_smithfield_jones_county() added in Cycle 16; live location h2 is "Jones County, NC"
+type    = "bushel"
+name    = "Smithfield Grain — Jones County (2065)"
+url     = "https://smithfieldgrain.com/cashbidssingle-2065"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 16): HTTP 200 at the per-location target /cashbidssingle-2066 (JCH - Deep Run Feed Mill, NC, from the East Region per-location list) — static Bushel .cbmod widget, 2 rows (Corn 1, Wheat 1), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 2 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_smithfield_deep_run_jch() added in Cycle 16; live location h2 is "Deep Run JCH, NC"
+type    = "bushel"
+name    = "Smithfield Grain — Deep Run JCH (2066)"
+url     = "https://smithfieldgrain.com/cashbidssingle-2066"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 16): HTTP 200 at the per-location target /cashbidssingle-2067 (Lapaz Elevator, IN, from the East Region per-location list) — static Bushel .cbmod widget, 2 rows (Corn 2), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 2 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_smithfield_lapaz() added in Cycle 16; widget header dated Thursday, November 19, 2026 (fresh)
+type    = "bushel"
+name    = "Smithfield Grain — Lapaz (2067)"
+url     = "https://smithfieldgrain.com/cashbidssingle-2067"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 16): HTTP 200 at the per-location target /cashbidssingle-2179 (Hamer Elevator, SC, from the East Region per-location list) — static Bushel .cbmod widget, 1 row (Soybeans), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 1 row, against saved HTML — BUSHEL_SITES registry entry + fetch_smithfield_hamer() added in Cycle 16; widget header dated Wednesday, November 18, 2026 — a day stale, like Chadbourn (Cycle 13)
+type    = "bushel"
+name    = "Smithfield Grain — Hamer (2179)"
+url     = "https://smithfieldgrain.com/cashbidssingle-2179"
+
+[[us.elevators]]
 enabled = false
-type    = "unknown"
+type    = "none"  # reclassified 2026-11-19 (Cycle 10): milling-company homepage, zero cash-bid mentions and no grain/bid links — no public bid page, do not add
 name    = "Star of the West"
 url     = "https://www.starofthewest.com"
 
 [[us.elevators]]
-enabled = false
-type    = "unknown"
+enabled = true  # enabled 2026-11-19 (Cycle 12): cashbids-js.php 200, var-bids JSON, 11 locations (Armstrong, Blue Earth, Cylinder, Emmetsburg-AGP, Fenton, Lakota, Ledyard, Marna, North Burt, Ringsted, Swea City), 126 rows (Corn 60, Soybeans 66; Emmetsburg-AGP Soybeans-only) — collector-ready; registry wiring is the coordinator's step
+type    = "agricharts-embed"  # verified 2026-11-19 (Cycle 12): loader-derived cashbids-js.php URL (statelinecoop.agricharts.com, groupby=location) serves the var-bids payload; reclassified agricharts-embed in Cycle 11, now proven
 name    = "StateLine Coop"
-url     = "https://www.statelinecoop.com"
+url     = "https://www.statelinecoop.com/cash-bids"
 
 [[us.elevators]]
-enabled = false
-type    = "unknown"
+enabled = true  # enabled 2026-11-19 (Cycle 10): classic DTN CashBidTable, covered by existing us_dtn_source.py — Playwright render check still open
+type    = "dtn"  # reclassified 2026-11-19 (Cycle 10): classic DTN — <div id="target"> + CashBidTable(tableOptions), companyID 23043, CIHedging CashBidWidget.js, ATLAS DTN shell; no static bid rows
 name    = "Sunrise"
 url     = "https://www.sunriseco-op.com"
 
 [[us.elevators]]
-enabled = false
-type    = "unknown"
+enabled = true
+type    = "agricharts-embed"
 name    = "Superior Ag"
 url     = "https://www.superiorag.com"
 
 [[us.elevators]]
-enabled = false
-type    = "unknown"
+enabled = true
+type    = "bushel"  # reclassified 2026-11-19 (Cycle 10): static Bushel .cbmod widget, 4 rows (Corn 2 + Soybeans 2, Cameron), dated header Nov 19, 2026; generic bushel_source.py parses it (status ok, verified against saved HTML) — registry entry added in Cycle 10
 name    = "Synergy"
 url     = "https://www.synergycoop.com"
 
 [[us.elevators]]
 enabled = false
-type    = "unknown"
+type    = "unknown"  # Cycle 11: HTTP 200 at /locations/cash-bids/ — proprietary GRAINweb "MyCashBids" interactive location-picker (choose a location + commodities, click Add; selections saved for next visit); no static bid rows, no recognizable embed, bids load via JS after a location is picked; needs a browser/API investigation; still disabled (distinct from The Andersons Canada, DTN, in the Ontario section)
 name    = "The Andersons"
 url     = "https://www.andersonsgrain.com"
 
 [[us.elevators]]
-enabled = false
-type    = "unknown"
+enabled = true
+type    = "agricharts-embed"
 name    = "TGM"
-url     = "https://www.totalgrainmarketing.com"
+url     = "https://www.totalgrainmarketing.com/Cash-Bids"
 
 [[us.elevators]]
 enabled = false
@@ -327,7 +591,7 @@ url     = "https://www.unitedcooperative.com"
 
 [[us.elevators]]
 enabled = false
-type    = "unknown"
+type    = "stonex"  # reclassified 2026-11-19 (Cycle 10): redirects to centralunitedcoop.com (Central United Cooperative — same site/org as CRC); Cash Bids section is a StoneX component iframe (stonehedge.stonex.com/component/bids, hideRows=true); DTN widget hits are map/weather widgets, not cash bids
 name    = "UFC"
 url     = "https://www.ufcmn.com"
 
@@ -338,28 +602,34 @@ name    = "Ursa Farmers Coop"
 url     = "https://www.ursacoop.com"
 
 [[us.elevators]]
-enabled = false
-type    = "unknown"
+enabled = true  # enabled 2026-11-19 (Cycle 12): fixed regex verified 84/84 against saved Cycle 11 HTML — month-name labels ('Dec 2026' … 'Oct 2027', 10 distinct, start == end on all rows), Corn / Soybeans / DNS Wheat, location param 'All'; month-only windows kept verbatim, no day invented
+type    = "agricharts"  # reclassified 2026-11-19 (Cycle 11): 84 static writeBidRow rows at /markets/cash.php (Corn / Soybeans / DNS Wheat, location param 'All') — parser gap was month-name delivery labels ('Dec 2026', 'Jan 2027') not MM/DD/YYYY, old _WRITEBIDROW_RX matched 0/84; fixed in Cycle 12 (regex accepts month-name labels, kept verbatim)
 name    = "West-Con"
-url     = "https://www.west-con.com"
+url     = "https://www.west-con.com/markets/cash.php"
 
 [[us.elevators]]
-enabled = false
-type    = "unknown"
+enabled = true  # enabled 2026-11-19 (Cycle 12): one GET of /markets/cash.php returned 200 with 43 static writeBidRow rows (Corn 18 / Soybeans 16 / Spring Wheat 9) — fixed regex matches 43/43; delivery labels are the SHORT month form ('Nov 26', 'Jan 27', 6 distinct), 6 rows span two adjacent months; 8 <h4> locations (Wheaton/Dumont/Browns Valley/LaMars/Hankinson/Mantador/Sisseton etc.)
+type    = "agricharts"  # reclassified 2026-11-19 (Cycle 12): AgriCharts-hosted /markets/cash.php, same writeBidRow family as West-Con — no registry adapter needed, orchestrator drives fetch_us_agricharts from this toml entry
 name    = "Wheaton Dumont"
-url     = "https://www.wdcoop.com"
+url     = "https://www.wdcoop.com/markets/cash.php"
 
 [[us.elevators]]
-enabled = false
-type    = "unknown"
+enabled = true
+type    = "bushel"  # reclassified 2026-11-19 (Cycle 10): static Bushel .cbmod widget, 5 rows (Corn 2 + Soybeans 3, Chippewa Falls), 6-col layout — tabbed widget (easyResponsiveTabs), commodity headings are bare h3.fcControls with no div.cbCommodity wrapper; Cycle 11 added the tabbed-widget fallback to bushel_source.py + registry entry (fetch_wheaton_grain)
 name    = "Wheaton Grain"
 url     = "https://www.wheatongrain.com"
 
 [[us.elevators]]
-enabled = false
-type    = "unknown"
+enabled = true  # enabled 2026-11-19 (Cycle 11): HTTP 200 at the 3439 embed target — static Bushel .cbmod widget, 10 rows (Corn 5 + Soybeans 5, Winchester), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst (FAC shape); existing generic bushel_source.py parse_bushel_html verified status ok, 10 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_winchester() added in Cycle 11
+type    = "bushel"  # Cycle 11: embed target 3439 verified static; the 3440 target was verified in Cycle 12 (see the Georgetown entry below)
 name    = "Winchester Ag"
-url     = "https://www.winchesteragservice.com"
+url     = "https://www.wheatongrain.com/cashbidssingle-3439?embed=y"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 12): HTTP 200 at the 3440 embed target — static Bushel .cbmod widget, 5 rows (Soybeans only), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; the location h2 is "Georgetown", so the 3440 embed serves Wheaton's Georgetown location, not Winchester (3439 is Winchester) — BUSHEL_SITES registry entry + fetch_winchester_3440() added in Cycle 12
+type    = "bushel"
+name    = "Winchester Ag — Georgetown (3440)"
+url     = "https://www.wheatongrain.com/cashbidssingle-3440?embed=y"
 
 # ── NOT FOUND (no cash bid page detected) ─────────────────────────────────────
 # CFE               — https://www.cfe.coop
@@ -386,3 +656,137 @@ url     = "https://www.winchesteragservice.com"
 # ADM               — https://www.adm.com  (too large, no public cash bid page)
 # Ag Valley         — https://www.agvalley.com
 # Valero            — https://www.valero.com  (refinery, no grain bids)
+
+# ── ADDITIONS — verified 2026-11-19 (GrainHub Cycle 1, US price-source discovery) ──
+# AgriCharts — writeBidRow confirmed in fetched HTML; enable immediately.
+
+[[us.elevators]]
+enabled = true
+type    = "agricharts"
+name    = "Central Farmers Coop"
+url     = "https://www.cenfarmcoop.com/markets/cash.php"
+
+[[us.elevators]]
+enabled = true
+type    = "agricharts"
+name    = "Anthony Farmers Co-op"
+url     = "https://www.anthonycoop.com/markets/cash.php"
+
+[[us.elevators]]
+enabled = true
+type    = "agricharts"
+name    = "Mulvane Coop"
+url     = "https://www.mulvanecoop.com/markets/cash.php"
+
+# ── DTN subdomain / DTN-style — widget reference confirmed in HTML + live bid
+# rows visible in search-indexed page text; confirm rows in Playwright, then enable.
+
+[[us.elevators]]
+enabled = true
+type    = "dtn"
+name    = "Brubaker Grain"
+url     = "https://dtn.brubakergrain.com/"
+
+[[us.elevators]]
+enabled = true
+type    = "dtn"
+name    = "Hoffman Ag"
+url     = "https://dtn.hoffmanag.com/"
+
+[[us.elevators]]
+enabled = true
+type    = "dtn"
+name    = "Wilton Farmers Union Elevator"
+url     = "https://www.wiltonfarmerselevator.com/index.cfm?show=11&mid=5&theLocation=1&cmid=all&layout=19"
+
+# ── BUSHEL — collector exists since Cycle 4 (`bushel_source.py`, generic
+# `.cbmod` parser, `direct_dict`). Verified-live entries are enabled;
+# the Cycle 17 audit enabled the 10 Cycle 4/5 sites + Ace Ethanol +
+# Alliance Grain + AGP that the toml had left disabled on the stale
+# Cycle 1 "no collector yet" note. Collwest stays disabled (confirmed
+# Canadian — see its entry). The Smithfield link-list entry stays
+# disabled (a per-location link list, not a bid page).
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 17 audit): verified live Cycle 5 — Bushel .cbmod widget, 17 rows (Chandler, MN); registry + toggle already on; toml still disabled on the stale Cycle 1 "no collector yet" note
+type    = "bushel"
+name    = "Chandler Feed"
+url     = "https://chandlerfeed.o.bushelsites.com"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 17 audit): verified live Cycle 4 — Bushel .cbmod widget, 45 rows across 3 locations (Arcadia + Schleswig corn/soy, AGP Manning soy only); registry + toggle already on; toml still disabled on the stale Cycle 1 "no collector yet" note
+type    = "bushel"
+name    = "FAC"
+url     = "https://www.faccooperative.com/cash-bids"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 17 audit): verified live Cycle 5 — Bushel .cbmod widget, 4 rows (Cameron, MO, corn/soy); registry + toggle already on; toml still disabled on the stale Cycle 1 "no collector yet" note
+type    = "bushel"
+name    = "Cameron Coop"
+url     = "https://www.cameroncoop.com/"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 17 audit): verified live Cycle 5 — Bushel .cbmod widget, 4 rows (Bazine, KS, wheat/milo/corn); registry + toggle already on; toml still disabled on the stale Cycle 1 "no collector yet" note
+type    = "bushel"
+name    = "CGS"
+url     = "https://www.cgscoop.net/"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 17 audit): verified live Cycle 5 — Bushel .cbmod widget, 12 rows (Colfax, WA, soft white / HRW wheat + barley; PNW coverage); registry + toggle already on; toml still disabled on the stale Cycle 1 "no collector yet" note
+type    = "bushel"
+name    = "Almota Elevator"
+url     = "https://www.almotagrain.com/cash-bids"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 17 audit): verified live Cycle 5 — Bushel .cbmod widget, 2 rows (corn + grain sorghum) at the literal /cashbidssingle- URL; registry + toggle already on; toml still disabled on the stale Cycle 1 "no collector yet" note
+type    = "bushel"
+name    = "Williams Gin & Grain"
+url     = "https://williamsginandgrain.com/cashbidssingle-"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 17 audit): verified live Cycle 5 — Bushel .cbmod widget, 12 rows (Rugby, ND, HRS wheat/soy/corn); registry + toggle already on; toml still disabled on the stale Cycle 1 "no collector yet" note
+type    = "bushel"
+name    = "Rugby Farmers Elevator"
+url     = "https://rugbyfarmers.com/"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 17 audit): verified live Cycle 5 — Bushel .cbmod widget, 2 rows (Lake Norden, SD, corn/soy); registry + toggle already on; toml still disabled on the stale Cycle 1 "no collector yet" note
+type    = "bushel"
+name    = "Lake Norden Farmers Elevator"
+url     = "https://www.lakenordenfarmerselevator.net/cash-bids"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 17 audit): verified live Cycle 5 — Bushel .cbmod widget, 12 rows (Webster City, IA, corn/soy); distinct org from Batch 4 United Coop (unitedcooperative.com); registry + toggle already on; toml still disabled on the stale Cycle 1 "no collector yet" note
+type    = "bushel"
+name    = "United Cooperative"
+url     = "https://www.unitedcoop.com/cash-bids"
+
+# Collwest Grain: country CONFIRMED Canadian 2026-11-18 (Collingwood, ON; CAD) — removed from the US list per the catalogue; this entry is kept only as a disabled record so the URL is not re-added. Do not enable in the US config; covered by the Ontario collwest_source.py + bushel fetch_collwest_bushel.
+[[us.elevators]]
+enabled = false
+type    = "bushel"
+name    = "Collwest Grain"
+url     = "https://collwestgrain.o.bushelsites.com"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 17 audit): verified live Cycle 5 — Bushel .cbmod widget, 3 rows (Forest River, ND, corn/soy/wheat); registry + toggle already on; toml still disabled on the stale Cycle 1 "no collector yet" note
+type    = "bushel"
+name    = "Forest River Coop"
+url     = "https://www.forestrivercoop.com/"
+
+# ── USDA MIRRORS — collector exists since Cycle 4 (`usda_mirror_source.py`).
+# One fetch returns the USDA AMS daily cash-bid report incl. Gulf export
+# rows (the only public Gulf/PNW route found). Both entries enabled in
+# the Cycle 17 audit (verified live Cycle 4, toggles + registry already on).
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 17 audit): USDA AMS daily cash-bid report mirror, verified live Cycle 4 (usda_mirror_source.py); registry + toggle (usda_mirror_jvg) already on; toml still disabled on the stale Cycle 1 "no collector yet" note
+type    = "usda"
+name    = "James Valley Grain (USDA mirror)"
+url     = "https://jamesvalleygrain.com/pages/usdacash.php"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-19 (Cycle 17 audit): same USDA AMS report, second host, verified live Cycle 4 (usda_mirror_source.py); registry + toggle (usda_mirror_fsg) already on; toml still disabled on the stale Cycle 1 "no collector yet" note
+type    = "usda"
+name    = "FS Grain (USDA mirror)"
+url     = "https://www.fsgrain.com/pages/usdacash.php"

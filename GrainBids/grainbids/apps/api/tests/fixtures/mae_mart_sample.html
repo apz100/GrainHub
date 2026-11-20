@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html><head><title>Grain Pricing | Mae-Mart Farms</title></head><body>
+<!-- Synthetic fixture mirroring the real Mae-Mart /grain-pricing
+     structure (gp-table-* tables + inline ALL_BIDS JSON). Values are
+     invented test data, not live prices. -->
+<section id="grain-pricing">
+<table class="gp-table" id="gp-table-corn">
+  <thead><tr><th>Contract / Delivery</th><th>CBOT Corn</th><th>Basis (CAD/bu)</th><th>Cash Price (CAD/bu)</th><th>Cash Price (CAD/tonne)</th><th></th></tr></thead>
+  <tbody><tr><td>Best Bid HARVEST 2026 - Free Storage Program</td><td>—</td><td>+1.2500</td><td>—</td><td>—</td><td>Lock a Bid</td></tr></tbody>
+</table>
+<table class="gp-table" id="gp-table-rye">
+  <thead><tr><th>Contract / Delivery</th><th>Spot Price</th><th>Basis (CAD/bu)</th><th>Cash Price (CAD/bu)</th><th>Cash Price (CAD/tonne)</th><th></th></tr></thead>
+  <tbody><tr><td>Best Bid Current Bid</td><td>—</td><td>+0.0000</td><td>—</td><td>—</td><td>Lock a Bid</td></tr></tbody>
+</table>
+</section>
+<script>
+(function(){
+  var ALL_BIDS = {"corn":[{"symbol":"ZCZ26=F","basis":1.25,"manualPrice":null}],"rye":[{"symbol":"","basis":0,"manualPrice":6.11}]};
+})();
+</script>
+</body></html>

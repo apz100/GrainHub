@@ -13,6 +13,11 @@ from app.models.normalized_price import NormalizedPrice
 from app.models.price_snapshot import PriceSnapshot
 from app.models.saved_search import SavedSearch
 from app.models.source import Source
+from app.services.basis_alerts import (
+    BasisAlertCrossing,
+    BasisAlertEvaluation,
+    evaluate_rule_basis_threshold,
+)
 
 
 OPEN_ALERT_STATUSES = ("new", "open", "pending")
@@ -92,27 +97,26 @@ def evaluate_alert_rules_for_snapshot(
                 threshold=threshold,
             )
 
-            existing = db.execute(
-                select(Alert.id).where(
-                    and_(
-                        Alert.alert_rule_id == rule.id,
-                        Alert.message == message,
-                        Alert.status.in_(OPEN_ALERT_STATUSES),
-                    )
-                )
-            ).first()
-            if existing:
+            if _maybe_create_alert(db, rule=rule, message=message) == "created":
+                created_alerts += 1
+            else:
                 deduped_alerts += 1
-                continue
 
-            db.add(
-                Alert(
-                    alert_rule_id=rule.id,
-                    message=message,
-                    status="new",
-                )
-            )
-            created_alerts += 1
+        # Optional basis-threshold path (Cycle 7): a rule that carries
+        # a basis_threshold also fires when a scoped row's basis
+        # crosses it. Rules without a basis threshold never enter this
+        # path, so price-only rules behave exactly as before.
+        basis_evaluation = _evaluate_rule_basis_threshold(
+            rule, rows, saved_search_map.get(rule.saved_search_id)
+        )
+        if basis_evaluation is not None:
+            evaluated_rows += basis_evaluation.evaluated
+            for crossing in basis_evaluation.crossings:
+                message = _build_basis_threshold_message(rule=rule, crossing=crossing)
+                if _maybe_create_alert(db, rule=rule, message=message) == "created":
+                    created_alerts += 1
+                else:
+                    deduped_alerts += 1
 
     if created_alerts > 0:
         db.commit()
@@ -124,6 +128,88 @@ def evaluate_alert_rules_for_snapshot(
         evaluated_rows=evaluated_rows,
         created_alerts=created_alerts,
         deduped_alerts=deduped_alerts,
+    )
+
+
+def _maybe_create_alert(db: Session, *, rule: AlertRule, message: str) -> str:
+    """Create the alert unless an identical open one already exists.
+
+    Returns ``"created"`` or ``"deduped"``. Shared by the price path
+    and the basis-threshold path so both dedup the same way.
+    """
+    existing = db.execute(
+        select(Alert.id).where(
+            and_(
+                Alert.alert_rule_id == rule.id,
+                Alert.message == message,
+                Alert.status.in_(OPEN_ALERT_STATUSES),
+            )
+        )
+    ).first()
+    if existing:
+        return "deduped"
+    db.add(
+        Alert(
+            alert_rule_id=rule.id,
+            message=message,
+            status="new",
+        )
+    )
+    return "created"
+
+
+def _normalized_price_to_tracker_row(row: NormalizedPrice) -> dict[str, object]:
+    """Shape a snapshot row like a basis-tracker ranked row."""
+    return {
+        "location": row.location,
+        "commodity_name": row.commodity_name,
+        "basis": row.basis,
+        "futures_month": row.futures_month,
+        "delivery_label": row.delivery_label,
+        "source_status": None,
+    }
+
+
+def _evaluate_rule_basis_threshold(
+    rule: AlertRule,
+    rows: list[NormalizedPrice],
+    saved_search: SavedSearch | None,
+) -> BasisAlertEvaluation | None:
+    """Run a rule's optional basis threshold over this snapshot's rows.
+
+    Returns ``None`` when the rule has no basis threshold (the common
+    case — price-only rules never enter the basis path) or when the
+    threshold/operator is invalid: a bad rule must not fail the
+    ingestion run, it is skipped and the rule's price path still runs.
+    The same location / saved-search / delivery-month scoping as the
+    price path applies.
+    """
+    scoped = [
+        row
+        for row in rows
+        if _location_matches(rule.location, row.location)
+        and _saved_search_matches(saved_search, row)
+        and _month_scope_matches(rule.delivery_months_json, row)
+    ]
+    try:
+        return evaluate_rule_basis_threshold(
+            rule, [_normalized_price_to_tracker_row(row) for row in scoped]
+        )
+    except ValueError:
+        return None
+
+
+def _build_basis_threshold_message(
+    *,
+    rule: AlertRule,
+    crossing: BasisAlertCrossing,
+) -> str:
+    location = crossing.location
+    commodity = crossing.commodity_name or "n/a"
+    delivery = crossing.delivery_label or "n/a"
+    return (
+        f"Rule {rule.id} triggered: basis {crossing.operator} {crossing.threshold} "
+        f"(actual={crossing.basis}) at {location} / {commodity} / {delivery}"
     )
 
 

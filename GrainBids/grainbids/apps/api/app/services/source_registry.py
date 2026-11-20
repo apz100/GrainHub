@@ -32,6 +32,115 @@ ADAPTERS: dict[str, SourceAdapter] = {
     "lac": SourceAdapter("lac", "lac_source", "fetch_lac_all", "playwright", "scraper", 15, 90),
     "snobelen": SourceAdapter("snobelen", "snobelen_source", "fetch_snobelen_all", "playwright", "scraper", 15, 90),
     "wanstead": SourceAdapter("wanstead", "wanstead_source", "fetch_wanstead_all", "playwright", "scraper", 15, 90),
+    "collwest": SourceAdapter("collwest", "collwest_source", "fetch_collwest", "direct_dict", "scraper", 15, 90),
+    "mae_mart": SourceAdapter("mae_mart", "mae_mart_source", "fetch_mae_mart", "direct_dict", "scraper", 15, 90),
+    "north_gower": SourceAdapter("north_gower", "north_gower_source", "fetch_north_gower_latest", "direct_dict", "scraper", 15, 90),
+    "mapleview": SourceAdapter("mapleview", "mapleview_source", "fetch_mapleview", "direct_dict", "scraper", 15, 90),
+    "fac": SourceAdapter("fac", "bushel_source", "fetch_fac", "direct_dict", "scraper", 15, 90),
+    "chandler_feed": SourceAdapter("chandler_feed", "bushel_source", "fetch_chandler_feed", "direct_dict", "scraper", 15, 90),
+    "cameron_coop": SourceAdapter("cameron_coop", "bushel_source", "fetch_cameron_coop", "direct_dict", "scraper", 15, 90),
+    "cgs": SourceAdapter("cgs", "bushel_source", "fetch_cgs", "direct_dict", "scraper", 15, 90),
+    "almota": SourceAdapter("almota", "bushel_source", "fetch_almota", "direct_dict", "scraper", 15, 90),
+    "williams_gin": SourceAdapter("williams_gin", "bushel_source", "fetch_williams_gin", "direct_dict", "scraper", 15, 90),
+    "rugby": SourceAdapter("rugby", "bushel_source", "fetch_rugby", "direct_dict", "scraper", 15, 90),
+    "lake_norden": SourceAdapter("lake_norden", "bushel_source", "fetch_lake_norden", "direct_dict", "scraper", 15, 90),
+    "united_coop": SourceAdapter("united_coop", "bushel_source", "fetch_united_coop", "direct_dict", "scraper", 15, 90),
+    "forest_river": SourceAdapter("forest_river", "bushel_source", "fetch_forest_river", "direct_dict", "scraper", 15, 90),
+    "ace_ethanol": SourceAdapter("ace_ethanol", "bushel_source", "fetch_ace_ethanol", "direct_dict", "scraper", 15, 90),
+    "alliance_grain": SourceAdapter("alliance_grain", "bushel_source", "fetch_alliance_grain", "direct_dict", "scraper", 15, 90),
+    "agp": SourceAdapter("agp", "bushel_source", "fetch_agp", "direct_dict", "scraper", 15, 90),
+    "synergy": SourceAdapter("synergy", "bushel_source", "fetch_synergy", "direct_dict", "scraper", 15, 90),
+    "wheaton_grain": SourceAdapter("wheaton_grain", "bushel_source", "fetch_wheaton_grain", "direct_dict", "scraper", 15, 90),
+    "skyland": SourceAdapter("skyland", "bushel_source", "fetch_skyland", "direct_dict", "scraper", 15, 90),
+    "winchester": SourceAdapter("winchester", "bushel_source", "fetch_winchester", "direct_dict", "scraper", 15, 90),
+    "winchester_3440": SourceAdapter("winchester_3440", "bushel_source", "fetch_winchester_3440", "direct_dict", "scraper", 15, 90),
+    "skyland_2730": SourceAdapter("skyland_2730", "bushel_source", "fetch_skyland_2730", "direct_dict", "scraper", 15, 90),
+    "smithfield_bentonville": SourceAdapter("smithfield_bentonville", "bushel_source", "fetch_smithfield_bentonville", "direct_dict", "scraper", 15, 90),
+    "agtegra": SourceAdapter("agtegra", "cashbids_embed_source", "fetch_agtegra", "direct_dict", "scraper", 15, 90),
+    "heritage_coop": SourceAdapter("heritage_coop", "cashbids_embed_source", "fetch_heritage_coop", "direct_dict", "scraper", 15, 90),
+    "linn_coop": SourceAdapter("linn_coop", "cashbids_embed_source", "fetch_linn_coop", "direct_dict", "scraper", 15, 90),
+    "midway_coop": SourceAdapter("midway_coop", "cashbids_embed_source", "fetch_midway_coop", "direct_dict", "scraper", 15, 90),
+    "ag_state": SourceAdapter("ag_state", "cashbids_embed_source", "fetch_ag_state", "direct_dict", "scraper", 15, 90),
+    "superior_ag": SourceAdapter("superior_ag", "cashbids_embed_source", "fetch_superior_ag", "direct_dict", "scraper", 15, 90),
+    "alcivia": SourceAdapter("alcivia", "cashbids_embed_source", "fetch_alcivia", "direct_dict", "scraper", 15, 90),
+    "tgm": SourceAdapter("tgm", "cashbids_embed_source", "fetch_tgm", "direct_dict", "scraper", 15, 90),
+    "pro_coop": SourceAdapter("pro_coop", "cashbids_embed_source", "fetch_pro_coop", "direct_dict", "scraper", 15, 90),
+    "hull_coop": SourceAdapter("hull_coop", "cashbids_embed_source", "fetch_hull_coop", "direct_dict", "scraper", 15, 90),
+    "stateline_coop": SourceAdapter("stateline_coop", "cashbids_embed_source", "fetch_stateline_coop", "direct_dict", "scraper", 15, 90),
+    "pro_coop_21302": SourceAdapter("pro_coop_21302", "cashbids_embed_source", "fetch_pro_coop_21302", "direct_dict", "scraper", 15, 90),
+    "pro_coop_21302b": SourceAdapter("pro_coop_21302b", "cashbids_embed_source", "fetch_pro_coop_21302b", "direct_dict", "scraper", 15, 90),
+    "skyland_2731": SourceAdapter("skyland_2731", "bushel_source", "fetch_skyland_2731", "direct_dict", "scraper", 15, 90),
+    "skyland_2734": SourceAdapter("skyland_2734", "bushel_source", "fetch_skyland_2734", "direct_dict", "scraper", 15, 90),
+    "skyland_2740": SourceAdapter("skyland_2740", "bushel_source", "fetch_skyland_2740", "direct_dict", "scraper", 15, 90),
+    "skyland_2742": SourceAdapter("skyland_2742", "bushel_source", "fetch_skyland_2742", "direct_dict", "scraper", 15, 90),
+    "skyland_2754": SourceAdapter("skyland_2754", "bushel_source", "fetch_skyland_2754", "direct_dict", "scraper", 15, 90),
+    "skyland_2761": SourceAdapter("skyland_2761", "bushel_source", "fetch_skyland_2761", "direct_dict", "scraper", 15, 90),
+    "smithfield_bladenboro": SourceAdapter("smithfield_bladenboro", "bushel_source", "fetch_smithfield_bladenboro", "direct_dict", "scraper", 15, 90),
+    "smithfield_bladenboro_feed_mill": SourceAdapter("smithfield_bladenboro_feed_mill", "bushel_source", "fetch_smithfield_bladenboro_feed_mill", "direct_dict", "scraper", 15, 90),
+    "smithfield_chadbourn": SourceAdapter("smithfield_chadbourn", "bushel_source", "fetch_smithfield_chadbourn", "direct_dict", "scraper", 15, 90),
+    "smithfield_clarkton": SourceAdapter("smithfield_clarkton", "bushel_source", "fetch_smithfield_clarkton", "direct_dict", "scraper", 15, 90),
+    "skyland_2763": SourceAdapter("skyland_2763", "bushel_source", "fetch_skyland_2763", "direct_dict", "scraper", 15, 90),
+    "skyland_2766": SourceAdapter("skyland_2766", "bushel_source", "fetch_skyland_2766", "direct_dict", "scraper", 15, 90),
+    "skyland_2770": SourceAdapter("skyland_2770", "bushel_source", "fetch_skyland_2770", "direct_dict", "scraper", 15, 90),
+    "skyland_2771": SourceAdapter("skyland_2771", "bushel_source", "fetch_skyland_2771", "direct_dict", "scraper", 15, 90),
+    "skyland_2778": SourceAdapter("skyland_2778", "bushel_source", "fetch_skyland_2778", "direct_dict", "scraper", 15, 90),
+    "skyland_3370": SourceAdapter("skyland_3370", "bushel_source", "fetch_skyland_3370", "direct_dict", "scraper", 15, 90),
+    "skyland_3621": SourceAdapter("skyland_3621", "bushel_source", "fetch_skyland_3621", "direct_dict", "scraper", 15, 90),
+    "smithfield_clinton": SourceAdapter("smithfield_clinton", "bushel_source", "fetch_smithfield_clinton", "direct_dict", "scraper", 15, 90),
+    "smithfield_hobbsville": SourceAdapter("smithfield_hobbsville", "bushel_source", "fetch_smithfield_hobbsville", "direct_dict", "scraper", 15, 90),
+    "smithfield_kinston": SourceAdapter("smithfield_kinston", "bushel_source", "fetch_smithfield_kinston", "direct_dict", "scraper", 15, 90),
+    "smithfield_lagrange": SourceAdapter("smithfield_lagrange", "bushel_source", "fetch_smithfield_lagrange", "direct_dict", "scraper", 15, 90),
+    "smithfield_morgans_corner": SourceAdapter("smithfield_morgans_corner", "bushel_source", "fetch_smithfield_morgans_corner", "direct_dict", "scraper", 15, 90),
+    "smithfield_mount_olive": SourceAdapter("smithfield_mount_olive", "bushel_source", "fetch_smithfield_mount_olive", "direct_dict", "scraper", 15, 90),
+    "smithfield_red_springs": SourceAdapter("smithfield_red_springs", "bushel_source", "fetch_smithfield_red_springs", "direct_dict", "scraper", 15, 90),
+    "smithfield_walstonburg": SourceAdapter("smithfield_walstonburg", "bushel_source", "fetch_smithfield_walstonburg", "direct_dict", "scraper", 15, 90),
+    "smithfield_weeksville": SourceAdapter("smithfield_weeksville", "bushel_source", "fetch_smithfield_weeksville", "direct_dict", "scraper", 15, 90),
+    "smithfield_chief_feed_mill": SourceAdapter("smithfield_chief_feed_mill", "bushel_source", "fetch_smithfield_chief_feed_mill", "direct_dict", "scraper", 15, 90),
+    "smithfield_laurinburg_feed_mill": SourceAdapter("smithfield_laurinburg_feed_mill", "bushel_source", "fetch_smithfield_laurinburg_feed_mill", "direct_dict", "scraper", 15, 90),
+    "smithfield_creswell": SourceAdapter("smithfield_creswell", "bushel_source", "fetch_smithfield_creswell", "direct_dict", "scraper", 15, 90),
+    "smithfield_warsaw": SourceAdapter("smithfield_warsaw", "bushel_source", "fetch_smithfield_warsaw", "direct_dict", "scraper", 15, 90),
+    "smithfield_harpster": SourceAdapter("smithfield_harpster", "bushel_source", "fetch_smithfield_harpster", "direct_dict", "scraper", 15, 90),
+    "smithfield_morral": SourceAdapter("smithfield_morral", "bushel_source", "fetch_smithfield_morral", "direct_dict", "scraper", 15, 90),
+    "smithfield_darlington": SourceAdapter("smithfield_darlington", "bushel_source", "fetch_smithfield_darlington", "direct_dict", "scraper", 15, 90),
+    "smithfield_lake_city": SourceAdapter("smithfield_lake_city", "bushel_source", "fetch_smithfield_lake_city", "direct_dict", "scraper", 15, 90),
+    "ag_plus": SourceAdapter("ag_plus", "us_agricharts_source", "fetch_ag_plus", "direct", "scraper", 15, 90),
+    "anthony_farmers_coop": SourceAdapter("anthony_farmers_coop", "us_agricharts_source", "fetch_anthony_farmers_coop", "direct", "scraper", 15, 90),
+    "central_farmers_coop": SourceAdapter("central_farmers_coop", "us_agricharts_source", "fetch_central_farmers_coop", "direct", "scraper", 15, 90),
+    "farmers_win_coop": SourceAdapter("farmers_win_coop", "us_agricharts_source", "fetch_farmers_win_coop", "direct", "scraper", 15, 90),
+    "heartland_coop": SourceAdapter("heartland_coop", "us_agricharts_source", "fetch_heartland_coop", "direct", "scraper", 15, 90),
+    "heritage_grain_cooperative": SourceAdapter("heritage_grain_cooperative", "us_agricharts_source", "fetch_heritage_grain_cooperative", "direct", "scraper", 15, 90),
+    "keller": SourceAdapter("keller", "us_agricharts_source", "fetch_keller", "direct", "scraper", 15, 90),
+    "kokomo_grain": SourceAdapter("kokomo_grain", "us_agricharts_source", "fetch_kokomo_grain", "direct", "scraper", 15, 90),
+    "legacy_farmers": SourceAdapter("legacy_farmers", "us_agricharts_source", "fetch_legacy_farmers", "direct", "scraper", 15, 90),
+    "mulvane_coop": SourceAdapter("mulvane_coop", "us_agricharts_source", "fetch_mulvane_coop", "direct", "scraper", 15, 90),
+    "pro_ag": SourceAdapter("pro_ag", "us_agricharts_source", "fetch_pro_ag", "direct", "scraper", 15, 90),
+    "west_con": SourceAdapter("west_con", "us_agricharts_source", "fetch_west_con", "direct", "scraper", 15, 90),
+    "wheaton_dumont": SourceAdapter("wheaton_dumont", "us_agricharts_source", "fetch_wheaton_dumont", "direct", "scraper", 15, 90),
+    "ag_partners": SourceAdapter("ag_partners", "us_dtn_source", "fetch_ag_partners", "direct", "scraper", 15, 90),
+    "al_corn": SourceAdapter("al_corn", "us_dtn_source", "fetch_al_corn", "direct", "scraper", 15, 90),
+    "allied_cooperative": SourceAdapter("allied_cooperative", "us_dtn_source", "fetch_allied_cooperative", "direct", "scraper", 15, 90),
+    "aurora_coop": SourceAdapter("aurora_coop", "us_dtn_source", "fetch_aurora_coop", "direct", "scraper", 15, 90),
+    "brubaker_grain": SourceAdapter("brubaker_grain", "us_dtn_source", "fetch_brubaker_grain", "direct", "scraper", 15, 90),
+    "cfs": SourceAdapter("cfs", "us_dtn_source", "fetch_cfs", "direct", "scraper", 15, 90),
+    "elite_octane": SourceAdapter("elite_octane", "us_dtn_source", "fetch_elite_octane", "direct", "scraper", 15, 90),
+    "frontier_coop": SourceAdapter("frontier_coop", "us_dtn_source", "fetch_frontier_coop", "direct", "scraper", 15, 90),
+    "green_plains": SourceAdapter("green_plains", "us_dtn_source", "fetch_green_plains", "direct", "scraper", 15, 90),
+    "hoffman_ag": SourceAdapter("hoffman_ag", "us_dtn_source", "fetch_hoffman_ag", "direct", "scraper", 15, 90),
+    "kanza_coop": SourceAdapter("kanza_coop", "us_dtn_source", "fetch_kanza_coop", "direct", "scraper", 15, 90),
+    "sunrise": SourceAdapter("sunrise", "us_dtn_source", "fetch_sunrise", "direct", "scraper", 15, 90),
+    "wilton_farmers_union_elevator": SourceAdapter("wilton_farmers_union_elevator", "us_dtn_source", "fetch_wilton_farmers_union_elevator", "direct", "scraper", 15, 90),
+    "smithfield_nichols": SourceAdapter("smithfield_nichols", "bushel_source", "fetch_smithfield_nichols", "direct_dict", "scraper", 15, 90),
+    "smithfield_petersburg": SourceAdapter("smithfield_petersburg", "bushel_source", "fetch_smithfield_petersburg", "direct_dict", "scraper", 15, 90),
+    "smithfield_waverly": SourceAdapter("smithfield_waverly", "bushel_source", "fetch_smithfield_waverly", "direct_dict", "scraper", 15, 90),
+    "smithfield_kinston_jch": SourceAdapter("smithfield_kinston_jch", "bushel_source", "fetch_smithfield_kinston_jch", "direct_dict", "scraper", 15, 90),
+    "smithfield_jones_county": SourceAdapter("smithfield_jones_county", "bushel_source", "fetch_smithfield_jones_county", "direct_dict", "scraper", 15, 90),
+    "smithfield_deep_run_jch": SourceAdapter("smithfield_deep_run_jch", "bushel_source", "fetch_smithfield_deep_run_jch", "direct_dict", "scraper", 15, 90),
+    "smithfield_lapaz": SourceAdapter("smithfield_lapaz", "bushel_source", "fetch_smithfield_lapaz", "direct_dict", "scraper", 15, 90),
+    "smithfield_hamer": SourceAdapter("smithfield_hamer", "bushel_source", "fetch_smithfield_hamer", "direct_dict", "scraper", 15, 90),
+    "five_star_coop": SourceAdapter("five_star_coop", "wpdatatables_source", "fetch_five_star_coop", "direct_dict", "scraper", 15, 90),
+    "fmn": SourceAdapter("fmn", "fmn_source", "fetch_fmn_cash", "direct_dict", "scraper", 15, 90),
+    "usda_mirror_jvg": SourceAdapter("usda_mirror_jvg", "usda_mirror_source", "fetch_usda_mirror", "direct_dict", "scraper", 15, 90),
+    "usda_mirror_fsg": SourceAdapter("usda_mirror_fsg", "usda_mirror_source", "fetch_usda_mirror_fs_grain", "direct_dict", "scraper", 15, 90),
 }
 PILOT_ADAPTER_KEYS = ("agricharts", "glg", "hensall", "snobelen", "andersons")
 
@@ -74,6 +183,22 @@ def _load_fetch_fn(adapter: SourceAdapter) -> Callable[[], pd.DataFrame]:
 
     if adapter.mode == "direct":
         return target
+
+    if adapter.mode == "direct_dict":
+        # Cycle 3 plain-HTML collectors return {"rows": [...], "status": ...}
+        # instead of a DataFrame; convert rows to a DataFrame here.
+        def _dict_runner() -> pd.DataFrame:
+            result = target()
+            if result is None:
+                return pd.DataFrame()
+            if isinstance(result, pd.DataFrame):
+                return result
+            if isinstance(result, dict):
+                rows = result.get("rows") or []
+                return pd.DataFrame(rows)
+            raise TypeError(f"Unexpected adapter output type for {adapter.key}: {type(result)!r}")
+
+        return _dict_runner
 
     if adapter.mode == "playwright":
         def _runner() -> pd.DataFrame:

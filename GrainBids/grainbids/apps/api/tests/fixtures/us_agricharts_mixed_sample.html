@@ -1,0 +1,16 @@
+<!-- Synthetic AgriCharts writeBidRow page (Cycle 12 test fixture).
+     Same row shape as live AgriCharts-hosted cash pages; ALL values are
+     invented — no real bid data. Covers all three delivery-label forms
+     the parser accepts: MM/DD/YYYY, month-name ('Dec 2026',
+     'January 2027'), and short month ('Nov 26'), plus a two-month
+     range ('Nov 26' -> 'Dec 26'). -->
+<html><head><title>Test Elevator Cash Bids</title></head><body>
+<script src="https://www.agricharts.com/marketdata/jsquote.php?varname=quotes&amp;symbols=ZCZ26,ZSF27,ZSN27&amp;fields=name,month,last"></script>
+<h4>Riverside</h4>
+<script>
+writeBidRow('CORN',-25,false,false,false,1,'12/01/2026','12/31/2026','All','&nbsp;','&nbsp;',56,'odd','c=1300&l=1631&d=Z26',quotes['ZCZ26'], 0-0, false, false, false,'AG_ONLY');
+writeBidRow('CORN',-20,false,false,false,1,'Dec 2026','Dec 2026','All','&nbsp;','&nbsp;',56,'even','c=1300&l=1631&d=Z26',quotes['ZCZ26'], 0-0, false, false, false,'AG_ONLY');
+writeBidRow('SOYBEANS',10,false,false,false,1,'January 2027','January 2027','All','&nbsp;','&nbsp;',60,'odd','c=1300&l=1631&d=F27',quotes['ZSF27'], 0-0, false, false, false,'AG_ONLY');
+writeBidRow('SOYBEANS',12,false,false,false,0.5,'Nov 26','Dec 26','All','&nbsp;','&nbsp;',60,'even','c=1300&l=1631&d=X26',quotes['ZSN27'], 0-0, false, true, false,'AG_ONLY');
+</script>
+</body></html>

@@ -1,0 +1,26 @@
+<!-- Synthetic AgriCharts writeBidRow page (Cycle 22 test fixture).
+     Heritage Grain Cooperative shape: <h4> tags are commodity headings
+     ('CORN - CASH', 'BEANS - DEC 2026'), not locations, and
+     forward-month rows carry the delivery label in the notes (or group)
+     argument with an escaped quote ('DEC \'26'). ALL values are invented
+     — no real bid data. A final 'Riverside' section proves a genuine
+     location <h4> is still used as the location. -->
+<html><head><title>Test Elevator Cash Bids</title></head><body>
+<script src="https://www.agricharts.com/marketdata/jsquote.php?varname=quotes&amp;symbols=ZCZ26,ZSF27,ZCH27&amp;fields=name,month,last"></script>
+<h4>CORN - CASH</h4>
+<script>
+writeBidRow('CORN - CASH',-5,false,false,false,0.75,'10/01/2026','11/30/2026','All','&nbsp;','CASH',56,'odd','c=12590&l=19988&d=X26',quotes['ZCZ26'], 0-0, false, false, false,'AG_ONLY');
+</script>
+<h4>BEANS - DEC 2026</h4>
+<script>
+writeBidRow('BEANS - DEC 2026',-14,false,false,false,0.75,'12/01/2026','12/31/2026','All','&nbsp;','DEC \'26',60,'odd','c=18646&l=19988&d=Z26',quotes['ZSF27'], 0-0, false, false, false,'AG_ONLY');
+</script>
+<h4>CORN - JAN 2027</h4>
+<script>
+writeBidRow('CORN - JAN 2027',-18,false,false,false,0.75,'01/01/2027','01/31/2027','All','JAN \'27','&nbsp;',56,'even','c=17594&l=19988&d=F27',quotes['ZCH27'], 0-0, false, false, false,'AG_ONLY');
+</script>
+<h4>Riverside</h4>
+<script>
+writeBidRow('SOYBEANS',10,false,false,false,1,'12/01/2026','12/31/2026','All','&nbsp;','&nbsp;',60,'odd','c=1300&l=1631&d=Z26',quotes['ZSF27'], 0-0, false, false, false,'AG_ONLY');
+</script>
+</body></html>

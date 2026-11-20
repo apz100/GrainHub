@@ -35,6 +35,13 @@ class Settings(BaseSettings):
     market_report_region: str = "Eastern Ontario"
     market_report_public_url: str = "https://grainbids.com"
     market_report_unsubscribe_url: str | None = None
+    # Research / USDA collectors. Keys live in env only, never in git.
+    # Empty means the key-gated collector reports "key required" and
+    # does not call the API.
+    nass_api_key: str = ""
+    fas_data_gov_api_key: str = ""
+    research_user_agent: str = "GrainHub/1.0 (research collector; contact via grainhub)"
+    research_http_timeout_seconds: int = 30
 
     @property
     def api_cors_origins_list(self) -> list[str]:

@@ -11,6 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from app.services.market_report import append_research_section, compile_market_report  # noqa: E402
 from app.services.research import (  # noqa: E402
     ResearchKeyRequired,
+    fetch_fas_psd,
     fetch_nass_quick_stats,
     parse_commitments_of_traders_text,
     parse_crop_production_text,
@@ -26,6 +27,37 @@ from app.services.research import (  # noqa: E402
 def test_nass_without_key_raises_key_required() -> None:
     with pytest.raises(ResearchKeyRequired):
         fetch_nass_quick_stats(commodity="Corn", year=2026, api_key="")
+
+
+def test_fas_without_key_raises_key_required() -> None:
+    with pytest.raises(ResearchKeyRequired):
+        fetch_fas_psd(commodity_code="0440000", api_key="")
+
+
+def test_fas_psd_calls_commodities_with_trailing_slash(monkeypatch) -> None:
+    # The FAS server returns HTTP 500 for /api/psd/commodities without a
+    # trailing slash and 200 with it (verified live 2026-11-19). Pin the
+    # slashed URL so the slash is never "cleaned up" away.
+    import app.services.research as research
+
+    captured: dict[str, object] = {}
+
+    class FakeResponse:
+        status_code = 200
+
+        def json(self):
+            return [{"commodityCode": "0440000", "commodityName": "Corn"}]
+
+    def fake_get(url, **kwargs):
+        captured["url"] = url
+        captured["params"] = kwargs.get("params")
+        return FakeResponse()
+
+    monkeypatch.setattr(research.requests, "get", fake_get)
+    rows = fetch_fas_psd(commodity_code="0440000", api_key="test-key")
+    assert captured["url"] == "https://api.fas.usda.gov/api/psd/commodities/"
+    assert captured["params"] == {"commodityCode": "0440000"}
+    assert rows == [{"commodityCode": "0440000", "commodityName": "Corn"}]
 
 
 def test_research_status_reports_keys_as_absent_by_default() -> None:

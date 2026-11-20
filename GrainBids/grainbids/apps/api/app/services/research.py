@@ -196,8 +196,11 @@ def fetch_fas_psd(
             "Get one at https://api.data.gov/signup/ — no key is stored in git."
         )
     try:
+        # Trailing slash is required: without it the FAS server returns
+        # HTTP 500 (verified live 2026-11-19 with a real key, while the
+        # slashed URL returns 200). Do not "clean up" the slash.
         response = requests.get(
-            f"{FAS_PSD_BASE_URL}/commodities",
+            f"{FAS_PSD_BASE_URL}/commodities/",
             params={"commodityCode": commodity_code},
             headers={**_headers(), "X-Api-Key": key},
             timeout=settings.research_http_timeout_seconds,

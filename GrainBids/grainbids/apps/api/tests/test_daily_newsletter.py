@@ -113,7 +113,7 @@ class DailyNewsletterDraftTests(unittest.TestCase):
         )
 
         self.assertEqual(draft.issue_key, "daily-2026-11-18")
-        self.assertIn("GrainHub Daily Newsletter", draft.subject)
+        self.assertIn("GrainBids Daily Newsletter", draft.subject)
         self.assertIn("November 18, 2026", draft.subject)
         top_bids = draft.sections[0]
         self.assertFalse(top_bids["empty"])
@@ -290,7 +290,7 @@ class DailyNewsletterRouteTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.json()
         self.assertEqual(payload["issue_key"], "daily-2026-11-18")
-        self.assertIn("GrainHub Daily Newsletter", payload["subject"])
+        self.assertIn("GrainBids Daily Newsletter", payload["subject"])
         self.assertFalse(payload["delivery"]["enabled"])
         self.assertFalse(payload["delivery"]["sent"])
         # No prices / research on the fake DB, but the verified 2026

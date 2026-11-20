@@ -21,7 +21,7 @@ export default async function GrainStocksPage() {
   const reports = data.reports ?? [];
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
-      <p className="text-xs uppercase tracking-[0.16em] text-black/50">GrainHub / Research / Grain Stocks</p>
+      <p className="text-xs uppercase tracking-[0.16em] text-black/50">GrainBids / Research / Grain Stocks</p>
       <h1 className="mt-1 font-[family-name:var(--font-serif)] text-4xl leading-tight">Grain Stocks</h1>
       <p className="mt-2 text-sm text-black/65">
         Quarterly, from USDA NASS — actual grain in bins on Dec 1, Mar 1, Jun 1 and Sep 1.

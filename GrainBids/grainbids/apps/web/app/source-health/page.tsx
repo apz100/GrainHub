@@ -79,7 +79,7 @@ export default async function SourceHealthPage() {
   }).length;
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
-      <p className="text-xs uppercase tracking-[0.16em] text-black/50">GrainHub / Source Health</p>
+      <p className="text-xs uppercase tracking-[0.16em] text-black/50">GrainBids / Source Health</p>
       <h1 className="mt-1 font-[family-name:var(--font-serif)] text-4xl leading-tight">
         Source Health
       </h1>

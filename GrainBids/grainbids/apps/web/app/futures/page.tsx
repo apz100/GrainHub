@@ -166,7 +166,7 @@ export default async function FuturesPage() {
   const stripContracts = strip.strips.flatMap((s) => s.contracts ?? []);
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
-      <p className="text-xs uppercase tracking-[0.16em] text-black/50">GrainHub / Futures</p>
+      <p className="text-xs uppercase tracking-[0.16em] text-black/50">GrainBids / Futures</p>
       <h1 className="mt-1 font-[family-name:var(--font-serif)] text-4xl leading-tight">
         Futures Strip
       </h1>

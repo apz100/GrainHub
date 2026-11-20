@@ -18,7 +18,7 @@ const PROTOTYPES = [
     href: "/prototypes/pricing",
     title: "Pricing Page",
     description:
-      "Four-silo draft pricing built from the public benchmarks in the GrainHub super plan (Farmbucks, GrainFox, Bushel, GrainStats). Draft only — final pricing is Adam's decision.",
+      "Four-silo draft pricing built from the public benchmarks in the GrainBids super plan (Farmbucks, GrainFox, Bushel, GrainStats). Draft only — final pricing is Adam's decision.",
   },
 ];
 
@@ -27,9 +27,9 @@ export default function PrototypesIndexPage() {
     <main className="mx-auto max-w-6xl px-6 py-10">
       <PrototypeBanner
         title="Prototypes index"
-        blurb="Design prototypes for the four GrainHub silos. Nothing here is production, no prices are invented, and no real company is featured."
+        blurb="Design prototypes for the four GrainBids silos. Nothing here is production, no prices are invented, and no real company is featured."
       />
-      <p className="mt-6 text-xs uppercase tracking-[0.16em] text-black/50">GrainHub / Prototypes</p>
+      <p className="mt-6 text-xs uppercase tracking-[0.16em] text-black/50">GrainBids / Prototypes</p>
       <h1 className="mt-1 font-[family-name:var(--font-serif)] text-4xl leading-tight">
         Prototypes
       </h1>

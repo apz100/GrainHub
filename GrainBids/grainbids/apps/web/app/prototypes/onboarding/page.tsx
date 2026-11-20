@@ -159,7 +159,7 @@ export default function OnboardingPrototypePage() {
         title="Onboarding / farm-profile wizard prototype"
         blurb="Prototype — not production. This wizard saves nothing and calls no API while you step through it. Only the clearly-labelled preview button on the final step talks to the API — and only to show what the farm-profile payload would look like."
       />
-      <p className="mt-6 text-xs uppercase tracking-[0.16em] text-black/50">GrainHub / Prototypes / Onboarding</p>
+      <p className="mt-6 text-xs uppercase tracking-[0.16em] text-black/50">GrainBids / Prototypes / Onboarding</p>
       <h1 className="mt-1 font-[family-name:var(--font-serif)] text-3xl leading-tight">
         Set up your farm profile
       </h1>

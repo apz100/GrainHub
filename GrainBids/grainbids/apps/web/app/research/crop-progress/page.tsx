@@ -21,7 +21,7 @@ export default async function CropProgressPage() {
   const reports = data.reports ?? [];
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
-      <p className="text-xs uppercase tracking-[0.16em] text-black/50">GrainHub / Research / Crop Progress</p>
+      <p className="text-xs uppercase tracking-[0.16em] text-black/50">GrainBids / Research / Crop Progress</p>
       <h1 className="mt-1 font-[family-name:var(--font-serif)] text-4xl leading-tight">Crop Progress</h1>
       <p className="mt-2 text-sm text-black/65">
         Weekly, Mondays 4pm ET, from USDA NASS. Planting, emergence and harvest progress, plus

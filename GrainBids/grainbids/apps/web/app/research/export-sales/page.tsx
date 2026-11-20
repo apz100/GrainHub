@@ -21,7 +21,7 @@ export default async function ExportSalesPage() {
   const reports = data.reports ?? [];
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
-      <p className="text-xs uppercase tracking-[0.16em] text-black/50">GrainHub / Research / Export Sales</p>
+      <p className="text-xs uppercase tracking-[0.16em] text-black/50">GrainBids / Research / Export Sales</p>
       <h1 className="mt-1 font-[family-name:var(--font-serif)] text-4xl leading-tight">Export Sales</h1>
       <p className="mt-2 text-sm text-black/65">
         Weekly, Thursdays 8:30 am ET, from USDA FAS — US export sales and shipments by

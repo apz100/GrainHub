@@ -95,7 +95,7 @@ export default async function ResearchIndexPage() {
   ]);
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
-      <p className="text-xs uppercase tracking-[0.16em] text-black/50">GrainHub / Research</p>
+      <p className="text-xs uppercase tracking-[0.16em] text-black/50">GrainBids / Research</p>
       <h1 className="mt-1 font-[family-name:var(--font-serif)] text-4xl leading-tight">
         USDA Research
       </h1>

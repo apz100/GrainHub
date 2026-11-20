@@ -353,7 +353,7 @@ export default async function HistoryPage({
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
-      <p className="text-xs uppercase tracking-[0.16em] text-black/50">GrainHub / History</p>
+      <p className="text-xs uppercase tracking-[0.16em] text-black/50">GrainBids / History</p>
       <h1 className="mt-1 font-[family-name:var(--font-serif)] text-4xl leading-tight">
         Price History
       </h1>

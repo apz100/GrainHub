@@ -102,9 +102,9 @@ export default function PricingPrototypePage() {
     <main className="mx-auto max-w-6xl px-6 py-10">
       <PrototypeBanner
         title="Pricing page prototype"
-        blurb="Prototype — not production. Benchmark-based draft pricing, not final: every figure below comes from a named public benchmark in the GrainHub super plan. Final pricing is Adam's decision."
+        blurb="Prototype — not production. Benchmark-based draft pricing, not final: every figure below comes from a named public benchmark in the GrainBids super plan. Final pricing is Adam's decision."
       />
-      <p className="mt-6 text-xs uppercase tracking-[0.16em] text-black/50">GrainHub / Prototypes / Pricing</p>
+      <p className="mt-6 text-xs uppercase tracking-[0.16em] text-black/50">GrainBids / Prototypes / Pricing</p>
       <h1 className="mt-1 font-[family-name:var(--font-serif)] text-4xl leading-tight">
         Pricing — draft
       </h1>
@@ -112,7 +112,7 @@ export default function PricingPrototypePage() {
         One platform, four silos. The free best-bid page stays free for
         everyone; each silo adds depth for the people who need it. Prices
         below are drafts anchored to what Farmbucks, GrainFox, Bushel and
-        GrainStats charge today — they are not GrainHub&apos;s final prices.
+        GrainStats charge today — they are not GrainBids&apos;s final prices.
       </p>
 
       <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -176,7 +176,7 @@ export default function PricingPrototypePage() {
           <li>Elevator Ops — Bushel: farmer plans $75–$599/yr; agribusiness pricing demo-only. Grain Discovery: demo-only, no published pricing.</li>
         </ul>
         <p className="mt-3 text-sm text-black/55">
-          Benchmarks were checked 2026-11-18 and are recorded in the GrainHub
+          Benchmarks were checked 2026-11-18 and are recorded in the GrainBids
           super plan. They will move — re-check before launch. Nothing on this
           page charges anyone anything.
         </p>

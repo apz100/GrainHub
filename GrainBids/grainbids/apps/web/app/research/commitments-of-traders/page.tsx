@@ -21,7 +21,7 @@ export default async function CommitmentsPage() {
   const reports = data.reports ?? [];
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
-      <p className="text-xs uppercase tracking-[0.16em] text-black/50">GrainHub / Research / Commitments of Traders</p>
+      <p className="text-xs uppercase tracking-[0.16em] text-black/50">GrainBids / Research / Commitments of Traders</p>
       <h1 className="mt-1 font-[family-name:var(--font-serif)] text-4xl leading-tight">
         Commitments of Traders
       </h1>

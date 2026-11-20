@@ -264,7 +264,7 @@ export default function PriceFinderPrototypePage() {
         title="Price Finder prototype — mobile-first"
         blurb="Prototype — not production. Searches the real /api/best-bids and /api/market-search endpoints. No prices are invented: empty results stay empty, and example rows (when the API is unreachable) are labelled as examples."
       />
-      <p className="mt-6 text-xs uppercase tracking-[0.16em] text-black/50">GrainHub / Prototypes / Price Finder</p>
+      <p className="mt-6 text-xs uppercase tracking-[0.16em] text-black/50">GrainBids / Prototypes / Price Finder</p>
       <h1 className="mt-1 font-[family-name:var(--font-serif)] text-3xl leading-tight">
         Find the best bid near you
       </h1>
@@ -351,7 +351,7 @@ export default function PriceFinderPrototypePage() {
           {apiUnreachable ? (
             <section>
               <p className="rounded border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                The GrainHub API could not be reached{error ? ` (${error})` : ""}, so no
+                The GrainBids API could not be reached{error ? ` (${error})` : ""}, so no
                 real bids are shown. The rows below are <strong>example data only</strong> —
                 synthetic prices at synthetic locations, shown just to preview the layout.
               </p>

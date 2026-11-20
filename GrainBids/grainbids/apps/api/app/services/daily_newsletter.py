@@ -195,7 +195,7 @@ def generate_daily_draft(
         _usda_today_section(todays_research, len(research_all), resolved_date),
         _upcoming_section(upcoming, resolved_date),
     )
-    subject = f"GrainHub Daily Newsletter — {resolved_date:%B} {resolved_date.day}, {resolved_date:%Y}"
+    subject = f"GrainBids Daily Newsletter — {resolved_date:%B} {resolved_date.day}, {resolved_date:%Y}"
     text = _render_text(subject, resolved_date, region, sections)
     html = _render_html(subject, resolved_date, region, sections)
     return DailyNewsletterDraft(

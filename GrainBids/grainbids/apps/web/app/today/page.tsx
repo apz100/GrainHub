@@ -321,7 +321,7 @@ export default async function TodayPage() {
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
-      <p className="text-xs uppercase tracking-[0.16em] text-black/50">GrainHub / Today</p>
+      <p className="text-xs uppercase tracking-[0.16em] text-black/50">GrainBids / Today</p>
       <h1 className="mt-1 font-[family-name:var(--font-serif)] text-4xl leading-tight">
         Today
       </h1>

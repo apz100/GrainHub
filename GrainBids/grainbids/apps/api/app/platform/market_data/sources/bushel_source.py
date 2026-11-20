@@ -146,6 +146,7 @@ CONTACT_USER_AGENT = "GrainHub-Research/1.0 +https://github.com/apz100/GrainHub"
 
 FAC_URL = "https://www.faccooperative.com/cash-bids"
 COLLWEST_URL = "https://www.collwestgrain.com/"
+HOMELAND_URL = "https://www.homelandgrain.com/cash-bids"
 AGP_URL = "https://agp.o.bushelsites.com/cash-bids"
 SYNERGY_URL = "https://www.synergycoop.com"
 SKYLAND_URL = "https://www.skylandgrain.com/cashbidssingle-"
@@ -262,6 +263,25 @@ BUSHEL_SITES: dict[str, BushelSite] = {
         "canola/barley/oats per tonne, corn/soy/wheat per bushel. "
         "Canadian — Ontario panel, not US. (Also covered by the "
         "older collwest_source.py widget parser.)",
+    ),
+    "homeland": BushelSite(
+        key="homeland",
+        company="Homeland Grain",
+        url=HOMELAND_URL,
+        currency="CAD",
+        default_location="Norwich",
+        verified=True,
+        location_labels={"Homeland Grain": "Norwich"},
+        notes="Verified live 2026-11-20 (night queue): 200 on "
+        "/cash-bids, 7-col .cbmod widget, 13 rows — corn 3, soybeans "
+        "3, soybeans delivered Hamilton 1, soft red winter wheat 3, "
+        "soft red wheat on-farm pick-up 3; delivery-variant sections "
+        "keep their qualifier in the commodity label. CAD: Ontario "
+        "panel (company's own About page places it in Oxford, "
+        "Norfolk and Brant counties, Ontario; Norwich is the "
+        "catalogue's elevator town). Futures values may carry a "
+        "trailing 's' (settlement marker) — the numeric parser "
+        "extracts the number.",
     ),
     # Cycle 5 (2026-11-19): all remaining registry sites verified live,
     # one polite GET each — every one 200 with a .cbmod widget, parsed
@@ -1768,6 +1788,16 @@ def fetch_collwest_bushel() -> dict[str, Any]:
     canola/barley/oats).
     """
     return fetch_bushel_site("collwest")
+
+
+def fetch_homeland() -> dict[str, Any]:
+    """Fetch Homeland Grain (Norwich, ON) via the generic collector.
+
+    Verified live 2026-11-20 (night queue): dedicated /cash-bids page
+    with a 7-column .cbmod widget, 13 rows including delivered-
+    Hamilton soybeans and on-farm pick-up wheat sections, CAD.
+    """
+    return fetch_bushel_site("homeland")
 
 
 def fetch_chandler_feed() -> dict[str, Any]:

@@ -33,6 +33,7 @@ bunge      = false  # URLs no longer valid — needs investigation before re-ena
 wanstead   = true
 ganaraska  = true
 collwest   = true
+homeland   = true  # Bushel .cbmod widget on /cash-bids, verified live 2026-11-20 (night queue)
 mae_mart   = true
 north_gower = true
 mapleview  = false  # stub only — bids are JS-rendered; needs Playwright in a later cycle

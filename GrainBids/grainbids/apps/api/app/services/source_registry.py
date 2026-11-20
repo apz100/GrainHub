@@ -37,6 +37,7 @@ ADAPTERS: dict[str, SourceAdapter] = {
     "north_gower": SourceAdapter("north_gower", "north_gower_source", "fetch_north_gower_latest", "direct_dict", "scraper", 15, 90),
     "mapleview": SourceAdapter("mapleview", "mapleview_source", "fetch_mapleview", "direct_dict", "scraper", 15, 90),
     "fac": SourceAdapter("fac", "bushel_source", "fetch_fac", "direct_dict", "scraper", 15, 90),
+    "homeland": SourceAdapter("homeland", "bushel_source", "fetch_homeland", "direct_dict", "scraper", 15, 90),
     "chandler_feed": SourceAdapter("chandler_feed", "bushel_source", "fetch_chandler_feed", "direct_dict", "scraper", 15, 90),
     "cameron_coop": SourceAdapter("cameron_coop", "bushel_source", "fetch_cameron_coop", "direct_dict", "scraper", 15, 90),
     "cgs": SourceAdapter("cgs", "bushel_source", "fetch_cgs", "direct_dict", "scraper", 15, 90),

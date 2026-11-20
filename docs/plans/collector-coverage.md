@@ -52,7 +52,7 @@ among the 119 — public prices only, no special treatment.
 |---|---:|---:|---:|
 | AgriCharts cashbids embed | 13 | 13 | 13 |
 | AgriCharts writeBidRow | 13 | 11 | 11 |
-| Bushel `.cbmod` | 62 | 62 | 57 |
+| Bushel `.cbmod` | 63 | 63 | 58 |
 | DTN (JS-only) | 13 | 0 | 0 |
 | USDA mirror | 2 | 2 | 2 |
 | agricharts_source | 1 | 1 | 0 |
@@ -115,6 +115,7 @@ among the 119 — public prices only, no special treatment.
 | `heritage_coop` | AgriCharts cashbids embed | on | Cycle 35 | 15 | live | embed site (Ada, OH) — not the AgriCharts Heritage wrapper |
 | `heritage_grain_cooperative` | AgriCharts writeBidRow | on | Cycle 36 | 14 | live | writeBidRow site — not the embed Heritage site |
 | `hoffman_ag` | DTN (JS-only) | OFF | Cycle — |  | pending | JS-only; render check pending |
+| `homeland` | Bushel `.cbmod` | on | Night 2026-11-20 | 13 | live | Homeland Grain, Norwich, ON; CAD; 7-col widget on /cash-bids incl. delivered-Hamilton soybeans + on-farm pick-up wheat sections; generic parser, no code changes needed |
 | `hull_coop` | AgriCharts cashbids embed | on | Cycle 35 | 12 | live |  |
 | `kanza_coop` | DTN (JS-only) | OFF | Cycle — |  | pending | ATLAS shell; render check pending |
 | `keller` | AgriCharts writeBidRow | on | Cycle 36 | 14 | live |  |
@@ -262,3 +263,32 @@ catalogue URLs — all HTTP 200 with expected widget markers
 parked `andersons` adapter were not probed. No adapter code
 changed — no page changed shape. Full table:
 `docs/marathon/phase-d-notes.md`.
+
+## Night queue (2026-11-20): Ontario catalogue leads resolved
+
+One polite GET each (`GrainHub-Research/1.0`), Ontario-first, from
+the catalogue's remaining no-adapter leads:
+
+- **Homeland Grain (Norwich, ON) — NEW ADAPTER, live.** The
+  dedicated `/cash-bids` page serves a standard 7-column Bushel
+  `.cbmod` widget (13 rows: corn 3, soybeans 3, soybeans delivered
+  Hamilton 1, soft red winter wheat 3, soft red wheat on-farm
+  pick-up 3). The generic parser handled it unchanged; wired as
+  `BUSHEL_SITES["homeland"]` + `fetch_homeland()` + registry
+  adapter `homeland` + `[sources]` toggle on, CAD, with fixture
+  tests (`tests/test_bushel_homeland.py`,
+  `tests/fixtures/bushel_homeland_sample.html`). **Totals now:
+  120 registered adapters, 102 toggle-enabled, 89 live.**
+- **Charwen Farms (Thornton, ON) — ruled out, no adapter.** Its
+  own site has no bids (its `/cash-bids/` path 404s); the homepage
+  "Cash Bids" link points at LAC's bids page, and LAC's location
+  list already includes Charwen as a delivery point — a duplicate
+  of existing LAC coverage, as the catalogue suspected.
+- **Addis Grain (Simcoe County, ON) — ruled out for plain HTTP.**
+  `/markets/` renders its bids through a JS WordPress block
+  (`dtn-gd-cash-bids-block`, DTN + Grain Discovery); the static
+  HTML carries no table. Same class as Mapleview — needs a
+  browser render, out of scope for the static pipeline.
+- **St. Lawrence Grains & Farm Supply (slgrainsfs.ca) — ruled
+  out for plain HTTP.** `/markets/` uses the same DTN + Grain
+  Discovery JS block as Addis; no static bids table.

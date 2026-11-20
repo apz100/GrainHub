@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections import defaultdict
 import uuid
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models.company import Company
@@ -26,28 +26,64 @@ def list_ambiguous_location_company_candidates(
     if not trusted_company_ids:
         return {"rows": [], "total_count": 0}
 
-    query = (
-        select(NormalizedPrice.location_id, NormalizedPrice.company_id, NormalizedPrice.source_name)
-        .join(PriceSnapshot, PriceSnapshot.id == NormalizedPrice.snapshot_id)
-        .join(Source, Source.id == PriceSnapshot.source_id)
-        .where(
-            Source.org_id == org_id,
-            NormalizedPrice.location_id.is_not(None),
-            NormalizedPrice.company_id.is_not(None),
-            NormalizedPrice.company_id.in_(trusted_company_ids),
-        )
-    )
+    base_filters = [
+        Source.org_id == org_id,
+        NormalizedPrice.location_id.is_not(None),
+        NormalizedPrice.company_id.is_not(None),
+        NormalizedPrice.company_id.in_(trusted_company_ids),
+    ]
     if source_id is not None:
-        query = query.where(Source.id == source_id)
+        base_filters.append(Source.id == source_id)
 
-    candidate_rows = db.execute(query).all()
-    by_location: dict[uuid.UUID, dict[str, object]] = {}
-
-    for location_id, company_id, source_name in candidate_rows:
-        if location_id is None or company_id is None:
-            continue
+    # Night queue 2026-11-20, item 2: the aggregation used to load
+    # every (location_id, company_id, source_name) triple for the org
+    # and count in Python — row-unbounded on the largest table
+    # (marathon Phase A documented it, fix deferred to here). The
+    # identity predicate and the canonical label are pure functions
+    # of the source *name*, so evaluate them once per distinct name
+    # (registry-scale) and let SQL GROUP BY do the counting; Python
+    # only merges the grouped rows, whose count is bounded by
+    # locations x companies x distinct source names.
+    distinct_source_names = (
+        db.execute(
+            select(NormalizedPrice.source_name)
+            .join(PriceSnapshot, PriceSnapshot.id == NormalizedPrice.snapshot_id)
+            .join(Source, Source.id == PriceSnapshot.source_id)
+            .where(*base_filters)
+            .distinct()
+        )
+        .scalars()
+        .all()
+    )
+    label_by_source_name: dict[str, str] = {}
+    for source_name in distinct_source_names:
         if not _source_creates_company_identity(source_name):
             continue
+        label_by_source_name[source_name] = (
+            canonical_source_name(source_name) or (source_name or "").strip() or "Unknown"
+        )
+    if not label_by_source_name:
+        return {"rows": [], "total_count": 0}
+
+    grouped_rows = db.execute(
+        select(
+            NormalizedPrice.location_id,
+            NormalizedPrice.company_id,
+            NormalizedPrice.source_name,
+            func.count(),
+        )
+        .join(PriceSnapshot, PriceSnapshot.id == NormalizedPrice.snapshot_id)
+        .join(Source, Source.id == PriceSnapshot.source_id)
+        .where(*base_filters, NormalizedPrice.source_name.in_(list(label_by_source_name)))
+        .group_by(
+            NormalizedPrice.location_id,
+            NormalizedPrice.company_id,
+            NormalizedPrice.source_name,
+        )
+    ).all()
+
+    by_location: dict[uuid.UUID, dict[str, object]] = {}
+    for location_id, company_id, source_name, row_count in grouped_rows:
         entry = by_location.get(location_id)
         if entry is None:
             entry = {
@@ -55,9 +91,8 @@ def list_ambiguous_location_company_candidates(
                 "source_counts": defaultdict(int),
             }
             by_location[location_id] = entry
-        entry["company_counts"][company_id] += 1
-        source_label = canonical_source_name(source_name) or (source_name or "").strip() or "Unknown"
-        entry["source_counts"][source_label] += 1
+        entry["company_counts"][company_id] += int(row_count)
+        entry["source_counts"][label_by_source_name[source_name]] += int(row_count)
 
     if not by_location:
         return {"rows": [], "total_count": 0}

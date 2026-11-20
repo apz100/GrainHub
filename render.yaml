@@ -1,0 +1,32 @@
+# Render Blueprint for the GrainHub API (FastAPI).
+# Web frontend deploys separately on Vercel; database is Supabase Postgres.
+# Secrets (sync: false) are entered in the Render dashboard, never in git.
+# Free plan: the service sleeps when idle and cold-starts on first request.
+services:
+  - type: web
+    name: grainhub-api
+    runtime: python
+    plan: free
+    rootDir: GrainBids/grainbids/apps/api
+    buildCommand: pip install -r requirements.txt
+    # Migrations run on every boot: alembic upgrade head is idempotent,
+    # and Render's free plan has no separate release/pre-deploy step.
+    startCommand: alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health/live
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12"
+      - key: APP_ENV
+        value: production
+      - key: ALLOW_IMPLICIT_ORG
+        value: "false"
+      - key: API_ENABLE_DOCS
+        value: "false"
+      - key: DATABASE_URL
+        sync: false
+      - key: API_CORS_ORIGINS
+        sync: false
+      - key: NASS_API_KEY
+        sync: false
+      - key: FAS_DATA_GOV_API_KEY
+        sync: false

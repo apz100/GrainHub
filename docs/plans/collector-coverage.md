@@ -243,3 +243,22 @@ among the 119 — public prices only, no special treatment.
    Landmark 522/0 bytes). See the catalogue Cycle 39 section.
    They are toml-only entries, not registry adapters, so they
    do not appear in the table above.
+
+## Phase D re-verification (2026-11-20, marathon)
+
+All 96 plain-HTTP adapters were executed live through the
+registry (one polite GET each): **93 returned rows, 0 errors**,
+and every row count matches the Cycle 35–37 "last verified"
+values in the table above except: `ag_state` 11 → **21** rows,
+`agp` 8 → **1** row (site-side fluctuation; was also 1 row in
+Cycle 7), `usda_mirror_jvg` / `usda_mirror_fsg` 197 → **182**
+rows (new daily report), and `north_gower` now has a first
+recorded count of **15 rows**. `heartland_coop` and
+`mulvane_coop` re-confirmed closed (0 rows, `jsquote.php` tag
+still missing); `mapleview` still a stub. The 8 Ontario
+Playwright adapters were re-checked by raw GET of their
+catalogue URLs — all HTTP 200 with expected widget markers
+(render checks still pending). The 13 DTN adapters and the
+parked `andersons` adapter were not probed. No adapter code
+changed — no page changed shape. Full table:
+`docs/marathon/phase-d-notes.md`.

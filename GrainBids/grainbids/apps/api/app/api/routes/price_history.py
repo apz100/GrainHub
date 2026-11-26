@@ -11,10 +11,12 @@ a price:
   (at most the 5 most recent). Years with no data are reported as
   missing, never invented or interpolated.
 
-Currency note: ``NormalizedPrice`` stores no currency column, so
-``currency`` is returned as ``null`` on every point with a note
-explaining that no currency is assumed. ``unit`` is ``"bu"`` for
-``cash_price_bu`` (``cash_price_mt`` is also returned, unit ``"mt"``).
+Currency note: each point carries its stored source currency
+(migration 0022); points whose source records no currency return
+``currency`` as ``null`` with ``currency_unknown: true`` and a note
+explaining that no currency is assumed for them. Prices are never
+converted here. ``unit`` is ``"bu"`` for ``cash_price_bu``
+(``cash_price_mt`` is also returned, unit ``"mt"``).
 """
 
 from __future__ import annotations
@@ -45,8 +47,10 @@ from app.services.market_canonicalization import canonical_commodity_name, norma
 router = APIRouter(prefix="/api/prices", tags=["prices"])
 
 CURRENCY_NOTE = (
-    "Currency is not stored on normalized prices in this database, "
-    "so currency is null on every point; no currency is assumed. "
+    "Each point carries its stored source currency; points whose "
+    "source records no currency return currency null with "
+    "currency_unknown true — no currency is assumed for those points, "
+    "and no conversion is applied. "
     "Unit is \"bu\" for cash_price_bu (cash_price_mt is also shown, unit \"mt\")."
 )
 SEASONAL_YEARS = 5
@@ -139,7 +143,8 @@ def _serialize_history_point(
         "basis": _to_basis_float(price.basis),
         "cash_price_bu": _to_float(price.cash_price_bu),
         "cash_price_mt": _to_float(price.cash_price_mt),
-        "currency": None,
+        "currency": (price.currency or "").strip().upper() or None,
+        "currency_unknown": not (price.currency or "").strip(),
         "unit": "bu",
     }
 
@@ -189,6 +194,7 @@ def price_history(
         "days": days,
         "point_count": len(points),
         "points": points,
+        "currencies": sorted({str(p["currency"]) for p in points if p["currency"]}),
         "source": HISTORY_SOURCE,
         "as_of": datetime.now(timezone.utc).date().isoformat(),
         "note": CURRENCY_NOTE,
@@ -288,6 +294,9 @@ def price_seasonal(
         "observations_by_year": {str(year): count for year, count in sorted(observations_by_year.items())},
         "point_count": len(points),
         "points": points,
+        "currencies": sorted(
+            {(price.currency or "").strip().upper() for price, _s in rows if (price.currency or "").strip()}
+        ),
         "source": HISTORY_SOURCE,
         "as_of": datetime.now(timezone.utc).date().isoformat(),
         "note": f"{note} {CURRENCY_NOTE}",

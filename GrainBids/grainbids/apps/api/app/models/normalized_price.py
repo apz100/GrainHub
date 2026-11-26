@@ -36,6 +36,15 @@ class NormalizedPrice(Base):
     delivery_end: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
     futures_month: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    # Currency the stored prices are denominated in (ISO 4217, e.g.
+    # "USD" / "CAD"), copied from the collector row at insert time
+    # (migration 0022); when the collector states none, it is derived
+    # from the delivery location's country (Canada -> CAD, US -> USD;
+    # see app/services/currency_rules.py). NULL means neither applied
+    # (non-CA/US or file / manual source). Prices are stored in their
+    # source currency; conversion happens only at display time
+    # with a labelled FX rate.
+    currency: Mapped[str | None] = mapped_column(String(3), nullable=True)
     futures_price: Mapped[float | None] = mapped_column(Numeric(18, 6), nullable=True)
     futures_change: Mapped[float | None] = mapped_column(Numeric(18, 6), nullable=True)
     basis: Mapped[float | None] = mapped_column(Numeric(18, 6), nullable=True)

@@ -5,9 +5,12 @@ commodity + delivery month, optionally within a radius of an origin.
 GET /api/basis/history -- basis over time for one location + commodity.
 
 Basis is always computed from stored normalized prices (cash minus
-futures, per bushel); nothing is estimated. Currency is not stored on
-normalized price rows, so responses report ``currency: null`` with a
-data-quality note explaining that, rather than assuming CAD or USD.
+futures, per bushel); nothing is estimated. Prices carry their
+stored source currency (migration 0022) when the source records one;
+rows without one report ``currency: null`` with
+``currency_unknown: true``, rather than assuming CAD or USD. Ranked
+rows are grouped by currency and never compared across currencies;
+no conversion is applied here.
 
 Origin resolution, in order: ``location_id``, ``location`` name, then the
 stored Testville pilot location (see ``basis_tracker.find_default_origin``).
@@ -533,6 +536,8 @@ def basis_tracker(
         "radius_km": radius_km,
         "delivery_month": delivery_month,
         "currency": ranked["currency"],
+        "currencies": ranked["currencies"],
+        "currency_unknown_count": ranked["currency_unknown_count"],
         "unit": ranked["unit"],
         "ranked": ranked["ranked"],
         "unranked": ranked["unranked"],
@@ -547,7 +552,8 @@ def basis_tracker(
             "Basis = stored cash price (per bushel) minus stored futures "
             "price. Rows without a cash or futures price are listed under "
             "unranked with a missing-data reason; no basis is estimated. "
-            "Rank 1 is the strongest (highest) basis."
+            "Rows are grouped by their stored currency; rank 1 is the "
+            "strongest (highest) basis within its currency group."
         ),
     }
 
@@ -597,6 +603,8 @@ def basis_history(
         "location_id": history["location_id"],
         "limit": limit,
         "currency": history["currency"],
+        "currencies": history["currencies"],
+        "currency_unknown_count": history["currency_unknown_count"],
         "unit": history["unit"],
         "row_count": history["row_count"],
         "missing_count": history["missing_count"],

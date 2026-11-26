@@ -1,0 +1,86 @@
+# Seed production sources — PREPARED, NOT YET RUN.
+#
+# Why this exists: the Render dashboard Shell (and one-off jobs) are
+# paywalled on the Free plan, so the seed job cannot run there without
+# a ~$7/mo Starter upgrade. This workflow runs the exact same job
+# (`python -m app.jobs.seed_sources`) on a standard GitHub-hosted
+# runner instead — $0 on this public repo, same as the ingestion
+# workflow in ingestion.yml. It does NOT enable any schedule.
+#
+# Design: docs/decisions/source-registration-rollout.md
+#   (dry-run -> real seed -> verify -> retire "Ontario Daily File").
+# Pricing: docs/decisions/render-cron-proposal.md
+#   (GitHub Actions = $0 on public repos; Render Cron = $2/mo).
+#
+# To run (Adam's decision, ~5 minutes of his time, $0):
+#   1. Add ONE repo secret: DATABASE_URL (Supabase session-pooler URI,
+#      the same value already in Render). The seed job registers
+#      Source rows only — it fetches no prices, so the two USDA keys
+#      are NOT needed for this workflow. (They are needed later by
+#      ingestion.yml, when the twice-daily poll is switched on.)
+#   2. Merge this file to master, OR run it from this branch:
+#      Actions -> "Seed production sources" -> Run workflow ->
+#      pick the branch, scope "all", dry_run checked.
+#   3. First run WITH dry_run on: expect `would create` ~101 minus
+#      any adapter keys the 6 legacy rows already carry, and
+#      `skipped_disabled` = the toggle-off keys. If the numbers look
+#      wrong, stop — nothing was written.
+#   4. Second run with dry_run OFF: the real seed. Idempotent —
+#      re-running reports created=0.
+#   5. Verify: GET /api/source-health should list the new sources
+#      as status "unknown" (never "healthy" before a first poll).
+#   6. Retire the dead legacy row "Ontario Daily File" (its identifier
+#      is a Windows path, P:\Adam\..., that can never resolve on a
+#      server): in the Supabase SQL editor, $0, no Render needed:
+#        UPDATE sources SET is_active = false
+#        WHERE name = 'Ontario Daily File'
+#          AND org_id = '9e39595c-5706-4496-a59f-b1b38b7c15da';
+#      Leave the other legacy rows until a first poll proves the
+#      registry rows work.
+#
+# After seeding, fresh prices still need the poller: that is the
+# separate ingestion.yml decision (same 3 secrets, schedule still
+# commented out). Seeding alone changes nothing user-visible.
+
+name: Seed production sources
+
+on:
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: "Adapters to seed (all = every enabled registry adapter; pilot = pilot set only)"
+        type: choice
+        options:
+          - all
+          - pilot
+        default: all
+      dry_run:
+        description: "Dry run only — report what would be created, write nothing"
+        type: boolean
+        default: true
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    concurrency: seed-sources
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r GrainBids/grainbids/apps/api/requirements.txt
+      - working-directory: GrainBids/grainbids/apps/api
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          APP_ENV: production
+          ALLOW_IMPLICIT_ORG: "false"
+        run: |
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            EXTRA="--dry-run"
+          else
+            EXTRA=""
+          fi
+          python -m app.jobs.seed_sources \
+            --org-id 9e39595c-5706-4496-a59f-b1b38b7c15da \
+            --scope ${{ inputs.scope }} $EXTRA

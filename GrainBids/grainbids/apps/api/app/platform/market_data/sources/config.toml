@@ -111,6 +111,12 @@ pro_coop_21302 = true  # AgriCharts cashbids.php embed, location 21302 Manson vi
 pro_coop_21302b = true  # AgriCharts cashbids.php embed, location 21302 Manson view — second embed (fields without delivery_end), verified live 2026-11-19 (Cycle 13; same Manson view as pro_coop_21302)
 hull_coop  = true  # AgriCharts cashbids.php embed, verified live 2026-11-19 (Cycle 12)
 stateline_coop = true  # AgriCharts cashbids.php embed, verified live 2026-11-19 (Cycle 12)
+cgb        = true  # AgriCharts cashbids.php embed, verified live 2026-11-27 (14 rows, CGB - MEEKERS LANDING)
+key_coop   = true  # AgriCharts cashbids.php embed, verified live 2026-11-27 (14 rows, Barnes City, IA)
+garden_city = true  # AgriCharts cashbids.php embed, verified live 2026-11-27 (7 rows, Garden City Elevator, KS)
+farmward   = true  # AgriCharts cashbids.php embed, verified live 2026-11-27 (200 rows, 10 MN locations)
+dorchester = true  # AgriCharts cashbids.php embed, verified live 2026-11-27 (32 rows, BEATRICE, NE; groupby=commodity)
+mid_iowa   = true  # AgriCharts cashbids.php embed, verified live 2026-11-27 (129 rows, 30 IA locations incl. ADM/Cargill/POET reference points)
 five_star_coop = true  # wpDataTables bid table, verified live 2026-11-19 (Cycle 9)
 fmn        = true  # AgriCharts writeBidRow cash page, verified live 2026-11-19 (Cycle 10)
 usda_mirror_jvg = true  # USDA AMS cash-bid report mirror, verified live 2026-11-19 (Cycle 4)
@@ -186,7 +192,7 @@ enabled = true   # master switch for all US sources
 
 # ── GENERATED — DO NOT EDIT BY HAND ──────────────────────────────────────
 # Synced from us_elevators_urls.toml by scripts/sync_us_elevators_config.py
-# on 2026-11-19. us_elevators_urls.toml is canonical: edit entries
+# on 2026-11-28. us_elevators_urls.toml is canonical: edit entries
 # there (name / url / type / enabled), then re-run this script.
 # The legacy GrainBidder runner reads this copy; entries whose type it
 # does not know (anything other than "agricharts" / "dtn") are skipped
@@ -392,10 +398,10 @@ name    = "CVA"
 url     = "https://www.cvacoop.com/cash-bids"
 
 [[us.elevators]]
-enabled = false
-type    = "unknown"
+enabled = true
+type    = "agricharts-embed"  # verified 2026-11-27: cashbids-js.php 200, var-bids JSON, 1 location (CGB - MEEKERS LANDING), 14 rows (Corn 7, Beans 7 — Beans maps to Soybeans); reclassified agricharts-embed from "unknown" (old url cgb.com/cgb-grain/ was not the cash-bids page)
 name    = "CGB"
-url     = "https://cgb.com/cgb-grain/"
+url     = "https://cgbgrain.com/midmiss-cash-bids/"
 
 [[us.elevators]]
 enabled = true
@@ -818,19 +824,13 @@ url     = "https://www.wheatongrain.com/cashbidssingle-3440?embed=y"
 # CFE               — https://www.cfe.coop
 # Country Visions   — https://www.countryvisions.coop
 # Evergreen FS      — https://www.evergreenfsinc.com
-# Farmers Coop Dorchester — https://www.farmerscooperativedorchester.com
-# FCS               — https://www.fcs-grain.com
-# Farmward          — https://www.farmward.coop
 # Five Star Coop    — https://www.fivestarcoop.com  (flagged unknown above)
 # FVC               — https://www.fvc.coop
 # Frontier Ag       — https://www.frontierag.com
-# Garden City Coop  — https://www.gardencitycoop.com
 # Hensall Co-op     — https://www.hensalldistrict.com
 # IAS               — https://www.iowaagsystems.com
 # Jennie-O          — https://www.jennieo.com
-# Key Coop          — https://www.key.coop
 # Michael Foods     — https://www.michaelfoods.com
-# Mid Iowa Coop     — https://www.midiowacoop.com
 # Midland Marketing — https://www.midlandmarketing.com
 # NEW Coop          — https://www.newcoop.com
 # New Vision Coop   — https://www.newvisioncoop.com
@@ -973,6 +973,40 @@ enabled = true  # enabled 2026-11-19 (Cycle 17 audit): same USDA AMS report, sec
 type    = "usda"
 name    = "FS Grain (USDA mirror)"
 url     = "https://www.fsgrain.com/pages/usdacash.php"
+
+# ── ADDITIONS — verified 2026-11-27 (Farmbucks US-buyer sweep, AgriCharts embeds) ──
+# Six cashbids-embed adapters (cashbids_embed_source.py): CGB entry above
+# reclassified in place; the five below are new.
+
+[[us.elevators]]
+enabled = true
+type    = "agricharts-embed"  # verified 2026-11-27: cashbids-js.php 200, var-bids JSON, 1 location (Barnes City, IA), 14 rows (Corn 8, Soybeans 6)
+name    = "Key Cooperative"
+url     = "https://keycoop.com/cash-bids-futures"
+
+[[us.elevators]]
+enabled = true
+type    = "agricharts-embed"  # verified 2026-11-27: cashbids-js.php 200, var-bids JSON, 1 location (Garden City Elevator, KS), 7 rows (Corn 2, Milo 2, Hard Red Wheat 2, Hard White Wheat 1)
+name    = "Garden City Coop"
+url     = "https://gccoop.com/products-services/grain"
+
+[[us.elevators]]
+enabled = true
+type    = "agricharts-embed"  # verified 2026-11-27: cashbids-js.php 200, var-bids JSON, 10 locations (Clements, Comfrey, Danube East, Morgan, Morton, Olivia, Renville, Sacred Heart, Springfield, Wood Lake — MN), 200 rows (Corn 100, Soybeans 100)
+name    = "Farmward Cooperative"
+url     = "https://farmward.net"
+
+[[us.elevators]]
+enabled = true
+type    = "agricharts-embed"  # verified 2026-11-27: cashbids-js.php 200, var-bids JSON, 32 rows (Corn 10, Milo 10, Beans 10, Wheat 2), groupby=commodity, single location BEATRICE, NE via location_name
+name    = "Farmers Cooperative Dorchester"
+url     = "https://farmersco-operative.com/grain/grain-cash-bids"
+
+[[us.elevators]]
+enabled = true
+type    = "agricharts-embed"  # verified 2026-11-27: cashbids-js.php 200, var-bids JSON, 30 locations incl. ADM / Cargill / POET reference points recorded as published, 129 rows (Corn 75, Soybeans 54)
+name    = "Mid Iowa Coop"
+url     = "https://midiowacoop.com/grains/cash-bids/"
 
 [notifications]
 enabled = false

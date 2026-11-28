@@ -1,6 +1,6 @@
 """US AgriCharts + DTN URL-bound registry adapter tests (Cycle 20).
 
-The 13 enabled ``agricharts`` + 13 enabled ``dtn`` entries in
+The 14 enabled ``agricharts`` + 13 enabled ``dtn`` entries in
 ``us_elevators_urls.toml`` had no registry adapter at all — the legacy
 generic functions take a URL, while the registry calls ``fetch_fn()``
 with no arguments. Cycle 20 adds one zero-argument ``fetch_<slug>()``
@@ -64,6 +64,7 @@ EXPECTED_AGRICHARTS: list[tuple[str, str, str]] = [
     ("central_farmers_coop", "Central Farmers Coop", "https://www.cenfarmcoop.com/markets/cash.php"),
     ("anthony_farmers_coop", "Anthony Farmers Co-op", "https://www.anthonycoop.com/markets/cash.php"),
     ("mulvane_coop", "Mulvane Coop", "https://www.mulvanecoop.com/markets/cash.php"),
+    ("pilgrims", "Pilgrim's Gold'n Plump", "https://gnpcograin.com/markets/cash.php"),
 ]
 
 EXPECTED_DTN: list[tuple[str, str, str]] = [
@@ -224,8 +225,8 @@ def test_config_toggles_exist_for_all_new_adapters() -> None:
 
 
 def test_agricharts_and_dtn_keys_do_not_collide() -> None:
-    """The 26 new keys are distinct from each other and from heritage_coop."""
+    """The 27 new keys are distinct from each other and from heritage_coop."""
     all_keys = [k for k, _n, _u in EXPECTED_AGRICHARTS + EXPECTED_DTN]
-    assert len(all_keys) == len(set(all_keys)) == 26
+    assert len(all_keys) == len(set(all_keys)) == 27
     assert "heritage_grain_cooperative" not in {"heritage_coop"}
     assert "heritage_grain_cooperative" in set(all_keys)

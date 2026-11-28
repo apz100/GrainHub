@@ -381,3 +381,59 @@ def test_bushel_unknown_site_key_raises() -> None:
         assert "nope" in str(exc)
     else:
         raise AssertionError("expected KeyError")
+
+
+# ---------------------------------------------------------------------------
+# Farmbucks batch (2026-11-28): recorded live fixtures — values are the
+# live prices at capture time, trimmed to the .cbmod widget.
+# ---------------------------------------------------------------------------
+
+
+def test_bushel_jennie_o_thirteen_corn_rows_faribault_medford() -> None:
+    result = bushel_source.parse_bushel_html(
+        _read("bushel_jennie_o_sample.html"),
+        site=bushel_source.get_bushel_site("jennie_o"),
+    )
+    assert result["status"] == "ok"
+    assert result["company"] == "Jennie-O Turkey Store"
+    assert result["location"] == "Faribault/Medford"
+    rows = result["rows"]
+    assert len(rows) == 13
+    assert {r["commodity"] for r in rows} == {"Corn"}
+    assert {r["location"] for r in rows} == {"Faribault/Medford"}
+    assert all(r["currency"] == "USD" and r["unit"] == "$/bu" for r in rows)
+    dec = next(r for r in rows if r["delivery_month"] == "Dec 26")
+    assert dec["cash_price"] == 4.06
+    assert dec["basis"] == -0.56
+    assert dec["futures_price"] == 4.625
+    assert dec["futures_month"] == "Mar 27 Corn"
+    assert dec["last_trade"] == "12:05 PM"
+    assert dec["note"] == ""
+    assert any("Cash bids for Friday, November 27, 2026" in n for n in result["notes"])
+
+
+def test_bushel_midland_eight_rows_brownell_white_wheat_passthrough() -> None:
+    result = bushel_source.parse_bushel_html(
+        _read("bushel_midland_sample.html"),
+        site=bushel_source.get_bushel_site("midland"),
+    )
+    assert result["status"] == "ok"
+    assert result["company"] == "Midland Marketing"
+    assert result["location"] == "Brownell"
+    rows = result["rows"]
+    assert len(rows) == 8
+    assert {r["commodity"] for r in rows} == {"Corn", "Milo", "Wheat", "White Wheat"}
+    assert all(len([r for r in rows if r["commodity"] == c]) == 2 for c in ("Corn", "Milo", "Wheat", "White Wheat"))
+    assert all(r["currency"] == "USD" and r["unit"] == "$/bu" for r in rows)
+    wheat_cash = next(
+        r for r in rows if r["commodity"] == "Wheat" and r["delivery_month"] == "Cash"
+    )
+    assert wheat_cash["cash_price"] == 5.47
+    assert wheat_cash["basis"] == -0.6
+    assert wheat_cash["futures_price"] == 6.0725
+    assert wheat_cash["futures_month"] == "Dec 26 KCBT Red Wheat"
+    # "White Wheat" is not in COMMODITY_MAP and passes through as-is.
+    white = next(r for r in rows if r["commodity"] == "White Wheat")
+    assert white["delivery_month"] == "Cash"
+    assert white["cash_price"] == 5.47
+    assert any("Cash bids for Friday, November 27, 2026" in n for n in result["notes"])

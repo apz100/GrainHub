@@ -542,6 +542,18 @@ name    = "Smithfield Grain — Hamer (2179)"
 url     = "https://smithfieldgrain.com/cashbidssingle-2179"
 
 [[us.elevators]]
+enabled = true  # enabled 2026-11-28 (Farmbucks batch): HTTP 200 at the per-location target /cashbidssingle-3715 (Jennie-O Turkey Store, Faribault/Medford, MN) — static Bushel .cbmod widget, 13 rows (Corn only), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 13 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_jennie_o() added; widget header dated Friday, November 27, 2026. Only the public bid tables are parsed; offers go through a login portal, which is not fetched.
+type    = "bushel"
+name    = "Jennie-O Turkey Store (3715)"
+url     = "https://www.jennieobids.com/cashbidssingle-3715"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-28 (Farmbucks batch): HTTP 200 at /cash-bids (Midland Marketing, Brownell, KS) — static Bushel .cbmod widget, 8 rows (Corn 2, Milo 2, Wheat 2, White Wheat 2), standard wrapped .cbCommodity + 7-col ul.sevenColumnsBigFirst; existing generic bushel_source.py parse_bushel_html verified status ok, 8 rows, against saved HTML — BUSHEL_SITES registry entry + fetch_midland() added; widget header dated Friday, November 27, 2026. Footer credits Barchart for market data, but the bid widget is the Bushel .cbmod served from the company's own domain.
+type    = "bushel"
+name    = "Midland Marketing"
+url     = "https://midlandmarketing.org/cash-bids"
+
+[[us.elevators]]
 enabled = false
 type    = "none"  # reclassified 2026-11-19 (Cycle 10): milling-company homepage, zero cash-bid mentions and no grain/bid links — no public bid page, do not add
 name    = "Star of the West"
@@ -677,6 +689,12 @@ enabled = true
 type    = "agricharts"
 name    = "Mulvane Coop"
 url     = "https://www.mulvanecoop.com/markets/cash.php"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-28 (Farmbucks batch): HTTP 200 at /markets/cash.php (Pilgrim's Gold'n Plump, Arcadia + Sauk Rapids, MN) — static AgriCharts writeBidRow page, 12 rows (Corn), jsquote.php tag present; existing generic us_agricharts_source.py fetch_us_agricharts verified 12 rows live — US_AGRICHARTS_SITES registry entry + fetch_pilgrims() added; USD/bu
+type    = "agricharts"
+name    = "Pilgrim's Gold'n Plump"
+url     = "https://gnpcograin.com/markets/cash.php"
 
 # ── DTN subdomain / DTN-style — widget reference confirmed in HTML + live bid
 # rows visible in search-indexed page text; confirm rows in Playwright, then enable.

@@ -445,6 +445,11 @@ US_AGRICHARTS_SITES: dict[str, tuple[str, str]] = {
     "central_farmers_coop": ("Central Farmers Coop", "https://www.cenfarmcoop.com/markets/cash.php"),
     "anthony_farmers_coop": ("Anthony Farmers Co-op", "https://www.anthonycoop.com/markets/cash.php"),
     "mulvane_coop": ("Mulvane Coop", "https://www.mulvanecoop.com/markets/cash.php"),
+    # Farmbucks batch (2026-11-28): Pilgrim's Gold'n Plump — static
+    # writeBidRow cash page, verified live 2026-11-28: 12 rows (Corn,
+    # Arcadia + Sauk Rapids, MN, delivery 11/01/2026–07/31/2027),
+    # jsquote.php tag present, USD/bu.
+    "pilgrims": ("Pilgrim's Gold'n Plump", "https://gnpcograin.com/markets/cash.php"),
 }
 
 
@@ -541,4 +546,15 @@ def fetch_anthony_farmers_coop() -> pd.DataFrame:
 def fetch_mulvane_coop() -> pd.DataFrame:
     """Fetch Mulvane Coop (static writeBidRow cash page) via the generic collector."""
     name, url = US_AGRICHARTS_SITES["mulvane_coop"]
+    return fetch_us_agricharts(url, name)
+
+
+def fetch_pilgrims() -> pd.DataFrame:
+    """Fetch Pilgrim's Gold'n Plump (static writeBidRow cash page) via the generic collector.
+
+    Verified live 2026-11-28: 12 static writeBidRow rows at
+    /markets/cash.php (Corn, Arcadia + Sauk Rapids, MN, delivery
+    11/01/2026–07/31/2027), jsquote.php tag present, USD/bu.
+    """
+    name, url = US_AGRICHARTS_SITES["pilgrims"]
     return fetch_us_agricharts(url, name)

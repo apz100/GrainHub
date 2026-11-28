@@ -1,0 +1,31 @@
+<html><body>
+<!--
+  SYNTHETIC fixture for the Hensall collector tests — invented test
+  data, not a live capture (the live page can only be rendered in a
+  browser; this sandbox has no browser egress). Shape follows the
+  Hensall <dtn-table> widget as the adapter expects it: a <dtn-table>
+  element whose inner <table> carries the documented headers
+  LOCATION | DELIVERY LABEL | CASH PRICE | BASIS | SYMBOL |
+  FUTURES PRICE | CHANGE | CONVERTED CASH PRICE | Chart.
+-->
+<div>
+  <h1>Corn</h1>
+  <dtn-table>
+    <table>
+      <thead><tr>
+        <th>LOCATION</th><th>DELIVERY LABEL</th><th>CASH PRICE</th>
+        <th>BASIS</th><th>SYMBOL</th><th>FUTURES PRICE</th>
+        <th>CHANGE</th><th>CONVERTED CASH PRICE</th><th>Chart</th>
+      </tr></thead>
+      <tbody>
+        <tr><td>Hensall</td><td>Dec 2026</td><td>10.00</td><td>1.00</td>
+        <td>@C26Z</td><td>400'0</td><td>0'2</td><td>393.70</td><td></td></tr>
+        <tr><td>Hensall</td><td>Nov 2027</td><td>11.00</td><td>1.50</td>
+        <td>@C27Z</td><td>410'0</td><td>-0'2</td><td>433.07</td><td></td></tr>
+        <tr><td></td><td></td><td></td><td></td>
+        <td></td><td></td><td></td><td></td><td></td></tr>
+      </tbody>
+    </table>
+  </dtn-table>
+</div>
+</body></html>

@@ -105,10 +105,14 @@ def _extract_location_options(page) -> Dict[str, str]:
     # Playwright's sense (they live inside a closed <select>), so
     # the default visible wait would time out even when the options
     # are present.
+    # Timeout is 60 s (was 30 s): the DTN backend that populates the
+    # dropdown took ~10 s on a direct probe 2026-11-28 and was slower
+    # still during run 46103946452, where all three attempts timed
+    # out at 30 s. Still inside the adapter's 90 s timeout.
     page.wait_for_selector(
         "select[name*='Location' i] option[value]",
         state="attached",
-        timeout=30000,
+        timeout=60000,
     )
     pairs = page.eval_on_selector_all(
         "select[name*='Location' i] option",
@@ -120,6 +124,16 @@ def _extract_location_options(page) -> Dict[str, str]:
             options[value] = label
     if not options:
         raise RuntimeError("Parsed zero LAC locations from dropdown (rendered page)")
+    # The DTN backend can answer with a single placeholder option
+    # ("No Locations Listed", value "0") instead of real locations —
+    # verified live 2026-11-28, twice, with a session: the backend
+    # currently lists no locations at all, and theLocation pages
+    # render no bid tables either. Iterating location "0" would fetch
+    # nothing; fail loudly with the actual cause instead.
+    if set(options) == {"0"}:
+        raise RuntimeError(
+            "LAC backend lists no locations (DTN returned 'No Locations Listed')"
+        )
     return options
 
 

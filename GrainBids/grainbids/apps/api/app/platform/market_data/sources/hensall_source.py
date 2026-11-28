@@ -117,6 +117,41 @@ def _normalize_hensall_df(df_raw: pd.DataFrame, commodity_name: str) -> pd.DataF
     return out
 
 
+def _collect_dtn_tables(page, timeout_ms: int = 60_000) -> List[Dict[str, str]]:
+    """Wait for the DTN cash-bids widget to render <dtn-table> elements
+    and return [{name, html}] per widget.
+
+    The widget is slow to appear: its JS (920 KB) must load, then it
+    fetches bid data from api.dtn.com — a single direct probe of that
+    API took ~22 s on a cold gateway — and only then renders the
+    tables. The previous code waited a blind 5 s after
+    domcontentloaded and usually found nothing ("no dtn-table
+    elements found", run 46103946452). Waiting on the element itself
+    (60 s by default, inside the adapter's 90 s timeout) is robust to
+    however long the widget + API take. Raises PWTimeout if nothing
+    renders.
+    """
+    page.wait_for_selector("dtn-table", timeout=timeout_ms)
+    return page.eval_on_selector_all(
+        "dtn-table",
+        """
+        els => els.map(el => {
+            const parent = el.parentElement;
+            let name = "";
+            if (parent) {
+                const h1 = parent.querySelector("h1");
+                if (h1) name = h1.textContent.trim();
+            }
+            const tbl = el.querySelector("table");
+            return {
+                name,
+                html: tbl ? tbl.outerHTML : ""
+            };
+        })
+        """,
+    )
+
+
 def fetch_hensall(playwright) -> pd.DataFrame:
     """
     Load the Hensall cash-bids page with Playwright, extract all <dtn-table>
@@ -131,30 +166,13 @@ def fetch_hensall(playwright) -> pd.DataFrame:
     try:
         page.goto(HENSALL_URL, wait_until="domcontentloaded", timeout=60_000)
 
-        # Let JS render the widget
-        page.wait_for_timeout(5_000)
-
         try:
-            items: List[Dict[str, str]] = page.eval_on_selector_all(
-                "dtn-table",
-                """
-                els => els.map(el => {
-                    const parent = el.parentElement;
-                    let name = "";
-                    if (parent) {
-                        const h1 = parent.querySelector("h1");
-                        if (h1) name = h1.textContent.trim();
-                    }
-                    const tbl = el.querySelector("table");
-                    return {
-                        name,
-                        html: tbl ? tbl.outerHTML : ""
-                    };
-                })
-                """,
-            )
+            items: List[Dict[str, str]] = _collect_dtn_tables(page)
         except PWTimeout:
-            print("[HENSALL WARN] no dtn-table elements found (timeout)")
+            print(
+                "[HENSALL WARN] no dtn-table elements found "
+                "(DTN widget did not render within 60s)"
+            )
             return pd.DataFrame()
 
         if not items:

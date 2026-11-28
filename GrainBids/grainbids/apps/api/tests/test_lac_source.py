@@ -71,3 +71,27 @@ def test_extract_location_options_from_rendered_page() -> None:
         options = lac_source._extract_location_options(page)  # noqa: SLF001
         browser.close()
     assert options == {"12": "London", "34": "St. Thomas"}
+
+
+def test_extract_location_options_no_locations_listed() -> None:
+    """Regression (run 46103946452): the DTN backend answered the
+    locations AJAX with a single placeholder option — "No Locations
+    Listed", value "0" — verified live 2026-11-28, twice, with a
+    session, and theLocation pages render no bid tables either. The
+    old code would have treated "0" as a real location and fetched
+    nothing for it; it now fails loudly with the actual cause.
+    Exercised here with a fixture page — no network.
+    """
+    import pytest
+    from playwright.sync_api import sync_playwright
+
+    html = """<html><body><form><select name="Location">
+    <option value="0">No Locations Listed</option>
+    </select></form></body></html>"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
+        page.set_content(html)
+        with pytest.raises(RuntimeError, match="lists no locations"):
+            lac_source._extract_location_options(page)  # noqa: SLF001
+        browser.close()

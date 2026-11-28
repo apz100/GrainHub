@@ -215,12 +215,13 @@ def test_tgm_groupby_commodity_beans_maps_to_soybeans():
     assert white["futures_price"] == pytest.approx(4.20)
 
 
-def test_registry_twelve_verified_sites_and_key_errors():
+def test_registry_fifteen_verified_sites_and_key_errors():
     sites = cashbids_embed_source.CASHBIDS_EMBED_SITES
     assert sorted(sites) == [
         "ag_state",
         "agtegra",
         "alcivia",
+        "evergreen_fs",
         "heritage_coop",
         "hull_coop",
         "linn_coop",
@@ -228,6 +229,7 @@ def test_registry_twelve_verified_sites_and_key_errors():
         "pro_coop",
         "pro_coop_21302",
         "pro_coop_21302b",
+        "star_of_the_west",
         "stateline_coop",
         "superior_ag",
         "tgm",
@@ -605,3 +607,145 @@ def test_fetch_stateline_coop_uses_verified_url() -> None:
     assert result["status"] == "ok"
     assert result["company"] == "StateLine Coop"
     assert len(result["rows"]) == 4
+
+
+# ---------------------------------------------------------------------------
+# 2026-11-28 — Evergreen FS (fsgrain, filter=all, 38 locations) and
+# Star of the West (sotw, Quincy MI location 9388). Fixtures are
+# RECORDED LIVE responses, trimmed (see the fixture headers) — values
+# below are live prices as published 2026-11-28, not invented data.
+# ---------------------------------------------------------------------------
+
+
+def test_registry_new_sites_evergreen_and_star_use_verified_live_js_urls():
+    evergreen = cashbids_embed_source.get_cashbids_embed_site("evergreen_fs")
+    assert evergreen.company == "Evergreen FS"
+    assert evergreen.js_url.startswith(
+        "https://fsgrain.agricharts.com/inc/cashbids/cashbids-js.php"
+        "?filter=all&location=&commodity=&groupby=location"
+    )
+    assert evergreen.js_url.endswith("noscript=1&&acCnt=1")
+    # dateformat is %m/%d (no year) on this site.
+    assert "dateformat=%25m%2F%25d&months=8" in evergreen.js_url
+    assert evergreen.default_location == "Ashton"  # first location seen live
+    star = cashbids_embed_source.get_cashbids_embed_site("star_of_the_west")
+    assert star.company == "Star of the West Milling"
+    assert star.js_url.startswith(
+        "https://sotw.agricharts.com/inc/cashbids/cashbids-js.php"
+        "?filter=location&location=9388&commodity=&groupby=location"
+    )
+    assert star.js_url.endswith("noscript=1&&acCnt=1")
+    assert star.default_location == "Quincy, MI"  # Quincy embed only
+
+
+def test_evergreen_fs_sample_parses_multi_location_rows():
+    site = cashbids_embed_source.get_cashbids_embed_site("evergreen_fs")
+    result = cashbids_embed_source.parse_cashbids_embed_html(
+        _read("cashbids_embed_evergreen_fs.html"), site=site
+    )
+    assert result["status"] == "ok"
+    assert result["company"] == "Evergreen FS"
+    # Trimmed fixture: Ashton + Bourbonnais groups, 16 rows each.
+    assert len(result["rows"]) == 32
+    assert result["location"] == "Ashton"  # first row's location
+    assert {row["location"] for row in result["rows"]} == {
+        "Ashton",
+        "Bourbonnais",
+    }
+    assert {row["commodity"] for row in result["rows"]} == {"Corn", "Soybeans"}
+    assert all(row["currency"] == "USD" for row in result["rows"])
+    assert all(row["unit"] == "$/bu" for row in result["rows"])
+    dec = next(
+        row
+        for row in result["rows"]
+        if row["location"] == "Ashton"
+        and row["commodity"] == "Corn"
+        and row["futures_symbol"] == "ZCZ26"
+    )
+    # futures "446-6" = 446.75 cents -> $4.4675; basis -30 cents.
+    assert dec["futures_price"] == pytest.approx(4.4675)
+    assert dec["basis"] == pytest.approx(-0.30)
+    assert dec["cash_price"] == pytest.approx(4.1675)
+    assert dec["futures_month"] == "Dec 2026"
+    assert dec["futures_change"] == pytest.approx(0.07)
+    assert dec["change"] == pytest.approx(0.07)
+    # dateformat %m/%d (no year): the delivery label is carried verbatim.
+    assert dec["delivery_month"] == "11/27"
+    assert dec["delivery_start"] == "11/27"
+    assert dec["delivery_end"] == "11/30"
+    jan = next(
+        row
+        for row in result["rows"]
+        if row["location"] == "Ashton"
+        and row["delivery_start"] == "01/01"
+    )
+    assert jan["delivery_month"] == "01/01"
+    assert jan["futures_month"] == "Mar 2027"
+    assert jan["futures_price"] == pytest.approx(4.63)
+    assert jan["basis"] == pytest.approx(-0.39)
+
+
+def test_fetch_evergreen_fs_uses_verified_url() -> None:
+    html = _read("cashbids_embed_evergreen_fs.html")
+    with patch.object(
+        cashbids_embed_source,
+        "fetch_cashbids_embed_html",
+        return_value=html,
+    ) as mock_get:
+        result = cashbids_embed_source.fetch_evergreen_fs()
+    mock_get.assert_called_once_with(
+        cashbids_embed_source.get_cashbids_embed_site("evergreen_fs").js_url
+    )
+    assert result["status"] == "ok"
+    assert result["company"] == "Evergreen FS"
+    assert result["location"] == "Ashton"
+    assert len(result["rows"]) == 32
+
+
+def test_star_of_the_west_sample_parses_quincy_red_wheat_rows():
+    site = cashbids_embed_source.get_cashbids_embed_site("star_of_the_west")
+    result = cashbids_embed_source.parse_cashbids_embed_html(
+        _read("cashbids_embed_star_of_the_west.html"), site=site
+    )
+    assert result["status"] == "ok"
+    assert result["company"] == "Star of the West Milling"
+    assert len(result["rows"]) == 2
+    assert result["location"] == "Quincy, MI"
+    assert {row["location"] for row in result["rows"]} == {"Quincy, MI"}
+    assert {row["commodity"] for row in result["rows"]} == {"Red Wheat"}
+    assert all(row["currency"] == "USD" for row in result["rows"])
+    assert all(row["unit"] == "$/bu" for row in result["rows"])
+    dec = next(
+        row for row in result["rows"] if row["futures_symbol"] == "ZWH27"
+    )
+    # futures "591-0" = 591.0 cents -> $5.91; basis -35 cents.
+    assert dec["futures_price"] == pytest.approx(5.91)
+    assert dec["basis"] == pytest.approx(-0.35)
+    assert dec["cash_price"] == pytest.approx(5.56)
+    assert dec["futures_month"] == "Mar 2027"
+    assert dec["delivery_month"] == "Nov 2026"
+    assert dec["delivery_start"] == "11/27/2026"
+    jul = next(
+        row for row in result["rows"] if row["futures_symbol"] == "ZWN27"
+    )
+    # futures "606-6" = 606.75 cents -> $6.0675.
+    assert jul["futures_price"] == pytest.approx(6.0675)
+    assert jul["cash_price"] == pytest.approx(5.72)
+    assert jul["delivery_month"] == "Jul 2027"
+
+
+def test_fetch_star_of_the_west_uses_verified_url() -> None:
+    html = _read("cashbids_embed_star_of_the_west.html")
+    with patch.object(
+        cashbids_embed_source,
+        "fetch_cashbids_embed_html",
+        return_value=html,
+    ) as mock_get:
+        result = cashbids_embed_source.fetch_star_of_the_west()
+    mock_get.assert_called_once_with(
+        cashbids_embed_source.get_cashbids_embed_site("star_of_the_west").js_url
+    )
+    assert result["status"] == "ok"
+    assert result["company"] == "Star of the West Milling"
+    assert result["location"] == "Quincy, MI"
+    assert len(result["rows"]) == 2

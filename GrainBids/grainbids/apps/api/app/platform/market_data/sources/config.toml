@@ -113,6 +113,9 @@ pro_coop_21302 = true  # AgriCharts cashbids.php embed, location 21302 Manson vi
 pro_coop_21302b = true  # AgriCharts cashbids.php embed, location 21302 Manson view — second embed (fields without delivery_end), verified live 2026-11-19 (Cycle 13; same Manson view as pro_coop_21302)
 hull_coop  = true  # AgriCharts cashbids.php embed, verified live 2026-11-19 (Cycle 12)
 stateline_coop = true  # AgriCharts cashbids.php embed, verified live 2026-11-19 (Cycle 12)
+evergreen_fs = true  # AgriCharts cashbids.php embed (fsgrain), verified live 2026-11-28 (492 rows, 38 locations, Corn/Soybeans)
+star_of_the_west = true  # AgriCharts cashbids.php embed (sotw, Quincy MI location 9388), verified live 2026-11-28 (2 Red Wheat rows)
+luckey = true  # Own JSON API (widgets-admin.luckeyfarmers.com/api/v1/cashbids), verified live 2026-11-28 (77 bids, 14 locations, Corn/Soybeans/Wheat)
 five_star_coop = true  # wpDataTables bid table, verified live 2026-11-19 (Cycle 9)
 fmn        = true  # AgriCharts writeBidRow cash page, verified live 2026-11-19 (Cycle 10)
 usda_mirror_jvg = true  # USDA AMS cash-bid report mirror, verified live 2026-11-19 (Cycle 4)
@@ -331,10 +334,10 @@ name    = "Linn Coop"
 url     = "https://www.linncoop.com/grain/cash-bids"
 
 [[us.elevators]]
-enabled = false  # verified dead 2026-11-19 (HTTP 404) - disabled in Cycle 1
-type    = "dtn"
+enabled = true  # enabled 2026-11-28: the old /markets/cash.php URL 404'd (verified dead 2026-11-19, Cycle 1), but the live grain-bids page (luckeyfarmers.com/grain-bids/) loads the company's OWN JSON API (widgets-admin.luckeyfarmers.com/api/v1/cashbids) — plain GET, no auth, 200, 14 locations, 77 bids (Corn/Soybeans/Wheat), parsed by the new luckey_source.py; no Barchart/DTN/AgriCharts/Bushel host involved
+type    = "json-api"  # reclassified 2026-11-28: dtn (dead /markets/cash.php) → json-api (own API behind /grain-bids/)
 name    = "Luckey Farmers"
-url     = "https://www.luckeyfarmers.com/markets/cash.php"
+url     = "https://luckeyfarmers.com/grain-bids/"
 
 [[us.elevators]]
 enabled = true
@@ -739,11 +742,12 @@ type    = "bushel"
 name    = "Midland Marketing"
 url     = "https://midlandmarketing.org/cash-bids"
 
+
 [[us.elevators]]
-enabled = false
-type    = "none"  # reclassified 2026-11-19 (Cycle 10): milling-company homepage, zero cash-bid mentions and no grain/bid links — no public bid page, do not add
+enabled = true  # enabled 2026-11-28: the company's Quincy location page (starofthewest.com/Quincy) embeds an AgriCharts cashbids widget (sotw.agricharts.com, location 9388) — cashbids-js.php 200, var-bids JSON, 2 Red Wheat rows (Quincy, MI, cash 5.56, basis -0.35), parsed by cashbids_embed_source.py; this adapter covers the Quincy embed only, other SOTW locations need their own location-param embeds later; do NOT use the Barchart Marketplace bid page found in research
+type    = "agricharts-embed"  # reclassified 2026-11-28: none (homepage, no bid page found in Cycle 10) → agricharts-embed (Quincy location page embed)
 name    = "Star of the West"
-url     = "https://www.starofthewest.com"
+url     = "https://starofthewest.com/Quincy"
 
 [[us.elevators]]
 enabled = true  # enabled 2026-11-19 (Cycle 12): cashbids-js.php 200, var-bids JSON, 11 locations (Armstrong, Blue Earth, Cylinder, Emmetsburg-AGP, Fenton, Lakota, Ledyard, Marna, North Burt, Ringsted, Swea City), 126 rows (Corn 60, Soybeans 66; Emmetsburg-AGP Soybeans-only) — collector-ready; registry wiring is the coordinator's step
@@ -832,7 +836,6 @@ url     = "https://www.wheatongrain.com/cashbidssingle-3440?embed=y"
 # ── NOT FOUND (no cash bid page detected) ─────────────────────────────────────
 # CFE               — https://www.cfe.coop
 # Country Visions   — https://www.countryvisions.coop
-# Evergreen FS      — https://www.evergreenfsinc.com
 # Farmers Coop Dorchester — https://www.farmerscooperativedorchester.com
 # FCS               — https://www.fcs-grain.com
 # Farmward          — https://www.farmward.coop
@@ -994,6 +997,12 @@ enabled = true  # enabled 2026-11-19 (Cycle 17 audit): same USDA AMS report, sec
 type    = "usda"
 name    = "FS Grain (USDA mirror)"
 url     = "https://www.fsgrain.com/pages/usdacash.php"
+
+[[us.elevators]]
+enabled = true  # enabled 2026-11-28: FS Grain board (fsgrain.com/cashbidsindex, linked from fscooperatives.com/evergreenfs/agriculture/cash-bids) embeds an AgriCharts cashbids widget — cashbids-js.php 200, var-bids JSON, 38 location groups, 492 rows (Corn 265, Soybeans 227; Holder and McLean among the Evergreen FS towns, plus ADM/Cargill/CGB/CHS reference buyers as published), parsed by cashbids_embed_source.py; dateformat is %m/%d (no year)
+type    = "agricharts-embed"
+name    = "Evergreen FS"
+url     = "https://fscooperatives.com/evergreenfs/agriculture/cash-bids"
 
 [notifications]
 enabled = false

@@ -1,0 +1,235 @@
+{
+  "kind": "normal",
+  "batchUid": "a72cbd5f",
+  "lastUpdatedAt": "2026-11-27T16:59:40.000-05:00",
+  "createdAt": "2026-11-27T16:59:41.569-05:00",
+  "futuresRecordId": 791487,
+  "data": {
+    "locationId1": {
+      "name": "Curtice",
+      "cropId1": {
+        "bids": [
+          {
+            "id": 104198770,
+            "kind": "normal",
+            "name": "Cash",
+            "basis": "-0.18",
+            "basisF": "-0.18",
+            "cropId": 1,
+            "symbol": "ZCZ26",
+            "batchUid": "a72cbd5f",
+            "futureId": 38461653,
+            "createdAt": "2026-11-27T16:59:41.151-05:00",
+            "currentBid": "4.29",
+            "expiration": "2026-12-13T19:00:00.000-05:00",
+            "locationId": 1,
+            "contractUid": "11742",
+            "currentBidF": "4.29",
+            "futuresMonth": "Dec 26",
+            "priceUpdatedAt": "2026-11-27T13:00:45.653-05:00",
+            "futuresPriceTick": "446'6",
+            "cashbidsSummaryId": null,
+            "futuresChangeSign": 1,
+            "futuresChangeTick": "7'0"
+          },
+          {
+            "id": 104198822,
+            "kind": "normal",
+            "name": "NC 27",
+            "basis": "-0.43",
+            "basisF": "-0.43",
+            "cropId": 1,
+            "symbol": "ZCZ27",
+            "batchUid": "a72cbd5f",
+            "futureId": 38461658,
+            "createdAt": "2026-11-27T16:59:41.493-05:00",
+            "currentBid": "4.48",
+            "expiration": "2027-12-13T19:00:00.000-05:00",
+            "locationId": 1,
+            "contractUid": "16736",
+            "currentBidF": "4.48",
+            "futuresMonth": "Dec 27",
+            "priceUpdatedAt": "2026-11-27T13:00:45.653-05:00",
+            "futuresPriceTick": "491'0",
+            "cashbidsSummaryId": null,
+            "futuresChangeSign": 1,
+            "futuresChangeTick": "6'4"
+          }
+        ],
+        "name": "Corn",
+        "contractUids": [
+          "11742",
+          "16736"
+        ]
+      },
+      "cropId2": {
+        "bids": [
+          {
+            "id": 104198783,
+            "kind": "normal",
+            "name": "Cash",
+            "basis": "-0.35",
+            "basisF": "-0.35",
+            "cropId": 2,
+            "symbol": "ZSF27",
+            "batchUid": "a72cbd5f",
+            "futureId": 38461666,
+            "createdAt": "2026-11-27T16:59:41.232-05:00",
+            "currentBid": "12.31",
+            "expiration": "2027-01-13T19:00:00.000-05:00",
+            "locationId": 1,
+            "contractUid": "19833",
+            "currentBidF": "12.31",
+            "futuresMonth": "Jan 27",
+            "priceUpdatedAt": "2026-11-27T13:00:45.603-05:00",
+            "futuresPriceTick": "1266'2",
+            "cashbidsSummaryId": null,
+            "futuresChangeSign": 1,
+            "futuresChangeTick": "22'2"
+          },
+          {
+            "id": 104198809,
+            "kind": "normal",
+            "name": "NC 27",
+            "basis": "-0.55",
+            "basisF": "-0.55",
+            "cropId": 2,
+            "symbol": "ZSX27",
+            "batchUid": "a72cbd5f",
+            "futureId": 38461672,
+            "createdAt": "2026-11-27T16:59:41.406-05:00",
+            "currentBid": "11.51",
+            "expiration": "2027-11-11T19:00:00.000-05:00",
+            "locationId": 1,
+            "contractUid": "14694",
+            "currentBidF": "11.51",
+            "futuresMonth": "Nov 27",
+            "priceUpdatedAt": "2026-11-27T13:00:45.603-05:00",
+            "futuresPriceTick": "1205'4",
+            "cashbidsSummaryId": null,
+            "futuresChangeSign": 1,
+            "futuresChangeTick": "19'6"
+          }
+        ],
+        "name": "Soybean",
+        "contractUids": [
+          "19833",
+          "14694"
+        ]
+      },
+      "cropId3": {
+        "bids": [
+          {
+            "id": 104198758,
+            "kind": "normal",
+            "name": "Cash",
+            "basis": "-0.3",
+            "basisF": "-0.30",
+            "cropId": 3,
+            "symbol": "ZWZ26",
+            "batchUid": "a72cbd5f",
+            "futureId": 38461639,
+            "createdAt": "2026-11-27T16:59:41.064-05:00",
+            "currentBid": "5.37",
+            "expiration": "2026-12-13T19:00:00.000-05:00",
+            "locationId": 1,
+            "contractUid": "18689",
+            "currentBidF": "5.37",
+            "futuresMonth": "Dec 26",
+            "priceUpdatedAt": "2026-11-27T13:00:32.430-05:00",
+            "futuresPriceTick": "566'4",
+            "cashbidsSummaryId": null,
+            "futuresChangeSign": 1,
+            "futuresChangeTick": "1'0"
+          },
+          {
+            "id": 104198797,
+            "kind": "normal",
+            "name": "NC 27",
+            "basis": "-0.4",
+            "basisF": "-0.40",
+            "cropId": 3,
+            "symbol": "ZWN27",
+            "batchUid": "a72cbd5f",
+            "futureId": 38461642,
+            "createdAt": "2026-11-27T16:59:41.326-05:00",
+            "currentBid": "5.67",
+            "expiration": "2027-07-13T20:00:00.000-04:00",
+            "locationId": 1,
+            "contractUid": "18636",
+            "currentBidF": "5.67",
+            "futuresMonth": "Jul 27",
+            "priceUpdatedAt": "2026-11-27T13:00:32.323-05:00",
+            "futuresPriceTick": "606'6",
+            "cashbidsSummaryId": null,
+            "futuresChangeSign": 1,
+            "futuresChangeTick": "3'4"
+          }
+        ],
+        "name": "Wheat",
+        "contractUids": [
+          "18689",
+          "18636"
+        ]
+      }
+    },
+    "locationId8": {
+      "name": "Haskins",
+      "cropId3": {
+        "bids": [
+          {
+            "id": 104198756,
+            "kind": "normal",
+            "name": "Cash",
+            "basis": "-0.15",
+            "basisF": "-0.15",
+            "cropId": 3,
+            "symbol": "ZWZ26",
+            "batchUid": "a72cbd5f",
+            "futureId": 38461639,
+            "createdAt": "2026-11-27T16:59:41.049-05:00",
+            "currentBid": "5.52",
+            "expiration": "2026-12-13T19:00:00.000-05:00",
+            "locationId": 8,
+            "contractUid": "18689",
+            "currentBidF": "5.52",
+            "futuresMonth": "Dec 26",
+            "priceUpdatedAt": "2026-11-27T13:00:32.430-05:00",
+            "futuresPriceTick": "566'4",
+            "cashbidsSummaryId": null,
+            "futuresChangeSign": 1,
+            "futuresChangeTick": "1'0"
+          },
+          {
+            "id": 104198795,
+            "kind": "normal",
+            "name": "NC 27",
+            "basis": "-0.3",
+            "basisF": "-0.30",
+            "cropId": 3,
+            "symbol": "ZWN27",
+            "batchUid": "a72cbd5f",
+            "futureId": 38461642,
+            "createdAt": "2026-11-27T16:59:41.315-05:00",
+            "currentBid": "5.77",
+            "expiration": "2027-07-13T20:00:00.000-04:00",
+            "locationId": 8,
+            "contractUid": "18636",
+            "currentBidF": "5.77",
+            "futuresMonth": "Jul 27",
+            "priceUpdatedAt": "2026-11-27T13:00:32.323-05:00",
+            "futuresPriceTick": "606'6",
+            "cashbidsSummaryId": null,
+            "futuresChangeSign": 1,
+            "futuresChangeTick": "3'4"
+          }
+        ],
+        "name": "Wheat",
+        "contractUids": [
+          "18689",
+          "18636"
+        ]
+      }
+    }
+  }
+}

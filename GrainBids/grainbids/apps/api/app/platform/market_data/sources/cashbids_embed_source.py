@@ -87,6 +87,8 @@ CONTACT_USER_AGENT = "GrainHub-Research/1.0 +https://github.com/apz100/GrainHub"
 #   PRO Coop 21302 procooperative.agricharts.com  / 21302 (Manson, IA)
 #   Hull Coop      hullcoopresp.agricharts.com     / filter=all
 #   StateLine Coop statelinecoop.agricharts.com    / filter=all
+#   Evergreen FS   fsgrain.agricharts.com          / filter=all
+#   Star of the West sotw.agricharts.com           / 9388 (Quincy, MI)
 
 # Raw commodity label (lowercased, grade prefix stripped) -> canonical.
 COMMODITY_MAP = {
@@ -454,6 +456,53 @@ CASHBIDS_EMBED_SITES: dict[str, CashbidsEmbedSite] = {
         "Emmetsburg-AGP is Soybeans-only, 6 rows). filter=all, "
         "groupby=location, no single default location. Embed at "
         "statelinecoop.com/cash-bids.",
+    ),
+    "evergreen_fs": CashbidsEmbedSite(
+        key="evergreen_fs",
+        company="Evergreen FS",
+        js_url=(
+            "https://fsgrain.agricharts.com/inc/cashbids/cashbids-js.php"
+            "?filter=all&location=&commodity=&groupby=location&width=100%"
+            "&showtimestamp=1&showchart=1&format=table&fields=%0Aname%2C"
+            "%0Adelivery_start%2C%0Adelivery_end%2C%0Afutures%2C%0Abasis"
+            "%2C%0Aprice%2C%0Afutureschange%0A&groupheading=table"
+            "&bidsort=commodity&dateformat=%25m%2F%25d&months=8"
+            "&noscript=1&&acCnt=1"
+        ),
+        default_location="Ashton",
+        verified=True,
+        notes="Verified live 2026-11-28: 200, var-bids JSON, 38 location "
+        "groups, 492 rows (Corn 265, Soybeans 227). Locations include "
+        "Holder and McLean (Evergreen FS towns) plus ADM / Cargill / "
+        "CGB / CHS reference buyers — recorded as published. "
+        "filter=all, groupby=location. NOTE: dateformat is %m/%d (no "
+        "year), so delivery_start / delivery_end are '11/27' style "
+        "and delivery_month carries them verbatim. Embed at "
+        "fsgrain.com/cashbidsindex, linked from "
+        "fscooperatives.com/evergreenfs/agriculture/cash-bids.",
+    ),
+    "star_of_the_west": CashbidsEmbedSite(
+        key="star_of_the_west",
+        company="Star of the West Milling",
+        js_url=(
+            "https://sotw.agricharts.com/inc/cashbids/cashbids-js.php"
+            "?filter=location&location=9388&commodity=&groupby=location"
+            "&width=&showtimestamp=1&hidenav=1&format=table&fields=name"
+            "%2Cdelivery_start%2Cdelivery_end%2Cbasismonth%2Cfutures"
+            "%2Cfutureschange%2Cbasis%2Cprice&groupheading=table"
+            "&bidsort=commodity&dateformat=%25m%2F%25d%2F%25Y&months=8"
+            "&locations=9388&commodities=&noscript=1&&acCnt=1"
+        ),
+        default_location="Quincy, MI",
+        verified=True,
+        notes="Verified live 2026-11-28: 200, var-bids JSON, 1 location "
+        "group ('Quincy, MI'), 2 Red Wheat rows (cash 5.56, basis "
+        "-0.35). This adapter covers the Quincy location embed only "
+        "(location=9388); other Star of the West locations would "
+        "need their own location-param embeds later. Do NOT use the "
+        "Barchart Marketplace bid page found in research — the data "
+        "here comes from the company's own location page "
+        "starofthewest.com/Quincy via sotw.agricharts.com.",
     ),
 }
 
@@ -861,3 +910,15 @@ def fetch_stateline_coop() -> dict[str, Any]:
     """Fetch StateLine Coop (Iowa / Minnesota, 11 locations).
     Verified live 2026-11-19 (Cycle 12)."""
     return fetch_cashbids_embed_site("stateline_coop")
+
+
+def fetch_evergreen_fs() -> dict[str, Any]:
+    """Fetch Evergreen FS (Illinois, 38 locations).
+    Verified live 2026-11-28: 492 rows (Corn / Soybeans)."""
+    return fetch_cashbids_embed_site("evergreen_fs")
+
+
+def fetch_star_of_the_west() -> dict[str, Any]:
+    """Fetch Star of the West Milling (Quincy, MI location only).
+    Verified live 2026-11-28: 2 Red Wheat rows."""
+    return fetch_cashbids_embed_site("star_of_the_west")

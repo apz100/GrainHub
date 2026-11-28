@@ -1,14 +1,22 @@
 """Tests for the generic AgriCharts cashbids.php-embed collector.
 
-The twelve embed sites (Agtegra, Heritage Coop, Linn Coop, Midway
+The twenty-one embed sites (Agtegra, Heritage Coop, Linn Coop, Midway
 Coop, Ag State, Superior Ag — Cycle 7 — plus ALCIVIA and TGM,
 Cycle 9, plus PRO Coop, Cycle 11, plus PRO Coop 21302, Hull Coop
-and StateLine Coop, Cycle 12) all serve their bids from a
+and StateLine Coop, Cycle 12, plus CGB, Key Cooperative, Garden City
+Coop, Farmward Cooperative, Farmers Cooperative Dorchester and Mid
+Iowa Coop, 2026-11-27, plus Evergreen FS and Star of the West,
+2026-11-28) all serve their bids from a
 ``cashbids-js.php`` endpoint whose response carries a ``var bids``
-JSON payload (verified live 2026-11-19, one polite GET per URL — see
-``cashbids_embed_source.py``). These tests lock the parser in with
-synthetic fixtures — no live fetching inside pytest, fixture values
-are invented test data, not live prices.
+JSON payload (verified live, one polite GET per URL — see
+``cashbids_embed_source.py``). The Cycle 7–13 tests lock the parser
+in with synthetic fixtures — no live fetching inside pytest, fixture
+values are invented test data, not live prices. The 2026-11-27 tests
+use RECORDED LIVE fixtures: trimmed copies of the live
+cashbids-js.php responses (1–2 location groups), so their values are
+the published prices as of 2026-11-27, not invented test data. The
+2026-11-28 tests (Evergreen FS, Star of the West) are recorded
+live the same way.
 """
 
 from __future__ import annotations
@@ -215,16 +223,22 @@ def test_tgm_groupby_commodity_beans_maps_to_soybeans():
     assert white["futures_price"] == pytest.approx(4.20)
 
 
-def test_registry_fifteen_verified_sites_and_key_errors():
+def test_registry_twenty_one_verified_sites_and_key_errors():
     sites = cashbids_embed_source.CASHBIDS_EMBED_SITES
     assert sorted(sites) == [
         "ag_state",
         "agtegra",
         "alcivia",
+        "cgb",
+        "dorchester",
         "evergreen_fs",
+        "farmward",
+        "garden_city",
         "heritage_coop",
         "hull_coop",
+        "key_coop",
         "linn_coop",
+        "mid_iowa",
         "midway_coop",
         "pro_coop",
         "pro_coop_21302",
@@ -308,6 +322,62 @@ def test_registry_new_sites_use_verified_live_js_urls():
     )
     assert stateline.js_url.endswith("&&acCnt=1")
     assert stateline.default_location is None  # 11 locations, filter=all
+    # 2026-11-27 — Farmbucks US-buyer sweep (recorded-live fixtures).
+    cgb = cashbids_embed_source.get_cashbids_embed_site("cgb")
+    assert cgb.company == "CGB"
+    assert cgb.js_url.startswith(
+        "https://cgb.agricharts.com/inc/cashbids/cashbids-js.php"
+        "?filter=all&location=79619&commodity&groupby=location"
+    )
+    # The loader's fields list and dateformat are unencoded (literal
+    # commas, %m/%d/%Y) — kept verbatim in the js_url.
+    assert "dateformat=%m/%d/%Y" in cgb.js_url
+    assert cgb.js_url.endswith("&&acCnt=1")
+    assert cgb.default_location == "CGB - MEEKERS LANDING"  # 1 location
+    key_coop = cashbids_embed_source.get_cashbids_embed_site("key_coop")
+    assert key_coop.company == "Key Cooperative"
+    assert key_coop.js_url.startswith(
+        "https://keycoop.agricharts.com/inc/cashbids/cashbids-js.php"
+        "?filter=all&location=&commodity=&groupby=location"
+    )
+    assert "setLocation=86090" in key_coop.js_url
+    assert key_coop.js_url.endswith("&&acCnt=1")
+    assert key_coop.default_location == "Barnes City"  # 1 location
+    garden_city = cashbids_embed_source.get_cashbids_embed_site("garden_city")
+    assert garden_city.company == "Garden City Coop"
+    assert garden_city.js_url.startswith(
+        "https://gccoop.agricharts.com/inc/cashbids/cashbids-js.php"
+        "?filter=all&location=62859&commodity=&groupby=location"
+    )
+    assert garden_city.js_url.endswith("&&acCnt=1")
+    assert garden_city.default_location == "Garden City Elevator"  # 1 location
+    farmward = cashbids_embed_source.get_cashbids_embed_site("farmward")
+    assert farmward.company == "Farmward Cooperative"
+    assert farmward.js_url.startswith(
+        "https://farmward.agricharts.com/inc/cashbids/cashbids-js.php"
+        "?filter=all&location=&commodity=&groupby=location"
+    )
+    assert farmward.js_url.endswith("&&acCnt=1")
+    assert farmward.default_location is None  # 10 locations, filter=all
+    dorchester = cashbids_embed_source.get_cashbids_embed_site("dorchester")
+    assert dorchester.company == "Farmers Cooperative Dorchester"
+    assert dorchester.js_url.startswith(
+        "https://farmersco-operative.agricharts.com/inc/cashbids/cashbids-js.php"
+        "?filter=all&location=28468&commodity=&groupby=commodity"
+    )
+    assert dorchester.js_url.endswith("&&acCnt=1")
+    assert dorchester.default_location == "BEATRICE"  # 1 location
+    mid_iowa = cashbids_embed_source.get_cashbids_embed_site("mid_iowa")
+    assert mid_iowa.company == "Mid Iowa Coop"
+    assert mid_iowa.js_url.startswith(
+        "https://midiowa.agricharts.com/inc/cashbids/cashbids-js.php"
+        "?filter=all&location=&commodity=&groupby=location"
+    )
+    # The loader's fields list omits 'name' — the payload still
+    # carries it on every row.
+    assert "fields=delivery_start" in mid_iowa.js_url
+    assert mid_iowa.js_url.endswith("&&acCnt=1")
+    assert mid_iowa.default_location is None  # 30 locations, filter=all
 
 
 def test_site_parse_path_uses_registry_defaults_for_new_sites():
@@ -610,6 +680,355 @@ def test_fetch_stateline_coop_uses_verified_url() -> None:
 
 
 # ---------------------------------------------------------------------------
+# 2026-11-27 — Farmbucks US-buyer sweep: CGB, Key Cooperative,
+# Garden City Coop, Farmward Cooperative, Farmers Cooperative
+# Dorchester, Mid Iowa Coop. Fixtures are RECORDED LIVE (trimmed copies
+# of the live cashbids-js.php responses, 1-2 groups each), so the
+# asserted values are the published prices as of 2026-11-27.
+# ---------------------------------------------------------------------------
+
+
+def test_cgb_sample_parses_meekers_landing_rows():
+    site = cashbids_embed_source.get_cashbids_embed_site("cgb")
+    result = cashbids_embed_source.parse_cashbids_embed_html(
+        _read("cashbids_embed_cgb_sample.html"), site=site
+    )
+    assert result["status"] == "ok"
+    assert result["company"] == "CGB"
+    assert len(result["rows"]) == 14
+    assert result["location"] == "CGB - MEEKERS LANDING"
+    assert {row["location"] for row in result["rows"]} == {
+        "CGB - MEEKERS LANDING"
+    }
+    assert {row["commodity"] for row in result["rows"]} == {"Corn", "Soybeans"}
+    assert sum(1 for row in result["rows"] if row["commodity"] == "Corn") == 7
+    assert sum(1 for row in result["rows"] if row["commodity"] == "Soybeans") == 7
+    assert all(row["currency"] == "USD" for row in result["rows"])
+    assert all(row["unit"] == "$/bu" for row in result["rows"])
+    corn = next(
+        row for row in result["rows"] if row["futures_symbol"] == "ZCH27"
+    )
+    # futures "463-0" = 463.0 cents -> $4.63; basis -32 cents -> -$0.32.
+    assert corn["futures_price"] == pytest.approx(4.63)
+    assert corn["basis"] == pytest.approx(-0.32)
+    assert corn["cash_price"] == pytest.approx(4.31)
+    assert corn["cash_price_mt"] == pytest.approx(169.68)
+    assert corn["change"] == pytest.approx(0.06)
+    assert corn["futures_change"] == pytest.approx(0.065)
+    assert corn["futures_month"] == "Mar 2027"
+    # Delivery windows start mid-month on this feed (11/16/2026).
+    assert corn["delivery_start"] == "11/16/2026"
+    assert corn["delivery_end"] == "11/30/2026"
+    assert corn["delivery_month"] == "Nov 2026"
+    # The feed labels soybeans "Beans" (ZSF27) — mapped to Soybeans.
+    soy = next(
+        row for row in result["rows"] if row["futures_symbol"] == "ZSF27"
+    )
+    assert soy["commodity"] == "Soybeans"
+    assert soy["futures_price"] == pytest.approx(12.6625)
+    assert soy["basis"] == pytest.approx(-0.08)
+    assert soy["cash_price"] == pytest.approx(12.59)
+
+
+def test_fetch_cgb_uses_verified_url() -> None:
+    html = _read("cashbids_embed_cgb_sample.html")
+    with patch.object(
+        cashbids_embed_source,
+        "fetch_cashbids_embed_html",
+        return_value=html,
+    ) as mock_get:
+        result = cashbids_embed_source.fetch_cgb()
+    mock_get.assert_called_once_with(
+        cashbids_embed_source.get_cashbids_embed_site("cgb").js_url
+    )
+    assert result["status"] == "ok"
+    assert result["company"] == "CGB"
+    assert result["location"] == "CGB - MEEKERS LANDING"
+    assert len(result["rows"]) == 14
+
+
+def test_key_coop_sample_parses_barnes_city_rows():
+    site = cashbids_embed_source.get_cashbids_embed_site("key_coop")
+    result = cashbids_embed_source.parse_cashbids_embed_html(
+        _read("cashbids_embed_key_coop_sample.html"), site=site
+    )
+    assert result["status"] == "ok"
+    assert result["company"] == "Key Cooperative"
+    assert len(result["rows"]) == 14
+    assert result["location"] == "Barnes City"
+    assert {row["location"] for row in result["rows"]} == {"Barnes City"}
+    assert {row["commodity"] for row in result["rows"]} == {"Corn", "Soybeans"}
+    assert sum(1 for row in result["rows"] if row["commodity"] == "Corn") == 8
+    assert sum(1 for row in result["rows"] if row["commodity"] == "Soybeans") == 6
+    assert all(row["currency"] == "USD" for row in result["rows"])
+    assert all(row["unit"] == "$/bu" for row in result["rows"])
+    corn = next(
+        row for row in result["rows"] if row["futures_symbol"] == "ZCZ26"
+    )
+    # futures "446-6" = 446.75 cents -> $4.4675; basis -33 cents.
+    assert corn["futures_price"] == pytest.approx(4.4675)
+    assert corn["basis"] == pytest.approx(-0.33)
+    assert corn["cash_price"] == pytest.approx(4.14)
+    assert corn["cash_price_mt"] == pytest.approx(162.885987)
+    assert corn["change"] == pytest.approx(0.07)
+    assert corn["futures_change"] == pytest.approx(0.07)
+    assert corn["futures_month"] == "Dec 2026"
+    assert corn["delivery_start"] == "11/01/2026"
+    assert corn["delivery_end"] == "11/30/2026"
+    assert corn["delivery_month"] == "Nov 2026"
+
+
+def test_fetch_key_coop_uses_verified_url() -> None:
+    html = _read("cashbids_embed_key_coop_sample.html")
+    with patch.object(
+        cashbids_embed_source,
+        "fetch_cashbids_embed_html",
+        return_value=html,
+    ) as mock_get:
+        result = cashbids_embed_source.fetch_key_coop()
+    mock_get.assert_called_once_with(
+        cashbids_embed_source.get_cashbids_embed_site("key_coop").js_url
+    )
+    assert result["status"] == "ok"
+    assert result["company"] == "Key Cooperative"
+    assert result["location"] == "Barnes City"
+    assert len(result["rows"]) == 14
+
+
+def test_garden_city_sample_parses_elevator_rows():
+    site = cashbids_embed_source.get_cashbids_embed_site("garden_city")
+    result = cashbids_embed_source.parse_cashbids_embed_html(
+        _read("cashbids_embed_garden_city_sample.html"), site=site
+    )
+    assert result["status"] == "ok"
+    assert result["company"] == "Garden City Coop"
+    assert len(result["rows"]) == 7
+    assert result["location"] == "Garden City Elevator"
+    assert {row["location"] for row in result["rows"]} == {
+        "Garden City Elevator"
+    }
+    assert {row["commodity"] for row in result["rows"]} == {
+        "Corn",
+        "Milo",
+        "Hard Red Wheat",
+        "Hard White Wheat",
+    }
+    assert all(row["currency"] == "USD" for row in result["rows"])
+    assert all(row["unit"] == "$/bu" for row in result["rows"])
+    corn = next(
+        row for row in result["rows"] if row["commodity"] == "Corn"
+    )
+    # futures "463-0" = $4.63; basis +5 cents -> +$0.05.
+    assert corn["futures_price"] == pytest.approx(4.63)
+    assert corn["basis"] == pytest.approx(0.05)
+    assert corn["cash_price"] == pytest.approx(4.68)
+    assert corn["futures_month"] == "Mar 2027"
+    assert corn["delivery_start"] == "09/01/2026"
+    assert corn["delivery_end"] == "12/01/2026"
+    assert corn["delivery_month"] == "Sep 2026"
+    # "Hard Red Wheat" / "Hard White Wheat" are not in COMMODITY_MAP —
+    # they are kept exactly as published.
+    hrw = next(
+        row for row in result["rows"] if row["commodity"] == "Hard Red Wheat"
+    )
+    assert hrw["futures_symbol"] == "KEH27"
+    assert hrw["futures_price"] == pytest.approx(6.36)
+    assert hrw["basis"] == pytest.approx(-0.75)
+    assert hrw["cash_price"] == pytest.approx(5.61)
+
+
+def test_fetch_garden_city_uses_verified_url() -> None:
+    html = _read("cashbids_embed_garden_city_sample.html")
+    with patch.object(
+        cashbids_embed_source,
+        "fetch_cashbids_embed_html",
+        return_value=html,
+    ) as mock_get:
+        result = cashbids_embed_source.fetch_garden_city()
+    mock_get.assert_called_once_with(
+        cashbids_embed_source.get_cashbids_embed_site("garden_city").js_url
+    )
+    assert result["status"] == "ok"
+    assert result["company"] == "Garden City Coop"
+    assert result["location"] == "Garden City Elevator"
+    assert len(result["rows"]) == 7
+
+
+def test_farmward_sample_parses_multi_location_rows():
+    site = cashbids_embed_source.get_cashbids_embed_site("farmward")
+    result = cashbids_embed_source.parse_cashbids_embed_html(
+        _read("cashbids_embed_farmward_sample.html"), site=site
+    )
+    assert result["status"] == "ok"
+    assert result["company"] == "Farmward Cooperative"
+    # Fixture is trimmed to the first 2 of the 10 live location groups
+    # (Clements, Comfrey) — 40 of the 200 live rows.
+    assert len(result["rows"]) == 40
+    assert {row["location"] for row in result["rows"]} == {
+        "Farmward Cooperative - Clements",
+        "Farmward Cooperative - Comfrey",
+    }
+    assert result["location"] == "Farmward Cooperative - Clements"
+    assert {row["commodity"] for row in result["rows"]} == {"Corn", "Soybeans"}
+    assert sum(1 for row in result["rows"] if row["commodity"] == "Corn") == 20
+    assert sum(1 for row in result["rows"] if row["commodity"] == "Soybeans") == 20
+    assert all(row["currency"] == "USD" for row in result["rows"])
+    assert all(row["unit"] == "$/bu" for row in result["rows"])
+    corn = next(
+        row
+        for row in result["rows"]
+        if row["location"] == "Farmward Cooperative - Clements"
+        and row["futures_symbol"] == "ZCH27"
+    )
+    # futures "463-0" = $4.63; basis -75 cents -> -$0.75.
+    assert corn["futures_price"] == pytest.approx(4.63)
+    assert corn["basis"] == pytest.approx(-0.75)
+    assert corn["cash_price"] == pytest.approx(3.88)
+    assert corn["cash_price_mt"] == pytest.approx(152.748671)
+    assert corn["futures_month"] == "Mar 2027"
+    assert corn["delivery_start"] == "10/01/2026"
+    assert corn["delivery_end"] == "11/30/2026"
+    assert corn["delivery_month"] == "Oct 2026"
+
+
+def test_fetch_farmward_uses_verified_url() -> None:
+    html = _read("cashbids_embed_farmward_sample.html")
+    with patch.object(
+        cashbids_embed_source,
+        "fetch_cashbids_embed_html",
+        return_value=html,
+    ) as mock_get:
+        result = cashbids_embed_source.fetch_farmward()
+    mock_get.assert_called_once_with(
+        cashbids_embed_source.get_cashbids_embed_site("farmward").js_url
+    )
+    assert result["status"] == "ok"
+    assert result["company"] == "Farmward Cooperative"
+    assert result["location"] == "Farmward Cooperative - Clements"
+    assert len(result["rows"]) == 40
+
+
+def test_dorchester_sample_parses_groupby_commodity_rows():
+    site = cashbids_embed_source.get_cashbids_embed_site("dorchester")
+    result = cashbids_embed_source.parse_cashbids_embed_html(
+        _read("cashbids_embed_dorchester_sample.html"), site=site
+    )
+    assert result["status"] == "ok"
+    assert result["company"] == "Farmers Cooperative Dorchester"
+    # Fixture is trimmed to the CORN + MILO groups (20 of the 32 live
+    # rows; the live BEANS + WHEAT groups are not reproduced here).
+    assert len(result["rows"]) == 20
+    # groupby=commodity: groups are named CORN / MILO, so the row
+    # location must come from location_name, not the group name.
+    assert {row["location"] for row in result["rows"]} == {"BEATRICE"}
+    assert result["location"] == "BEATRICE"
+    assert {row["commodity"] for row in result["rows"]} == {"Corn", "Milo"}
+    assert sum(1 for row in result["rows"] if row["commodity"] == "Corn") == 10
+    assert sum(1 for row in result["rows"] if row["commodity"] == "Milo") == 10
+    assert all(row["currency"] == "USD" for row in result["rows"])
+    assert all(row["unit"] == "$/bu" for row in result["rows"])
+    corn = next(
+        row for row in result["rows"] if row["futures_symbol"] == "ZCH27"
+    )
+    # futures "463-0" = $4.63; basis -45 cents -> -$0.45.
+    assert corn["futures_price"] == pytest.approx(4.63)
+    assert corn["basis"] == pytest.approx(-0.45)
+    assert corn["cash_price"] == pytest.approx(4.18)
+    assert corn["cash_price_mt"] == pytest.approx(164.56)
+    assert corn["futures_month"] == "Mar 2027"
+    assert corn["delivery_start"] == "11/01/2026"
+    assert corn["delivery_end"] == "11/30/2026"
+    assert corn["delivery_month"] == "Nov 2026"
+    milo = next(
+        row for row in result["rows"] if row["commodity"] == "Milo"
+    )
+    assert milo["basis"] == pytest.approx(-0.65)
+    assert milo["cash_price"] == pytest.approx(3.98)
+
+
+def test_fetch_dorchester_uses_verified_url() -> None:
+    html = _read("cashbids_embed_dorchester_sample.html")
+    with patch.object(
+        cashbids_embed_source,
+        "fetch_cashbids_embed_html",
+        return_value=html,
+    ) as mock_get:
+        result = cashbids_embed_source.fetch_dorchester()
+    mock_get.assert_called_once_with(
+        cashbids_embed_source.get_cashbids_embed_site("dorchester").js_url
+    )
+    assert result["status"] == "ok"
+    assert result["company"] == "Farmers Cooperative Dorchester"
+    assert result["location"] == "BEATRICE"
+    assert len(result["rows"]) == 20
+
+
+def test_mid_iowa_sample_parses_reference_location_rows():
+    site = cashbids_embed_source.get_cashbids_embed_site("mid_iowa")
+    result = cashbids_embed_source.parse_cashbids_embed_html(
+        _read("cashbids_embed_mid_iowa_sample.html"), site=site
+    )
+    assert result["status"] == "ok"
+    assert result["company"] == "Mid Iowa Coop"
+    # Fixture is trimmed to the first 2 of the 30 live location groups
+    # (ADM CEDAR RAPIDS, ADM DSM) — 6 of the 129 live rows.
+    assert len(result["rows"]) == 6
+    assert {row["location"] for row in result["rows"]} == {
+        "ADM CEDAR RAPIDS",
+        "ADM DSM",
+    }
+    assert result["location"] == "ADM CEDAR RAPIDS"  # first row's location
+    assert {row["commodity"] for row in result["rows"]} == {"Corn", "Soybeans"}
+    assert sum(1 for row in result["rows"] if row["commodity"] == "Corn") == 3
+    assert sum(1 for row in result["rows"] if row["commodity"] == "Soybeans") == 3
+    assert all(row["currency"] == "USD" for row in result["rows"])
+    assert all(row["unit"] == "$/bu" for row in result["rows"])
+    # ADM / Cargill / POET reference locations are recorded exactly as
+    # published, not expanded or remapped.
+    corn = next(
+        row
+        for row in result["rows"]
+        if row["location"] == "ADM CEDAR RAPIDS" and row["commodity"] == "Corn"
+    )
+    # futures "446-6" = $4.4675; basis +3 cents -> +$0.03.
+    assert corn["futures_price"] == pytest.approx(4.4675)
+    assert corn["basis"] == pytest.approx(0.03)
+    assert corn["cash_price"] == pytest.approx(4.50)
+    assert corn["cash_price_mt"] == pytest.approx(177.06)
+    assert corn["futures_month"] == "Dec 2026"
+    assert corn["delivery_start"] == "11/01/2026"
+    assert corn["delivery_month"] == "Nov 2026"
+    soy = next(
+        row
+        for row in result["rows"]
+        if row["location"] == "ADM DSM" and row["commodity"] == "Soybeans"
+    )
+    # The loader's fields list omits 'name', but the payload still
+    # carries it — the commodity still parses.
+    assert soy["futures_symbol"] == "ZSF27"
+    assert soy["futures_price"] == pytest.approx(12.6625)
+    assert soy["basis"] == pytest.approx(-0.30)
+    assert soy["cash_price"] == pytest.approx(12.36)
+
+
+def test_fetch_mid_iowa_uses_verified_url() -> None:
+    html = _read("cashbids_embed_mid_iowa_sample.html")
+    with patch.object(
+        cashbids_embed_source,
+        "fetch_cashbids_embed_html",
+        return_value=html,
+    ) as mock_get:
+        result = cashbids_embed_source.fetch_mid_iowa()
+    mock_get.assert_called_once_with(
+        cashbids_embed_source.get_cashbids_embed_site("mid_iowa").js_url
+    )
+    assert result["status"] == "ok"
+    assert result["company"] == "Mid Iowa Coop"
+    assert result["location"] == "ADM CEDAR RAPIDS"
+    assert len(result["rows"]) == 6
+
+
+# ---------------------------------------------------------------------------
 # 2026-11-28 — Evergreen FS (fsgrain, filter=all, 38 locations) and
 # Star of the West (sotw, Quincy MI location 9388). Fixtures are
 # RECORDED LIVE responses, trimmed (see the fixture headers) — values
@@ -627,7 +1046,7 @@ def test_registry_new_sites_evergreen_and_star_use_verified_live_js_urls():
     assert evergreen.js_url.endswith("noscript=1&&acCnt=1")
     # dateformat is %m/%d (no year) on this site.
     assert "dateformat=%25m%2F%25d&months=8" in evergreen.js_url
-    assert evergreen.default_location == "Ashton"  # first location seen live
+    assert evergreen.default_location is None  # 38 locations, filter=all
     star = cashbids_embed_source.get_cashbids_embed_site("star_of_the_west")
     assert star.company == "Star of the West Milling"
     assert star.js_url.startswith(

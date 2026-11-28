@@ -23,11 +23,11 @@
 name: Scheduled ingestion
 
 on:
-  # schedule:
-  #   - cron: "5 8 * * *"
-  #     timezone: "America/Toronto"
-  #   - cron: "5 15 * * *"
-  #     timezone: "America/Toronto"
+  schedule:
+    - cron: "5 8 * * *"
+      timezone: "America/Toronto"
+    - cron: "5 15 * * *"
+      timezone: "America/Toronto"
   workflow_dispatch: {}
 
 jobs:

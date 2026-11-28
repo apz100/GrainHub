@@ -16,9 +16,9 @@ neither step needs a browser:
      parse target: it is present and complete on every site checked,
      while the rendered table is NOT reliable (Agtegra's table body
      is empty ``<tr class="odd/even">`` rows filled client-side from
-     the JSON; the other eight sites server-render it).
+     the JSON; the other sites checked at the time server-render it).
 
-Bid object fields used (all present on every row of all twelve sites
+Bid object fields used (all present on every row of all twenty-one sites
 checked): ``name`` (commodity), ``symbol`` (e.g. ``ZCZ26``),
 ``delivery_start`` / ``delivery_end`` (``MM/DD/YYYY``), ``basismonth``
 (``Dec 2026``), ``basis`` (integer cents, e.g. -90), ``futures`` /
@@ -38,8 +38,9 @@ the published cash price: futures − basis ≈ cash). ``futures`` /
 ``cashpricetonne`` (same number, not a conversion).
 
 Location: each cashbid carries ``location_name`` — that is the row
-location. Two sites group by commodity instead of location
-(``groupby=ccommodity``: Ag State, Superior Ag), so the location
+location. Several sites group by commodity instead of location
+(``groupby=ccommodity``: Ag State, Superior Ag, TGM, PRO Coop 21302 /
+21302b, Hull Coop, Farmers Cooperative Dorchester), so the location
 *group* name there is a commodity (``Corn`` / ``Soybeans``) and must
 never be used as the location; ``location_name`` is authoritative.
 Midway's embed publishes the location label ``All Locations`` (one
@@ -87,6 +88,14 @@ CONTACT_USER_AGENT = "GrainHub-Research/1.0 +https://github.com/apz100/GrainHub"
 #   PRO Coop 21302 procooperative.agricharts.com  / 21302 (Manson, IA)
 #   Hull Coop      hullcoopresp.agricharts.com     / filter=all
 #   StateLine Coop statelinecoop.agricharts.com    / filter=all
+#   CGB            cgb.agricharts.com              / 79619
+#   Key Coop       keycoop.agricharts.com          / setLocation=86090
+#   Garden City Coop gccoop.agricharts.com         / 62859
+#   Farmward Coop  farmward.agricharts.com         / filter=all
+#   Farmers Coop Dorchester farmersco-operative.agricharts.com / 28468
+#   Mid Iowa Coop  midiowa.agricharts.com          / filter=all
+#   Evergreen FS   fsgrain.agricharts.com          / filter=all
+#   Star of the West sotw.agricharts.com           / 9388 (Quincy, MI)
 
 # Raw commodity label (lowercased, grade prefix stripped) -> canonical.
 COMMODITY_MAP = {
@@ -454,6 +463,183 @@ CASHBIDS_EMBED_SITES: dict[str, CashbidsEmbedSite] = {
         "Emmetsburg-AGP is Soybeans-only, 6 rows). filter=all, "
         "groupby=location, no single default location. Embed at "
         "statelinecoop.com/cash-bids.",
+    ),
+    "cgb": CashbidsEmbedSite(
+        key="cgb",
+        company="CGB",
+        js_url=(
+            "https://cgb.agricharts.com/inc/cashbids/cashbids-js.php"
+            "?filter=all&location=79619&commodity&groupby=location"
+            "&width=100%&showtimestamp=1&hidenav=1&showchart=1"
+            "&format=table&fields=name,delivery_start,delivery_end"
+            ",basismonth,futures,futureschange,basis,price"
+            "&groupheading=table&bidsort=commodity&dateformat=%m/%d/%Y"
+            "&months=11&noscript=1&&acCnt=1"
+        ),
+        default_location="CGB - MEEKERS LANDING",
+        verified=True,
+        notes="Verified live 2026-11-27: 200, var-bids JSON, 1 location "
+        "(CGB - MEEKERS LANDING), 14 rows (Corn 7, Beans 7 — the feed "
+        "labels soybeans 'Beans', mapped to Soybeans in COMMODITY_MAP). "
+        "The loader's fields list and dateformat are unencoded "
+        "(literal commas, %m/%d/%Y), kept verbatim in the js_url. "
+        "Delivery windows start mid-month (11/16/2026). Embed at "
+        "cgbgrain.com/midmiss-cash-bids/.",
+    ),
+    "key_coop": CashbidsEmbedSite(
+        key="key_coop",
+        company="Key Cooperative",
+        js_url=(
+            "https://keycoop.agricharts.com/inc/cashbids/cashbids-js.php"
+            "?filter=all&location=&commodity=&groupby=location&width="
+            "&showtimestamp=1&showchart=1&asp=1&enableScrollIntoView=1"
+            "&useLocationDisplayName=1&format=table&fields=name%2Cdelivery_"
+            "start%2Cdelivery_end%2Cbasismonth%2Cfutures%2Cfutureschange"
+            "%2Cbasis%2Cprice&groupheading=table&bidsort=commodity"
+            "&dateformat=%25m%2F%25d%2F%25Y&months=8&locations="
+            "&commodities=&setLocation=86090&noscript=1&&acCnt=1"
+        ),
+        default_location="Barnes City",
+        verified=True,
+        notes="Verified live 2026-11-27: 200, var-bids JSON, 1 location "
+        "(Barnes City, IA), 14 rows (Corn 8, Soybeans 6). The loader "
+        "URL ends in a trailing '&' after setLocation=86090, so the "
+        "js_url carries '&setLocation=86090&noscript=1&&acCnt=1'. "
+        "Embed at keycoop.com/cash-bids-futures.",
+    ),
+    "garden_city": CashbidsEmbedSite(
+        key="garden_city",
+        company="Garden City Coop",
+        js_url=(
+            "https://gccoop.agricharts.com/inc/cashbids/cashbids-js.php"
+            "?filter=all&location=62859&commodity=&groupby=location"
+            "&width=100%&showtimestamp=1&showchart=1&format=table"
+            "&fields=name%2Cnotes%2Cbasismonth%2Cbasis%2Cprice"
+            "%2Cfutureschange&groupheading=table&bidsort=commodity"
+            "&dateformat=%25m%2F%25d%2F%25Y&months=11&noscript=1&&acCnt=1"
+        ),
+        default_location="Garden City Elevator",
+        verified=True,
+        notes="Verified live 2026-11-27: 200, var-bids JSON, 1 location "
+        "(Garden City Elevator, KS), 7 rows (Corn 2, Milo 2, Hard Red "
+        "Wheat 2, Hard White Wheat 1). The 'Hard Red Wheat' / 'Hard "
+        "White Wheat' labels are not in COMMODITY_MAP and are kept as "
+        "published. Embed at gccoop.com/products-services/grain "
+        "(cash-bids link on that page).",
+    ),
+    "farmward": CashbidsEmbedSite(
+        key="farmward",
+        company="Farmward Cooperative",
+        js_url=(
+            "https://farmward.agricharts.com/inc/cashbids/cashbids-js.php"
+            "?filter=all&location=&commodity=&groupby=location&width="
+            "&showtimestamp=1&hidenav=1&showchart=1&asp=1"
+            "&enableScrollIntoView=1&format=table&fields=name%2Cdelivery_"
+            "start%2Cdelivery_end%2Cbasismonth%2Cfutures%2Cfutureschange"
+            "%2Cbasis%2Cprice&groupheading=table&bidsort=commodity"
+            "&dateformat=%25m%2F%25d%2F%25Y&months=8&locations="
+            "&commodities=&noscript=1&&acCnt=1"
+        ),
+        verified=True,
+        notes="Verified live 2026-11-27: 200, var-bids JSON, 10 "
+        "locations (Clements, Comfrey, Danube East, Morgan, Morton, "
+        "Olivia, Renville, Sacred Heart, Springfield, Wood Lake — "
+        "all Minnesota), 200 rows (Corn 100, Soybeans 100). "
+        "filter=all, groupby=location; no single default location (alcivia precedent). Embed at farmward.net.",
+    ),
+    "dorchester": CashbidsEmbedSite(
+        key="dorchester",
+        company="Farmers Cooperative Dorchester",
+        js_url=(
+            "https://farmersco-operative.agricharts.com/inc/cashbids/cashbids-js.php"
+            "?filter=all&location=28468&commodity=&groupby=commodity"
+            "&width=100%&showtimestamp=1&showchart=1&format=table"
+            "&fields=name%2Cdelivery_start%2Cdelivery_end%2Cbasismonth"
+            "%2Cfutures%2Cfutureschange%2Cbasis%2Cprice&groupheading=table"
+            "&bidsort=commodity&dateformat=%25m%2F%25d%2F%25Y&months=8"
+            "&locations=&commodities=&noscript=1&&acCnt=1"
+        ),
+        default_location="BEATRICE",
+        verified=True,
+        notes="Verified live 2026-11-27: 200, var-bids JSON, 32 rows "
+        "(Corn 10, Milo 10, Beans 10 — mapped to Soybeans — Wheat 2). "
+        "groupby=commodity: groups are named CORN / MILO / BEANS / "
+        "WHEAT, so the row location comes from location_name "
+        "('BEATRICE', NE, the only location on every row). Embed at "
+        "farmersco-operative.com/grain/grain-cash-bids.",
+    ),
+    "mid_iowa": CashbidsEmbedSite(
+        key="mid_iowa",
+        company="Mid Iowa Coop",
+        js_url=(
+            "https://midiowa.agricharts.com/inc/cashbids/cashbids-js.php"
+            "?filter=all&location=&commodity=&groupby=location"
+            "&width=100%&showtimestamp=1&showchart=1"
+            "&enableScrollIntoView=1&format=table&fields=delivery_start"
+            "%2Cdelivery_end%2Cbasismonth%2Cfutures%2Cfutureschange"
+            "%2Cbasis%2Cprice&groupheading=table&bidsort=commodity"
+            "&dateformat=%25m%2F%25d%2F%25Y&months=8&locations="
+            "&commodities=&noscript=1&&acCnt=1"
+        ),
+        verified=True,
+        notes="Verified live 2026-11-27: 200, var-bids JSON, 30 "
+        "locations (ADM Cedar Rapids, ADM DSM, Beaman, Buckeye, "
+        "Cargill Cedar Rapids, Cargill IA Falls, Cargill Starch, "
+        "Cedar Falls, Conrad, Eddy, Edgewood, Green Mountain, "
+        "Haverhill, Hudson, Jesup, Jewell, Klostermann, Laporte City, "
+        "Lincolnway, Liscomb, Midway, Mill Junction, Pinelake, POET "
+        "F.B., POET IA Falls, POET S.R., Shell Rock Soy Proc, "
+        "Sinclair, State Center, Waterloo — Iowa), 129 rows (Corn 75, "
+        "Soybeans 54). The ADM / Cargill / POET reference locations "
+        "are recorded exactly as published. The loader's fields list "
+        "omits 'name', but the payload still carries it on every row. "
+        "filter=all, groupby=location; no single default location (alcivia precedent). Embed at midiowacoop.com/grains/cash-bids/.",
+    ),
+    "evergreen_fs": CashbidsEmbedSite(
+        key="evergreen_fs",
+        company="Evergreen FS",
+        js_url=(
+            "https://fsgrain.agricharts.com/inc/cashbids/cashbids-js.php"
+            "?filter=all&location=&commodity=&groupby=location&width=100%"
+            "&showtimestamp=1&showchart=1&format=table&fields=%0Aname%2C"
+            "%0Adelivery_start%2C%0Adelivery_end%2C%0Afutures%2C%0Abasis"
+            "%2C%0Aprice%2C%0Afutureschange%0A&groupheading=table"
+            "&bidsort=commodity&dateformat=%25m%2F%25d&months=8"
+            "&noscript=1&&acCnt=1"
+        ),
+        verified=True,
+        notes="Verified live 2026-11-28: 200, var-bids JSON, 38 location "
+        "groups, 492 rows (Corn 265, Soybeans 227). Locations include "
+        "Holder and McLean (Evergreen FS towns) plus ADM / Cargill / "
+        "CGB / CHS reference buyers — recorded as published. "
+        "filter=all, groupby=location. NOTE: dateformat is %m/%d (no "
+        "year), so delivery_start / delivery_end are '11/27' style "
+        "and delivery_month carries them verbatim. Embed at "
+        "fsgrain.com/cashbidsindex, linked from "
+        "fscooperatives.com/evergreenfs/agriculture/cash-bids.",
+    ),
+    "star_of_the_west": CashbidsEmbedSite(
+        key="star_of_the_west",
+        company="Star of the West Milling",
+        js_url=(
+            "https://sotw.agricharts.com/inc/cashbids/cashbids-js.php"
+            "?filter=location&location=9388&commodity=&groupby=location"
+            "&width=&showtimestamp=1&hidenav=1&format=table&fields=name"
+            "%2Cdelivery_start%2Cdelivery_end%2Cbasismonth%2Cfutures"
+            "%2Cfutureschange%2Cbasis%2Cprice&groupheading=table"
+            "&bidsort=commodity&dateformat=%25m%2F%25d%2F%25Y&months=8"
+            "&locations=9388&commodities=&noscript=1&&acCnt=1"
+        ),
+        default_location="Quincy, MI",
+        verified=True,
+        notes="Verified live 2026-11-28: 200, var-bids JSON, 1 location "
+        "group ('Quincy, MI'), 2 Red Wheat rows (cash 5.56, basis "
+        "-0.35). This adapter covers the Quincy location embed only "
+        "(location=9388); other Star of the West locations would "
+        "need their own location-param embeds later. Do NOT use the "
+        "Barchart Marketplace bid page found in research — the data "
+        "here comes from the company's own location page "
+        "starofthewest.com/Quincy via sotw.agricharts.com.",
     ),
 }
 
@@ -861,3 +1047,50 @@ def fetch_stateline_coop() -> dict[str, Any]:
     """Fetch StateLine Coop (Iowa / Minnesota, 11 locations).
     Verified live 2026-11-19 (Cycle 12)."""
     return fetch_cashbids_embed_site("stateline_coop")
+
+
+
+def fetch_evergreen_fs() -> dict[str, Any]:
+    """Fetch Evergreen FS (Illinois, 38 locations).
+    Verified live 2026-11-28: 492 rows (Corn / Soybeans)."""
+    return fetch_cashbids_embed_site("evergreen_fs")
+
+
+def fetch_star_of_the_west() -> dict[str, Any]:
+    """Fetch Star of the West Milling (Quincy, MI location only).
+    Verified live 2026-11-28: 2 Red Wheat rows."""
+    return fetch_cashbids_embed_site("star_of_the_west")
+
+
+def fetch_cgb() -> dict[str, Any]:
+    """Fetch CGB (CGB - MEEKERS LANDING). Verified live 2026-11-27."""
+    return fetch_cashbids_embed_site("cgb")
+
+
+def fetch_key_coop() -> dict[str, Any]:
+    """Fetch Key Cooperative (Barnes City, IA). Verified live 2026-11-27."""
+    return fetch_cashbids_embed_site("key_coop")
+
+
+def fetch_garden_city() -> dict[str, Any]:
+    """Fetch Garden City Coop (Garden City Elevator, KS).
+    Verified live 2026-11-27."""
+    return fetch_cashbids_embed_site("garden_city")
+
+
+def fetch_farmward() -> dict[str, Any]:
+    """Fetch Farmward Cooperative (Minnesota, 10 locations).
+    Verified live 2026-11-27."""
+    return fetch_cashbids_embed_site("farmward")
+
+
+def fetch_dorchester() -> dict[str, Any]:
+    """Fetch Farmers Cooperative Dorchester (BEATRICE, NE).
+    Verified live 2026-11-27."""
+    return fetch_cashbids_embed_site("dorchester")
+
+
+def fetch_mid_iowa() -> dict[str, Any]:
+    """Fetch Mid Iowa Coop (Iowa, 30 locations).
+    Verified live 2026-11-27."""
+    return fetch_cashbids_embed_site("mid_iowa")

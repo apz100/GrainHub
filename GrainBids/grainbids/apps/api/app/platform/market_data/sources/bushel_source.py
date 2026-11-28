@@ -1207,6 +1207,43 @@ BUSHEL_SITES: dict[str, BushelSite] = {
         "Wednesday, November 18, 2026 — a day stale, like "
         "Chadbourn (Cycle 13).",
     ),
+    # Farmbucks batch (2026-11-28): two more Bushel .cbmod sites,
+    # one polite GET each — both 200, both standard wrapped 7-col
+    # .cbmod widgets, both parsed by the generic parser with no
+    # changes. Bid tables are public static HTML served from the
+    # company's own domain; offers go through a login portal, which
+    # is not fetched. The midland footer credits Barchart for market
+    # data, but the bid widget itself is the Bushel .cbmod — the
+    # same situation as chandler_feed / almota, whose pages also
+    # mention DTN/Barchart in passing.
+    "jennie_o": BushelSite(
+        key="jennie_o",
+        company="Jennie-O Turkey Store",
+        url="https://www.jennieobids.com/cashbidssingle-3715",
+        currency="USD",
+        default_location="Faribault/Medford",
+        verified=True,
+        notes="Verified live 2026-11-28: 200, standard wrapped "
+        "7-col .cbmod widget, 13 rows, Corn only, USD/bu. "
+        "Location h2 'Faribault/Medford' (Faribault + Medford, MN). "
+        "Widget header dated Friday, November 27, 2026. Sample: "
+        "Corn Dec 26 cash 4.06, basis -0.56, futures 4.625.",
+    ),
+    "midland": BushelSite(
+        key="midland",
+        company="Midland Marketing",
+        url="https://midlandmarketing.org/cash-bids",
+        currency="USD",
+        default_location="Brownell",
+        verified=True,
+        notes="Verified live 2026-11-28: 200, standard wrapped "
+        "7-col .cbmod widget, 8 rows (Corn 2, Milo 2, Wheat 2, "
+        "White Wheat 2), USD/bu. Location h2 'Brownell' (Brownell, "
+        "KS). Widget header dated Friday, November 27, 2026. "
+        "Sample: Wheat Cash 5.47, basis -0.6. 'White Wheat' is not "
+        "in COMMODITY_MAP and passes through as-is, like "
+        "'Red Wheat'.",
+    ),
 }
 
 
@@ -2279,3 +2316,27 @@ def fetch_smithfield_hamer() -> dict[str, Any]:
     November 18, 2026 — a day stale, like Chadbourn.
     """
     return fetch_bushel_site("smithfield_hamer")
+
+
+def fetch_jennie_o() -> dict[str, Any]:
+    """Fetch Jennie-O Turkey Store (Faribault/Medford, MN) via the
+    per-location target 3715. Verified live 2026-11-28: 200,
+    standard wrapped 7-col .cbmod widget, 13 rows (Corn only),
+    USD/bu. Widget header dated Friday, November 27, 2026.
+    Sample: Corn Dec 26 cash 4.06, basis -0.56, futures 4.625.
+    Only the public bid tables are parsed; offers go through a
+    login portal which is not fetched.
+    """
+    return fetch_bushel_site("jennie_o")
+
+
+def fetch_midland() -> dict[str, Any]:
+    """Fetch Midland Marketing (Brownell, KS) via /cash-bids.
+    Verified live 2026-11-28: 200, standard wrapped 7-col .cbmod
+    widget, 8 rows (Corn 2, Milo 2, Wheat 2, White Wheat 2),
+    USD/bu. Widget header dated Friday, November 27, 2026.
+    Sample: Wheat Cash 5.47, basis -0.6. The footer credits
+    Barchart for market data, but the bid widget is the Bushel
+    .cbmod served from the company's own domain.
+    """
+    return fetch_bushel_site("midland")

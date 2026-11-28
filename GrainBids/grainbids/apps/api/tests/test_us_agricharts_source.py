@@ -612,3 +612,82 @@ def test_heritage_saved_html_row_count() -> None:
         "10/01/2026", "12/01/2026", "01/01/2027", "02/01/2027",
         "03/01/2027", "07/01/2027", "09/01/2027",
     }
+
+
+# ─── Farmbucks batch (2026-11-28) — Pilgrim's Gold'n Plump ───────────────
+# Recorded live fixture (tests/fixtures/us_agricharts_pilgrims_sample.html):
+# the <h4> location headings, writeBidRow() data calls and jsquote.php
+# script tag trimmed from https://gnpcograin.com/markets/cash.php, kept
+# in document order. Values are the live bids at capture time (2026-11-28),
+# not invented test data. The jsquote feed is mocked with the live quotes
+# the page's symbols resolved to at capture time.
+
+PILGRIMS_SAVED = FIXTURES / "us_agricharts_pilgrims_sample.html"
+
+# Live jsquote values at capture (2026-11-28): ZCH27 Mar 2027 463,
+# ZCK27 May 2027 472.75, ZCN27 Jul 2027 480.5, ZCZ27 Dec 2027 491.
+_PILGRIMS_JSQUOTE = (
+    "var quotes={'ZCH27':{name:'Corn',month:'March 2027',last:'463'},"
+    "'ZCK27':{name:'Corn',month:'May 2027',last:'472.75'},"
+    "'ZCN27':{name:'Corn',month:'July 2027',last:'480.5'},"
+    "'ZCZ27':{name:'Corn',month:'December 2027',last:'491'}};"
+)
+
+
+def test_pilgrims_saved_html_row_count() -> None:
+    """Structure only: the regex matches all 12 saved Pilgrims rows."""
+    html = PILGRIMS_SAVED.read_text(encoding="utf-8")
+    assert html.count("writeBidRow('") == 12
+    ms = list(ag._WRITEBIDROW_RX.finditer(html))
+    assert len(ms) == 12
+    assert {m.group(1) for m in ms} == {"Corn"}
+    # Two <h4> location headings, one per 6-row block, in order.
+    assert ag._H4_RX.findall(html) == ["Arcadia", "Sauk Rapids"]
+    # The jsquote tag lists a symbol for every row.
+    jm = ag._JSQUOTE_SCRIPT_RX.search(html)
+    assert jm is not None
+    assert {m.group(7) for m in ms} == {"ZCH27", "ZCK27", "ZCN27", "ZCZ27"}
+    assert {m.group(7) for m in ms} <= set(jm.group(2).split(","))
+    # All deliveries are full MM/DD/YYYY windows (6 distinct starts).
+    assert {m.group(3) for m in ms} == {
+        "11/01/2026", "12/01/2026", "01/01/2027",
+        "04/01/2027", "06/01/2027", "10/01/2027",
+    }
+
+
+def test_pilgrims_saved_html_fetch() -> None:
+    """Full fetch against the recorded fixture: 12 rows, 2 locations,
+    cash prices derived from the mocked live jsquote feed, USD/bu."""
+    page = PILGRIMS_SAVED.read_text(encoding="utf-8")
+
+    def _fake_get(url, params=None, headers=None, timeout=None):
+        if "jsquote" in url:
+            return _Resp24(_PILGRIMS_JSQUOTE)
+        return _Resp24(page)
+
+    with patch.object(ag.requests, "get", side_effect=_fake_get):
+        df = ag.fetch_us_agricharts(
+            "https://gnpcograin.com/markets/cash.php", "Pilgrim's Gold'n Plump"
+        )
+
+    assert len(df) == 12
+    assert df["Location"].tolist().count("Pilgrim's Gold'n Plump - Arcadia") == 6
+    assert df["Location"].tolist().count("Pilgrim's Gold'n Plump - Sauk Rapids") == 6
+    assert set(df["Name"]) == {"Corn"}
+    assert df["Futures Month"].tolist() == [
+        "March 2027", "March 2027", "March 2027",
+        "May 2027", "July 2027", "December 2027",
+    ] * 2
+    assert df["Futures Price"].tolist() == [
+        "463", "463", "463", "472.75", "480.5", "491",
+    ] * 2
+    # Basis -69 on 463 -> $3.94 (Arcadia Nov); -87 on 463 -> $3.76 (Sauk Rapids Nov).
+    arcadia_nov = df[df["Location"] == "Pilgrim's Gold'n Plump - Arcadia"].iloc[0]
+    assert arcadia_nov["Delivery"] == "11/01/2026"
+    assert arcadia_nov["Delivery End"] == "11/30/2026"
+    assert arcadia_nov["Basis"] == "-69"
+    assert arcadia_nov["Bushel Cash Price"] == "$3.94"
+    sauk_nov = df[df["Location"] == "Pilgrim's Gold'n Plump - Sauk Rapids"].iloc[0]
+    assert sauk_nov["Basis"] == "-87"
+    assert sauk_nov["Bushel Cash Price"] == "$3.76"
+    assert df["Note"].tolist() == [""] * 12

@@ -26,6 +26,15 @@
 #   non-zero only when the poll itself crashes. A red run therefore
 #   means something systemic broke, not "one elevator site was
 #   down".)
+# - The USDA research-cache warmup (app/jobs/warm_research_cache.py)
+#   runs LAST, as its own step: it pre-fetches the FAS PSD + NASS
+#   rows the research routes cache, so emails / the newsletter /
+#   alerts read already-cached data instead of waiting on a first
+#   on-demand fetch. It is last so a warmup failure cannot skip the
+#   poll, and it uses the same env (the keys are already here). Same
+#   exit-code shape as the poll: 0 when at least one dataset
+#   refreshed, 1 only when nothing was cached at all (e.g. keys
+#   missing) or the job crashed.
 
 name: Scheduled ingestion
 
@@ -70,3 +79,12 @@ jobs:
           APP_ENV: production
           ALLOW_IMPLICIT_ORG: "false"
         run: python -m app.jobs.poll_sources
+      - name: Warm USDA research cache
+        working-directory: GrainBids/grainbids/apps/api
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NASS_API_KEY: ${{ secrets.NASS_API_KEY }}
+          FAS_DATA_GOV_API_KEY: ${{ secrets.FAS_DATA_GOV_API_KEY }}
+          APP_ENV: production
+          ALLOW_IMPLICIT_ORG: "false"
+        run: python -m app.jobs.warm_research_cache

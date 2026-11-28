@@ -122,8 +122,19 @@ COLUMN_ALIASES = {
     "commodity": ["commodity", "crop", "grain", "name"],
     "source_name": ["source_name", "source", "buyer", "company", "source_sheet", "sheet"],
     "delivery_start": ["delivery_start", "start", "start_date", "delivery start"],
-    "delivery_end": ["delivery_end", "end", "end_date", "delivery end"],
-    "delivery_label": ["delivery_label", "delivery", "delivery_end", "delivery period"],
+    # "delivery_month" is what the Bushel / wpDataTables / Mae-Mart /
+    # North Gower collectors emit (e.g. "Nov 2026", "2026 Crop",
+    # "Spot", "Harvest 2026"). Until 2026-11-28 it matched NO alias,
+    # so every row from those adapters lost its delivery window in
+    # _check_completeness even though the value was right there —
+    # the first scheduled poll dropped all rows for 9 Smithfield
+    # mills, ace_ethanol, five_star_coop (301 rows), collwest,
+    # north_gower, rugby and williams_gin. Mapping it to both
+    # delivery_end and delivery_label keeps the composite key distinct
+    # per delivery month (two rows for the same location/commodity
+    # with different delivery months must not collapse into one).
+    "delivery_end": ["delivery_end", "end", "end_date", "delivery end", "delivery_month"],
+    "delivery_label": ["delivery_label", "delivery", "delivery_end", "delivery period", "delivery_month"],
     "futures_month": ["futures_month", "month", "futures contract", "symbol", "futures symbol", "futures mon."],
     "futures_price": ["futures_price", "futures", "fut_price"],
     "futures_change": ["futures_change", "fut_change", "change", "chg"],

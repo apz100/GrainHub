@@ -18,6 +18,7 @@ from app.services.upload_csv import (  # noqa: E402
     _looks_like_month_delivery_label,
     _parse_decimal,
     _source_creates_company_identity,
+    infer_column_mapping,
     summarize_quality,
 )
 
@@ -138,6 +139,70 @@ class UploadQualityTests(unittest.TestCase):
             basis=Decimal("0.15"),
             cash_price_bu=Decimal("6.25"),
             cash_price_mt=Decimal("246.00"),
+        )
+        self.assertEqual(reasons, [])
+
+    def test_delivery_month_maps_to_delivery_window(self) -> None:
+        # Regression: the first scheduled poll (2026-11-27) dropped
+        # every row from the Bushel / wpDataTables / Mae-Mart /
+        # North Gower adapters because their "delivery_month" column
+        # matched no alias, so _check_completeness saw no delivery
+        # window even though the value was right there (9 Smithfield
+        # mills, ace_ethanol, five_star_coop's 301 rows, collwest,
+        # north_gower, rugby, williams_gin).
+        headers = [
+            "company",
+            "location",
+            "commodity",
+            "delivery_month",
+            "cash_price",
+            "cash_price_mt",
+            "basis",
+            "futures_price",
+            "futures_month",
+            "last_trade",
+            "change",
+            "currency",
+            "unit",
+            "note",
+        ]
+        mapping = infer_column_mapping(headers)
+        self.assertEqual(mapping["delivery_end"], "delivery_month")
+        self.assertEqual(mapping["delivery_label"], "delivery_month")
+        self.assertEqual(mapping["cash_price_bu"], "cash_price")
+
+    def test_bushel_row_passes_completeness_with_delivery_month(self) -> None:
+        # Smithfield Bladenboro Feed Mill, Corn, as the adapter emits
+        # it: delivery_month "November", futures_month "Dec 26 Corn"
+        # (commodity suffix, so no derived delivery month — the
+        # delivery window comes from the delivery_month column).
+        reasons = _check_completeness(
+            source_name="Smithfield Grain",
+            delivery_end="November",
+            delivery_label="November",
+            futures_month="Dec 26 Corn",
+            futures_month_raw="Dec 26 Corn",
+            futures_change=Decimal("0"),
+            basis=Decimal("1.0"),
+            cash_price_bu=Decimal("5.45"),
+            cash_price_mt=Decimal("214.55"),
+        )
+        self.assertEqual(reasons, [])
+
+    def test_five_star_row_passes_completeness_with_delivery_month(self) -> None:
+        # Five Star Coop rows carry delivery_month "Nov 2026" and no
+        # futures_month column at all; persist falls back to the
+        # delivery label for futures_month, so the row is complete.
+        reasons = _check_completeness(
+            source_name="Five Star Coop",
+            delivery_end="Nov 2026",
+            delivery_label="Nov 2026",
+            futures_month="Nov 2026",
+            futures_month_raw="",
+            futures_change=Decimal("22.25"),
+            basis=Decimal("-0.76"),
+            cash_price_bu=Decimal("11.90"),
+            cash_price_mt=Decimal("436.44"),
         )
         self.assertEqual(reasons, [])
 

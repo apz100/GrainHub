@@ -66,11 +66,17 @@ def test_parse_gulf_coast_rows_verbatim_values() -> None:
     assert soy["bid_type"] == "Export"
     assert soy["cash_price"] == 13.28
     assert soy["low_price"] == 13.28 and soy["high_price"] == 13.28
-    assert soy["basis"] == "+110.00 F"
+    # "basis" is now the numeric $/bu low end (110 cents -> $1.10);
+    # the printed string is kept verbatim in "basis_raw".
+    assert soy["basis"] == 1.10
+    assert soy["basis_raw"] == "+110.00 F"
     assert soy["basis_cents"] == 110.0
     assert soy["basis_high_cents"] == 110.0
     assert soy["basis_month"] == "F"
     assert soy["unit"] == "$/bu"
+    # F on a Nov 18, 2026 report is the Jan 2027 contract.
+    assert soy["delivery_month"] == "January 2027"
+    assert soy["futures_month"] == "Jan 27"
 
 
 def test_parse_pacific_ports_rows_and_basis_range() -> None:
@@ -108,6 +114,46 @@ def test_parse_oats_unit_inference_by_magnitude() -> None:
     assert oats["unit"] == "cents/bu"  # cents-scale print, not $260/bu
     corn = [r for r in out["rows"] if r["commodity"] == "Corn"][0]
     assert corn["unit"] == "$/bu"
+
+
+def test_parse_derives_delivery_window_from_basis_month() -> None:
+    # Regression: the first scheduled poll (2026-11-27) dropped all
+    # 49 FS Grain rows — no delivery_month / futures_month / basis
+    # columns at all, even though the basis month code + report date
+    # name the contract exactly. Z on a Nov 18, 2026 report is the
+    # December 2026 contract; the basis is the low end in $/bu.
+    out = parse_usda_mirror_html(FIXTURE_HTML, url=JAMES_VALLEY_URL)
+    central_corn = [r for r in out["rows"] if r["region"] == "Central"][0]
+    assert central_corn["basis_month"] == "Z"
+    assert central_corn["basis"] == 0.75
+    assert central_corn["basis_raw"] == "+75.00 Z"
+    assert central_corn["delivery_month"] == "December 2026"
+    assert central_corn["futures_month"] == "Dec 26"
+    pnw_wheat = [r for r in out["rows"] if r["region"] == "Pacific Ports"][0]
+    assert pnw_wheat["basis"] == 0.35  # low end of +35.00 Z to +40.00 Z
+    assert pnw_wheat["basis_high_cents"] == 40.0
+    assert pnw_wheat["delivery_month"] == "December 2026"
+    # A row with no basis cell gets no window either — never guessed.
+    central_soy = [r for r in out["rows"] if r["region"] == "Central"][1]
+    assert central_soy["basis"] is None
+    assert central_soy["delivery_month"] is None
+    assert central_soy["futures_month"] is None
+
+
+def test_contract_window_year_rollover_and_unknown() -> None:
+    from app.platform.market_data.sources.usda_mirror_source import (  # noqa: E402
+        _contract_window_for_basis_month,
+    )
+
+    # Same-month-or-later stays in the report year; earlier rolls over.
+    assert _contract_window_for_basis_month("Z", "Nov 18, 2026") == ("December 2026", "Dec 26")
+    assert _contract_window_for_basis_month("F", "Nov 18, 2026") == ("January 2027", "Jan 27")
+    assert _contract_window_for_basis_month("H", "Nov 18, 2026") == ("March 2027", "Mar 27")
+    assert _contract_window_for_basis_month("Z", "Mar 10, 2027") == ("December 2027", "Dec 27")
+    assert _contract_window_for_basis_month("Q", "not a date") == (None, None)
+    assert _contract_window_for_basis_month("?", "Nov 18, 2026") == (None, None)
+    assert _contract_window_for_basis_month(None, "Nov 18, 2026") == (None, None)
+    assert _contract_window_for_basis_month("Z", None) == (None, None)
 
 
 def test_parse_history_select_and_report_id() -> None:

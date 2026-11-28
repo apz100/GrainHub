@@ -48,3 +48,26 @@ def test_lac_parse_rendered_table() -> None:
 def test_lac_parse_empty_html_returns_empty_frame() -> None:
     df = lac_source.parse_lac_html("<html><body>no tables</body></html>", "LAC - Nowhere")
     assert df.empty
+
+
+def test_extract_location_options_from_rendered_page() -> None:
+    """Regression: the static-HTML dropdown fetch finds zero options
+    (the DTN page populates the <select> client-side), which failed
+    LAC in the first scheduled poll ("Parsed zero LAC locations from
+    dropdown"). The rendered-page path reads the same options from
+    the live DOM. Exercised here with a fixture page — no network.
+    """
+    from playwright.sync_api import sync_playwright
+
+    html = """<html><body><form><select name="Location">
+    <option value="">Select a Location</option>
+    <option value="12">London</option>
+    <option value="34">St. Thomas</option>
+    </select></form></body></html>"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
+        page.set_content(html)
+        options = lac_source._extract_location_options(page)  # noqa: SLF001
+        browser.close()
+    assert options == {"12": "London", "34": "St. Thomas"}

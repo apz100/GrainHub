@@ -1,24 +1,31 @@
-# Scheduled ingestion — PREPARED, NOT ACTIVE.
+# Scheduled ingestion — ACTIVE since 2026-11-27 (commit 15e06dc).
 #
 # Design and pricing: docs/decisions/render-cron-proposal.md
 # (GitHub Actions = $0 on this public repo; Render Cron Jobs = $2/mo).
 #
-# The schedule block below is COMMENTED OUT on purpose. Until Adam
-# approves and the repo secrets exist, this workflow can only be run
-# manually (workflow_dispatch) — and even that will fail until the
-# secrets are set. Do not uncomment the schedule as part of a merge
-# unless the secrets below are already in place.
-#
-# To activate (Adam's decision):
-#   1. Add repo secrets: DATABASE_URL (Supabase session-pooler URI,
-#      same value as Render), NASS_API_KEY, FAS_DATA_GOV_API_KEY.
-#   2. Uncomment the schedule block.
-#   3. Merge to master (scheduled workflows only run from the
-#      default branch).
+# Repo secrets required: DATABASE_URL (Supabase session-pooler URI,
+# same value as Render), NASS_API_KEY, FAS_DATA_GOV_API_KEY.
+# Scheduled workflows only run from the default branch.
 #
 # Times are 08:05 / 15:05 America/Toronto (not :00 — GitHub drops
 # queued jobs under top-of-hour load; the timezone field handles DST,
 # unlike Render cron which is UTC-only).
+#
+# Notes from the first live run (46099501182, 2026-11-27):
+# - Playwright browsers MUST be installed in the runner: several
+#   adapters (agricharts, glg, hensall, snobelen, wanstead, dg_global,
+#   lac) launch headless Chromium, and pip install alone does not
+#   provide the browser binaries. Without this step every one of
+#   those sources fails with "BrowserType.launch: Executable doesn't
+#   exist .../ms-playwright/chromium_headless_shell-...".
+# - The two jobs run as SEPARATE steps on purpose: they are one
+#   `run: |` block with bash -e by default, so a failure in the
+#   file-ingestion cycle used to skip the source poll entirely.
+#   (Per-source failures are recorded in /api/source-health and do
+#   NOT fail the run — see app/jobs/poll_sources.py, which exits
+#   non-zero only when the poll itself crashes. A red run therefore
+#   means something systemic broke, not "one elevator site was
+#   down".)
 
 name: Scheduled ingestion
 
@@ -41,13 +48,25 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -r GrainBids/grainbids/apps/api/requirements.txt
-      - working-directory: GrainBids/grainbids/apps/api
+      # Playwright is in requirements.txt, but the browser binaries are
+      # not: adapters that launch Chromium fail without this step.
+      # --with-deps installs the OS libraries Chromium needs.
+      - run: python -m playwright install --with-deps chromium
+      - name: File-source ingestion cycle
+        working-directory: GrainBids/grainbids/apps/api
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           NASS_API_KEY: ${{ secrets.NASS_API_KEY }}
           FAS_DATA_GOV_API_KEY: ${{ secrets.FAS_DATA_GOV_API_KEY }}
           APP_ENV: production
           ALLOW_IMPLICIT_ORG: "false"
-        run: |
-          python -m app.jobs.daily_source_ingestion
-          python -m app.jobs.poll_sources
+        run: python -m app.jobs.daily_source_ingestion
+      - name: Poll due sources
+        working-directory: GrainBids/grainbids/apps/api
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NASS_API_KEY: ${{ secrets.NASS_API_KEY }}
+          FAS_DATA_GOV_API_KEY: ${{ secrets.FAS_DATA_GOV_API_KEY }}
+          APP_ENV: production
+          ALLOW_IMPLICIT_ORG: "false"
+        run: python -m app.jobs.poll_sources

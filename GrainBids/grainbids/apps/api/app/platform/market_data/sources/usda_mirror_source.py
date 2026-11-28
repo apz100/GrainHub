@@ -44,9 +44,15 @@ Units — read carefully, the page is internally inconsistent:
     for them is coded — if they ever appear, this inference must be
     revisited for those commodities.
   * Basis is printed in cents with a futures-month code letter, e.g.
-    "+110.00 F" or a range "+220.00 Z to +265.00 Z". ``basis`` keeps
-    the raw string; ``basis_cents`` / ``basis_high_cents`` hold the
-    parsed low/high ends (None when the cell is blank or "UNCH").
+    "+110.00 F" or a range "+220.00 Z to +265.00 Z". ``basis_raw``
+    keeps the printed string; ``basis`` is the parsed low end in
+    $/bu (cents / 100) so the normalizer can read it, and
+    ``basis_cents`` / ``basis_high_cents`` hold the parsed low/high
+    ends in cents (None when the cell is blank or "UNCH"). The month
+    code + the report date also yield ``delivery_month`` ("Dec 2026")
+    and ``futures_month`` ("Dec 26") — the next contract of that
+    month on or after the report month (see
+    ``_contract_window_for_basis_month``).
   * A data row prints a low–high range across the bids in that
     region. ``cash_price`` is the low end of that range; ``low_price``
     and ``high_price`` are both returned so the range is visible.
@@ -152,6 +158,90 @@ def _parse_basis(text: str | None) -> tuple[float | None, float | None, str | No
     return values[0], values[-1], month
 
 
+# Futures month codes (CBOT): F Jan, G Feb, H Mar, J Apr, K May, M Jun,
+# N Jul, Q Aug, U Sep, V Oct, X Nov, Z Dec.
+_MONTH_CODE_TO_NUMBER = {
+    "F": 1,
+    "G": 2,
+    "H": 3,
+    "J": 4,
+    "K": 5,
+    "M": 6,
+    "N": 7,
+    "Q": 8,
+    "U": 9,
+    "V": 10,
+    "X": 11,
+    "Z": 12,
+}
+_MONTH_NUMBER_TO_ABBR = {
+    1: "Jan",
+    2: "Feb",
+    3: "Mar",
+    4: "Apr",
+    5: "May",
+    6: "Jun",
+    7: "Jul",
+    8: "Aug",
+    9: "Sep",
+    10: "Oct",
+    11: "Nov",
+    12: "Dec",
+}
+_MONTH_NUMBER_TO_NAME = {
+    1: "January",
+    2: "February",
+    3: "March",
+    4: "April",
+    5: "May",
+    6: "June",
+    7: "July",
+    8: "August",
+    9: "September",
+    10: "October",
+    11: "November",
+    12: "December",
+}
+
+
+def _contract_window_for_basis_month(
+    month_code: str | None, report_date: str | None
+) -> tuple[str | None, str | None]:
+    """Resolve a basis month code + report date to a delivery window.
+
+    Returns (delivery_month, futures_month), e.g. ("Dec 2026", "Dec 26")
+    for code "Z" on a November 2026 report, or (None, None) when the
+    code is unknown or the report date is unparseable — never guessed.
+
+    The code names the next contract of that month on or after the
+    report month: a Z basis on a November report is the December
+    contract of the same year; an F basis on the same report is the
+    January contract of the next year. The report date comes from the
+    page's own archive <select> ("Nov 18, 2026"), never from today.
+
+    Why this exists: until 2026-11-28 these rows carried no delivery
+    or futures month at all, so the normalizer dropped all 49 FS Grain
+    rows in the first scheduled poll (missing_delivery_window /
+    missing_futures_month / missing_basis), even though the month code
+    and the report date together name the contract exactly.
+    """
+    if not month_code or not report_date:
+        return None, None
+    month_number = _MONTH_CODE_TO_NUMBER.get(month_code.strip().upper())
+    if month_number is None:
+        return None, None
+    try:
+        from datetime import datetime as _datetime
+
+        report = _datetime.strptime(report_date.strip(), "%b %d, %Y")
+    except (ValueError, TypeError):
+        return None, None
+    year = report.year if month_number >= report.month else report.year + 1
+    delivery_month = f"{_MONTH_NUMBER_TO_NAME[month_number]} {year}"
+    futures_month = f"{_MONTH_NUMBER_TO_ABBR[month_number]} {str(year)[-2:]}"
+    return delivery_month, futures_month
+
+
 def _company_for(url: str | None, soup: BeautifulSoup) -> str:
     if url:
         host = (urlparse(url).netloc or "").lower()
@@ -238,6 +328,14 @@ def parse_usda_mirror_html(html: str, *, url: str | None = None) -> dict[str, An
         if low_price is None and high_price is None and basis_cents is None:
             continue
         unit = _unit_for(low_price, high_price)
+        # "basis" is the numeric $/bu value the normalizer reads
+        # (low end of the printed range, cents -> dollars); the
+        # printed string is kept verbatim in "basis_raw". A range's
+        # high end stays in "basis_high_cents". Delivery / futures
+        # months come from the basis month code + report date (see
+        # _contract_window_for_basis_month); rows without a month
+        # code keep None there rather than an invented month.
+        delivery_month, futures_month = _contract_window_for_basis_month(basis_month, report_date)
         rows.append(
             {
                 "company": company,
@@ -245,10 +343,13 @@ def parse_usda_mirror_html(html: str, *, url: str | None = None) -> dict[str, An
                 "region": region,
                 "commodity": commodity,
                 "bid_type": bid_type or None,
+                "delivery_month": delivery_month,
+                "futures_month": futures_month,
                 "cash_price": low_price,
                 "low_price": low_price,
                 "high_price": high_price,
-                "basis": basis_raw or None,
+                "basis": (basis_cents / 100.0) if basis_cents is not None else None,
+                "basis_raw": basis_raw or None,
                 "basis_cents": basis_cents,
                 "basis_high_cents": basis_high_cents,
                 "basis_month": basis_month,

@@ -74,6 +74,55 @@ def _fetch_location_options() -> Dict[str, str]:
     return options
 
 
+def _fetch_location_options_from_page(page) -> Dict[str, str]:
+    """Read the Location dropdown from the JS-rendered page.
+
+    Fallback for when the static-HTML path above finds nothing: the
+    DTN page now populates the dropdown client-side, so the HTML
+    returned by ``requests`` carries an empty <select> and
+    ``_fetch_location_options`` raises "Parsed zero LAC locations"
+    (verified live 2026-11-28 — the first scheduled poll failed LAC
+    on exactly this). The Playwright page has the rendered DOM, so
+    the same digit-valued options are readable there. ``page`` is the
+    already-open page from ``fetch_lac_all``.
+    """
+    from urllib.parse import urlencode as _urlencode
+
+    page.goto(f"{LAC_BASE_URL}?{_urlencode(DEFAULT_PARAMS)}", wait_until="domcontentloaded", timeout=30000)
+    return _extract_location_options(page)
+
+
+def _extract_location_options(page) -> Dict[str, str]:
+    """Read the Location dropdown options from the current page DOM.
+
+    Split out from ``_fetch_location_options_from_page`` so the
+    extraction is testable with a fixture page (``set_content``)
+    without a live navigation.
+    """
+    # The options arrive with the page's JavaScript; wait until at
+    # least one digit-valued option exists before reading them.
+    # state="attached": <option> elements are never "visible" in
+    # Playwright's sense (they live inside a closed <select>), so
+    # the default visible wait would time out even when the options
+    # are present.
+    page.wait_for_selector(
+        "select[name*='Location' i] option[value]",
+        state="attached",
+        timeout=30000,
+    )
+    pairs = page.eval_on_selector_all(
+        "select[name*='Location' i] option",
+        "els => els.map(e => [e.value.trim(), (e.textContent || '').trim()])",
+    )
+    options: Dict[str, str] = {}
+    for value, label in pairs:
+        if value.isdigit() and label:
+            options[value] = label
+    if not options:
+        raise RuntimeError("Parsed zero LAC locations from dropdown (rendered page)")
+    return options
+
+
 # ---------------------------------------------------------------------------
 # Parse a *rendered* LAC HTML page into our canonical DataFrame
 # ---------------------------------------------------------------------------
@@ -187,11 +236,22 @@ def fetch_lac_all(p: Playwright) -> pd.DataFrame:
 
     Reuses the Playwright instance passed in from grainBidder.py.
     """
-    locations = _fetch_location_options()
+    # Fast path first (worked until the DTN page went JS-only for the
+    # dropdown): one requests GET. When it finds zero options, fall
+    # back to reading the rendered dropdown via the Playwright page
+    # instead of failing the whole source.
+    locations: Dict[str, str] | None = None
+    try:
+        locations = _fetch_location_options()
+    except RuntimeError as exc:
+        if "Parsed zero" not in str(exc):
+            raise
     all_rows = []
 
     browser = p.chromium.launch(headless=True)
     page = browser.new_page()
+    if locations is None:
+        locations = _fetch_location_options_from_page(page)
 
     for loc_id, loc_name in locations.items():
         params = DEFAULT_PARAMS | {"theLocation": loc_id}

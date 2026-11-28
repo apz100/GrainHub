@@ -18,15 +18,29 @@ def _default_commodity_id(db) -> str:
 
 
 def run_once() -> int:
+    # Exit-code contract (changed 2026-11-28, first scheduled run):
+    # 0 means "the poll ran to completion"; per-source failures do NOT
+    # fail the run — each source's outcome is already recorded in
+    # /api/source-health (status + consecutive_failures + last_error).
+    # The old rule (exit 1 unless every source passed) made the first
+    # scheduled run report FAILURE with 71/101 sources live, and would
+    # keep every future run red until 101/101 sources are green at
+    # once — which never happens while any elevator site is down or
+    # changes its page. A red run now means the poll itself crashed
+    # (DB down, bad config, unhandled exception), which is the signal
+    # worth paging on.
     session = get_sessionmaker()()
     try:
         commodity_id = _default_commodity_id(session)
         results = poll_due_sources(session, commodity_id=commodity_id, now=datetime.now(timezone.utc))
-        failed = sum(1 for result in results if result.status != "completed")
-        print(f"polled={len(results)} failed={failed}")
-        return 0 if failed == 0 else 1
+    except Exception as exc:  # noqa: BLE001 - systemic failure, not a source failure
+        print(f"poll_failed error={exc!r}")
+        return 1
     finally:
         session.close()
+    failed = sum(1 for result in results if result.status != "completed")
+    print(f"polled={len(results)} failed={failed}")
+    return 0
 
 
 def run_loop(sleep_seconds: int = 60) -> int:
